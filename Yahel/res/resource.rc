@@ -1,0 +1,235 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+#include "../src/api.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "windows.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Neutral resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEU)
+#ifdef _WIN32
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_YAHEL ACCELERATORS DISCARDABLE 
+BEGIN
+    "0",            ID_YAHEL_EDIT_RESET_ZERO, VIRTKEY, CONTROL, NOINVERT
+    "A",            ID_YAHEL_SELECT_ALL,    VIRTKEY, CONTROL, NOINVERT
+    "A",            ID_YAHEL_SELECT_NONE,   VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
+    "C",            ID_YAHEL_EDIT_COPY,     VIRTKEY, CONTROL, NOINVERT
+    "F",            ID_YAHEL_FIND,          VIRTKEY, CONTROL, NOINVERT
+    "G",            ID_YAHEL_GOTO_ADDRESS,  VIRTKEY, CONTROL, NOINVERT
+    "K",            ID_YAHEL_BOOKMARK_TOGGLE, VIRTKEY, CONTROL, NOINVERT
+    "R",            ID_YAHEL_SELECT_CURRENT, VIRTKEY, CONTROL, NOINVERT
+    "V",            ID_YAHEL_EDIT_PASTE,    VIRTKEY, CONTROL, NOINVERT
+    VK_F11,         ID_YAHEL_BOOKMARK_PREV, VIRTKEY, CONTROL, NOINVERT
+    VK_F12,         ID_YAHEL_BOOKMARK_NEXT, VIRTKEY, CONTROL, NOINVERT
+    VK_F3,          ID_YAHEL_FIND_NEXT,     VIRTKEY, NOINVERT
+    VK_NEXT,        ID_YAHEL_GOTO_RECORD_NEXT, VIRTKEY, CONTROL, NOINVERT
+    VK_PRIOR,       ID_YAHEL_GOTO_RECORD_PREV, VIRTKEY, CONTROL, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_YAHEL MENU DISCARDABLE 
+BEGIN
+    POPUP "x"
+    BEGIN
+        MENUITEM "Bookmarkkkuuu here\tCtrl+K",  ID_YAHEL_BOOKMARK_TOGGLE
+        MENUITEM SEPARATOR
+        MENUITEM "Copy\tCtrl+C",                ID_YAHEL_EDIT_COPY
+        MENUITEM "Copy to file...",             ID_YAHEL_FILE_SAVE_COPY_AS
+        MENUITEM "Paste\tCtrl+V",               ID_YAHEL_EDIT_PASTE
+        MENUITEM "Paste from file...",          ID_YAHEL_EDIT_PASTE_SPECIAL
+        MENUITEM "Delete\tDel",                 ID_YAHEL_EDIT_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "Find...\tCtrl+F",             ID_YAHEL_FIND
+        MENUITEM "Find next\tF3",               ID_YAHEL_FIND_NEXT
+        MENUITEM SEPARATOR
+        POPUP "Select"
+        BEGIN
+            MENUITEM "All\tCtrl+A",                 ID_YAHEL_SELECT_ALL
+            MENUITEM "Nothing\tCtrl+Shift+A",       ID_YAHEL_SELECT_NONE
+            MENUITEM SEPARATOR
+            MENUITEM "Current item\tCtrl+R",        ID_YAHEL_SELECT_CURRENT
+        END
+        POPUP "Reset"
+        BEGIN
+            MENUITEM "Selection with zeros\tCtrl+0", 
+                                                    ID_YAHEL_EDIT_RESET_ZERO
+            MENUITEM "Selection with...",           ID_YAHEL_EDIT_RESET
+        END
+        POPUP "Go to"
+        BEGIN
+            MENUITEM "Previous item\tCtrl+PgUp",    ID_YAHEL_GOTO_RECORD_PREV
+
+            MENUITEM "Next item\tCtrl+PgDown",      ID_YAHEL_GOTO_RECORD_NEXT
+
+            MENUITEM SEPARATOR
+            MENUITEM "Previous bookmark\tCtrl+F11", ID_YAHEL_BOOKMARK_PREV
+            MENUITEM "Next bookmark\tCtrl+F12",     ID_YAHEL_BOOKMARK_NEXT
+            MENUITEM SEPARATOR
+            MENUITEM "Address...\tCtrl+G",          ID_YAHEL_GOTO_ADDRESS
+        END
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDR_YAHEL_FIND DIALOG DISCARDABLE  0, 0, 303, 186
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Find"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        ID_YAHEL_TEXT,20,18,276,14,ES_AUTOHSCROLL
+    CONTROL         "Match case",ID_YAHEL_ACCURACY,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,20,35,53,10
+    EDITTEXT        IDC_FILE,20,64,276,68,WS_CLIPSIBLINGS
+    EDITTEXT        ID_YAHEL_NUMBER,74,140,40,14,ES_AUTOHSCROLL | ES_NUMBER
+    DEFPUSHBUTTON   "Find next",ID_YAHEL_FIND_NEXT,192,165,50,14,WS_DISABLED
+    PUSHBUTTON      "Find prev",ID_YAHEL_FIND_PREV,138,165,50,14,NOT 
+                    WS_VISIBLE | WS_DISABLED
+    CONTROL         "Search for ASCII pattern:",ID_YAHEL_DEFAULT1,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,7,7,289,10
+    CONTROL         "Search for Byte pattern:",ID_YAHEL_DEFAULT2,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,7,52,289,10
+    CONTROL         "Byte other than:",ID_YAHEL_DEFAULT3,"Button",
+                    BS_AUTORADIOBUTTON,7,142,66,10
+    PUSHBUTTON      "Cancel",IDCANCEL,246,165,50,14
+END
+
+IDR_YAHEL_ITEM_DEFINITION DIALOG DISCARDABLE  0, 0, 291, 175
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Item definition"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "An item consists of [1-%d Bytes]:",IDC_INFO1,7,35,102,8,
+                    NOT WS_GROUP
+    EDITTEXT        IDC_NUMBER,7,45,48,14,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_FILE,7,61,277,46,ES_AUTOHSCROLL
+    LTEXT           "An item is displayed by the following pattern [%d-%d chars]:",
+                    IDC_INFO2,7,114,185,8,NOT WS_GROUP
+    EDITTEXT        IDC_PATTERN,7,124,277,14,ES_AUTOHSCROLL
+    LTEXT           "Static",IDC_ERROR,7,139,277,8,WS_DISABLED | NOT 
+                    WS_GROUP
+    DEFPUSHBUTTON   "OK",IDOK,181,154,50,14,WS_DISABLED
+    PUSHBUTTON      "Cancel",IDCANCEL,234,154,50,14
+    LTEXT           "Presets:",IDC_STATIC,7,7,26,8,NOT WS_GROUP
+    COMBOBOX        IDC_PRESETS,7,16,277,115,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+END
+
+IDR_YAHEL_SINGLE_NUMBER DIALOG DISCARDABLE  0, 0, 172, 69
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "&N",IDC_INFO1,7,7,158,8,NOT WS_GROUP
+    EDITTEXT        IDC_NUMBER,7,18,158,14,ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "He&xa",IDC_HEXA,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    7,33,33,10
+    DEFPUSHBUTTON   "OK",IDOK,62,48,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,115,48,50,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDR_YAHEL_FIND, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 296
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 179
+    END
+
+    IDR_YAHEL_ITEM_DEFINITION, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 284
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 168
+    END
+
+    IDR_YAHEL_SINGLE_NUMBER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 165
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 62
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+#endif    // Neutral resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+    "../src/api.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""windows.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
