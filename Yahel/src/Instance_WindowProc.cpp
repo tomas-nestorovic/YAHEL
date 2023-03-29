@@ -1006,18 +1006,22 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 								auto itEmpView=itEmp;
 								auto itNearestBm=itNearestBookmark;
 								auto aView=address; auto aNearestBm=itNearestBm!=bookmarks.end()?*itNearestBm:Stream::GetErrorPosition();
-								const bool readIncompleteItem=nBytesRead%item.nStreamBytes!=0;
-								const WORD nCompleteItems=std::min<WORD>( item.nInRow, nBytesRead/item.nStreamBytes );
+								const auto d=div( nBytesRead, (TPosition)item.nStreamBytes );
+								const bool readIncompleteItem=d.rem!=0;
+								const WORD nCompleteItems=std::min<WORD>( item.nInRow, d.quot );
 								for( WORD n=0; n<nCompleteItems+readIncompleteItem; n++ ){
-									const BYTE printFlags =	selection.Contains( aView, item.nStreamBytes )
+									const BYTE nStreamBytes=readIncompleteItem && n==nCompleteItems // drawing an incomplete last Item in the Row?
+															? d.rem
+															: item.nStreamBytes;
+									const BYTE printFlags =	selection.Contains( aView, nStreamBytes )
 															? CHexaPaintDC::Selected
 															: CHexaPaintDC::Normal;
 									for( char i=0; i<item.patternLength; i++ ){
-										COLORREF emphasisColor=	itEmpView->Contains( aView, item.nStreamBytes ) // whole Item contained in a single Emphasis?
+										COLORREF emphasisColor=	itEmpView->Contains( aView, nStreamBytes ) // whole Item contained in a single Emphasis?
 																? itEmpView->color
 																: COLOR_WHITE; // assumption (no Emphasis)
 										WCHAR c=item.GetPrintableChar(i);
-										if (readIncompleteItem && n==nCompleteItems) // drawing an incomplete last Item in the Row?
+										if (nStreamBytes!=item.nStreamBytes) // drawing an incomplete last Item in the Row?
 											c=L'\x2026', i=CHAR_MAX-1; // when the ellipsis printed, terminate this cycle
 										if (c){
 											dc.SetContentPrintState( printFlags, emphasisColor );
@@ -1031,7 +1035,7 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 														break;
 													}
 											}
-											const BYTE iByte=n*item.nStreamBytes+item.GetByteIndex(i);
+											const BYTE iByte=n*nStreamBytes+item.GetByteIndex(i);
 											if (byteStates[iByte]==Good)
 												dc.SetContentPrintState( printFlags, emphasisColor );
 											else
@@ -1045,7 +1049,7 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 										while (itEmpView->z<aView)
 											itEmpView++;
 									}
-									aView+=item.nStreamBytes;
+									aView+=nStreamBytes;
 									if (aNearestBm<aView){
 										dc.FlushPrintBuffer(); // to print the Bookmark over the File content and update the rcView!
 										const LONG x=charLayout.view.a*font.GetCharAvgWidth()+n*itemWidth;
