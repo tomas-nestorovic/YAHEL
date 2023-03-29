@@ -12,6 +12,7 @@ namespace Yahel{
 
 	#define ITEM_PATTERN_LENGTH_MIN	'\x3'
 	#define ITEM_STREAM_BYTES_MAX	('Z'+1-'A')
+	#define ITEM_STREAM_BYTES_SPEC_LEN (2+1)
 
 	#define VIEW_HALFBYTE_FORMAT	L"%X"
 	#define VIEW_SPACE_LENGTH		2

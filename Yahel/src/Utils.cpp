@@ -240,6 +240,10 @@ namespace Utils{
 		return enabled;
 	}
 
+	int CYahelDialog::GetDlgItemTextLength(WORD id) const{
+		return ::GetWindowTextLength( GetDlgItemHwnd(id) );
+	}
+
 	HWND CYahelDialog::FocusDlgItem(WORD id) const{
 		return ::SetFocus( GetDlgItemHwnd(id) );
 	}

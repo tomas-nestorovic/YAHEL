@@ -103,6 +103,7 @@ namespace Utils{
 		inline bool IsDlgButtonChecked(WORD id) const{ return ::IsDlgButtonChecked(hDlg,id)!=BST_UNCHECKED; }
 		inline void CheckDlgButton(WORD id,bool checked) const{ ::CheckDlgButton(hDlg,id,checked*BST_CHECKED); }
 		inline int GetDlgItemText(WORD id,PTCHAR buf,UINT bufLength) const{ return ::GetDlgItemText( hDlg, id, buf, bufLength ); }
+		int GetDlgItemTextLength(WORD id) const;
 		inline int SetDlgItemText(WORD id,LPCSTR text) const{ return ::SetDlgItemText( hDlg, id, text ); }
 		inline int GetDlgItemInt(WORD id) const{ return ::GetDlgItemInt( hDlg, id, nullptr, TRUE ); }
 		inline int SetDlgItemInt(WORD id,int i) const{ return ::SetDlgItemInt( hDlg, id, i, TRUE ); }

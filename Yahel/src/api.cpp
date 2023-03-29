@@ -21,6 +21,8 @@ namespace Yahel
 				return L"Item pattern indices out of bounds";
 			case ERROR_ITEM_DEF_PATTERN_NO_PLACEHOLDER:
 				return L"Item pattern doesn't address the stream";
+			case ERROR_ITEM_DEF_PATTERN_INSUFFICIENT_BUFFER:
+				return L"Item pattern doesn't fit in caller's buffer";
 			case ERROR_ITEM_COUNT_INVALID:
 				return L"Invalid count of items per row";
 			case ERROR_PASTE_FAILED:
@@ -475,12 +477,13 @@ namespace Stream
 	bool IInstance::DefineItemUsingDefaultEnglishDialog(char *definitionBuffer,BYTE bufferCapacity,HWND hParent){
 		//
 		// - the PatternBuffer must accommodate at least one char
-		if (!definitionBuffer || bufferCapacity<ITEM_PATTERN_LENGTH_MIN+1)
+		static_assert( ITEM_STREAM_BYTES_MAX<=99, "" ); // must otherwise revise the below BufferCapacity
+		if (!definitionBuffer || bufferCapacity<ITEM_STREAM_BYTES_SPEC_LEN+ITEM_PATTERN_LENGTH_MIN+1) // capacity of "27;Aa ", see Assert above
 			return false;
 		// - defining the Dialog
 		class CItemDefinitionDialog sealed:public Utils::CYahelDialog{
 			const PCHAR definitionBuffer;
-			const BYTE bufferCapacity;
+			const BYTE bufferCapacity, patternLengthMax;
 			CInstance hexaEditor;
 			BYTE sampleStreamBytes[ITEM_STREAM_BYTES_MAX];
 			bool processNotifications; // notifications on user's interaction with Dialog
@@ -509,7 +512,7 @@ namespace Stream
 					::wsprintf( buf, buf, ITEM_STREAM_BYTES_MAX );
 				SetDlgItemText( IDC_INFO1, buf );
 				GetDlgItemText( IDC_INFO2, buf, ARRAYSIZE(buf) );
-					::wsprintf( buf, buf, ITEM_PATTERN_LENGTH_MIN, bufferCapacity-1 );
+					::wsprintf( buf, buf, ITEM_PATTERN_LENGTH_MIN, patternLengthMax );
 				SetDlgItemText( IDC_INFO2, buf );
 				// . seeing if initial Item is one of Presets
 				ShowItem();
@@ -522,10 +525,17 @@ namespace Stream
 			}
 			TError TrySaveDefinition(){
 				// attempts to redefine an Item from current inputs; returns a DWORD-encoded error
-				auto i=GetDlgItemText( IDC_NUMBER, definitionBuffer, bufferCapacity-1 );
-				definitionBuffer[i++]=';';
-				GetDlgItemText( IDC_PATTERN, definitionBuffer+i, bufferCapacity-i-1 );
-				const auto err=item.Redefine(definitionBuffer);
+				auto i=GetDlgItemText( IDC_NUMBER, definitionBuffer, bufferCapacity );
+				TError err=ERROR_KOSHER; // assumption
+				if (ITEM_STREAM_BYTES_MAX<i)
+					err=ERROR_ITEM_DEF_BYTE_COUNT;
+				else if (patternLengthMax<GetDlgItemTextLength(IDC_PATTERN))
+					err=ERROR_ITEM_DEF_PATTERN_INSUFFICIENT_BUFFER;
+				else{
+					definitionBuffer[i++]=';';
+					GetDlgItemText( IDC_PATTERN, definitionBuffer+i, bufferCapacity-i-1 );
+					err=item.Redefine(definitionBuffer);
+				}
 				if (EnableDlgItem( IDOK, !err ))
 					SetDlgItemText( IDC_ERROR, nullptr );
 				else
@@ -586,6 +596,7 @@ namespace Stream
 				// ctor
 				// . parsing the input Item Pattern
 				: definitionBuffer(definitionBuffer) , bufferCapacity(std::min<BYTE>(bufferCapacity,ARRAYSIZE(item.pattern)))
+				, patternLengthMax( bufferCapacity-1-ITEM_STREAM_BYTES_SPEC_LEN )
 				, hexaEditor( (HINSTANCE)&__ImageBase, &hexaEditor, SEARCH_PARAMS, 0 )
 				, processNotifications(false) {
 				static_assert( ARRAYSIZE(item.pattern)<=99, "must revise ::wsprintf calls in InitDialog!" );
