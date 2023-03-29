@@ -117,8 +117,7 @@ namespace Yahel{
 		::InitializeCriticalSection(&locker);
 		Reset( nullptr, nullptr, TPosInterval(0) );
 		ShowColumns(TColumn::ALL);
-		//const bool viewValid=DefineItem(nullptr) && SetItemCount(8,16); // default View of one Byte
-		const TError err=RedefineItem("3;AaBbCc ", 8, 16 ); // default View of one Byte
+		const TError err=RedefineItem( nullptr, 8, 16 ); // default View of one Byte
 		assert( !err );
 		// - comparing requested configuration with HexaEditor's skills
 		/*assert(	recordSize>=128 // making sure that entire Rows are either (1) well readable, (2) readable with error, or (3) non-readable; 128 = min Sector length
