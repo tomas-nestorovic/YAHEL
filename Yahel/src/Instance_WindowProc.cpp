@@ -71,15 +71,18 @@ caretCorrectlyMoveTo:	// . adjusting the Caret's Position (aligning towards the 
 						//fallthrough
 					}
 					case VK_KANJI:{
-caretRefresh:			// . refreshing the Caret
+caretRefresh:			// refresh of Caret display
+						// . avoid visual artifacts by hiding the Caret first
 						::HideCaret(hWnd);
-							// : scrolling if Caret has been moved to an invisible part of the File content
-							const TRow iRow=__logicalPositionToRow__(caret.streamPosition), iScrollY=GetVertScrollPos();
-							if (iRow<iScrollY) __scrollToRow__(iRow);
-							else if (iRow>=iScrollY+nRowsOnPage) __scrollToRow__(iRow-nRowsOnPage+1);
-							// : displaying the Caret
+						// . scrolling if Caret has been moved to an invisible part of the File content
+						const TRow iRow=__logicalPositionToRow__(caret.streamPosition), iScrollY=GetVertScrollPos();
+						if (iRow<iScrollY) __scrollToRow__(iRow);
+						else if (iRow>=iScrollY+nRowsOnPage) __scrollToRow__(iRow-nRowsOnPage+1);
+						// . displaying the Caret
+						if (::GetFocus()==hWnd){
 							__refreshCaretDisplay__();
-						ShowCaret();
+							ShowCaret();
+						}
 						return true;
 					}
 					case VK_RIGHT:
