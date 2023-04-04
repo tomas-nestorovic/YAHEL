@@ -281,6 +281,8 @@ namespace Yahel{
 		EXCLUSIVELY_LOCK_THIS_OBJECT();
 		if (!Update( f, sa, fileLogicalSizeLimits ))
 			return false;
+		if (!f)
+			nLogicalRows = nRowsDisplayed = nRowsOnPage = 0;
 		caret=TCaret(0); // resetting the Caret and Selection
 		logPosScrolledTo=0;
 		return true;
