@@ -296,7 +296,7 @@ namespace Yahel{
 			update.logicalSizeLimits=limits;
 		}else{
 			// otherwise, updating the values normally
-			logicalSizeLimits = update.logicalSizeLimits = limits; // setting also Update just in case the cursor is in non-client area
+			this->logicalSizeLimits = update.logicalSizeLimits = limits; // setting also Update just in case the cursor is in non-client area
 			if (::IsWindow(hWnd)) // may be window-less if the owner is window-less
 				if (f)
 					__refreshVertically__();
@@ -324,7 +324,7 @@ namespace Yahel{
 			update.logicalSize=logicalSize;
 		else{
 			// otherwise, updating the values normally
-			logicalSize = update.logicalSize = logicalSize; // setting also Update just in case the cursor is in non-client area
+			this->logicalSize = update.logicalSize = logicalSize; // setting also Update just in case the cursor is in non-client area
 			if (::IsWindow(hWnd)) // may be window-less if the owner is window-less
 				__refreshVertically__();
 		}

@@ -960,6 +960,8 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 				auto y=HEADER_HEIGHT+iRowFirstToPaint*font.GetCharHeight();
 				const auto selection=caret.GetSelectionAsc();
 				auto itEmp=emphases.lower_bound( TEmphasis(address,0) );
+				if (itEmp!=emphases.begin() && address<itEmp->a) // potentially skipped a relevant Emphasis? (e.g. at Address 48 we have skipped the Emphasis <42;70> by discovering the next Emphasis <72;80>)
+					itEmp--;
 				f.Seek( address );
 				for( WCHAR buf[16]; iRowA<=iRowZ; iRowA++,y+=font.GetCharHeight() ){
 					RECT rcRow={ 0, y, rcClip.right, y+font.GetCharHeight() };
