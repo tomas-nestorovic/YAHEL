@@ -79,7 +79,7 @@ namespace Yahel{
 					case MAKELONG(ID_YAHEL_TEXT,EN_CHANGE):
 						if (acceptNotification){
 							acceptNotification=false; // preventing from recurrent processing
-								hexaEditor.SetFileLogicalSize(
+								hexaEditor.SetStreamLogicalSize(
 									params.patternLength=::GetDlgItemTextA( hDlg, ID_YAHEL_TEXT, params.pattern.chars, sizeof(params.pattern.chars) )
 								);
 								hexaEditor.f.SetLength( params.patternLength );

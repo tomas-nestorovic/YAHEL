@@ -198,9 +198,6 @@ namespace Yahel{
 		void Update(IStream *f,Stream::IAdvisor *sa) override;
 		bool Update(IStream *f,Stream::IAdvisor *sa,const TPosInterval &fileLogicalSizeLimits) override;
 		bool Reset(IStream *f,Stream::IAdvisor *sa,const TPosInterval &fileLogicalSizeLimits) override;
-		bool SetFileLogicalSizeLimits(const TPosInterval &limits) override;
-		TPosition GetFileLogicalSize() const override;
-		void SetFileLogicalSize(TPosition logicalSize) override;
 		TPosition GetCaretPosition() const override;
 		TPosInterval GetSelectionAsc() const override;
 		void SetSelection(TPosition selStart,TPosition selEnd) override;
@@ -216,6 +213,9 @@ namespace Yahel{
 		TError SetItemCountPerRow(WORD nItemsInRowMin=1,WORD nItemsInRowMax=-1) override;
 
 		// "Stream" column
+		bool SetStreamLogicalSizeLimits(const TPosInterval &limits) override;
+		TPosition GetStreamLogicalSize() const override;
+		void SetStreamLogicalSize(TPosition logicalSize) override;
 		WORD GetStreamBytesCountPerRow() const override;
 
 		// searching

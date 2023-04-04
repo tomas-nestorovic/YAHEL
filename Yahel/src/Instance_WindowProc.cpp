@@ -295,7 +295,7 @@ editDelete:				if (!editable) return true; // can't edit content of a disabled w
 						}
 						// . refreshing the scrollbar
 						f.SetLength( logicalSize );
-						SetFileLogicalSize( logicalSize );
+						SetStreamLogicalSize( logicalSize );
 						SendEditNotification( EN_CHANGE );
 						RepaintData();
 						goto caretCorrectlyMoveTo;
@@ -329,7 +329,7 @@ editDelete:				if (!editable) return true; // can't edit content of a disabled w
 								else if (caret.streamPosition+item.nStreamBytes<=logicalSizeLimits.z){ // can append new Item to the end of File?
 									const auto newLength=caret.streamPosition+item.nStreamBytes;
 									f.SetLength( newLength );
-									SetFileLogicalSize( newLength );
+									SetStreamLogicalSize( newLength );
 								}else{
 									ShowMessage(MSG_LIMIT_UPPER);
 									break;
@@ -344,7 +344,7 @@ editDelete:				if (!editable) return true; // can't edit content of a disabled w
 							f.Seek( -1, STREAM_SEEK_CUR );
 							f.Write( &b, sizeof(b), IgnoreIoResult );
 							caret.CancelSelection(); // cancelling any Selection
-							SetFileLogicalSize(  std::max( logicalSize, f.GetLength() )  );
+							SetStreamLogicalSize(  std::max( logicalSize, f.GetLength() )  );
 							SendEditNotification( EN_CHANGE );
 							RepaintData();
 							SendMessage( WM_KEYDOWN, VK_RIGHT ); // advance Caret
@@ -367,7 +367,7 @@ editDelete:				if (!editable) return true; // can't edit content of a disabled w
 							f.Seek( caret.streamPosition );
 							f.Write( &wParam, sizeof(BYTE), IgnoreIoResult );
 							caret.streamSelectionA = caret.streamPosition+=sizeof(BYTE);
-							SetFileLogicalSize(  std::max( logicalSize, f.GetLength() )  );
+							SetStreamLogicalSize(  std::max( logicalSize, f.GetLength() )  );
 							SendEditNotification( EN_CHANGE );
 							RepaintData();
 							goto caretRefresh;

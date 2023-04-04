@@ -256,7 +256,7 @@ namespace Yahel{
 		pStreamAdvisor= sa!=nullptr ? sa : &DefaultStreamAdvisor;
 		this->f.stream.Attach(f);
 		if (f){
-			SetFileLogicalSize(this->f.GetLength());
+			SetStreamLogicalSize(this->f.GetLength());
 			f->AddRef();
 		}
 	}
@@ -267,7 +267,7 @@ namespace Yahel{
 			return false;
 		EXCLUSIVELY_LOCK_THIS_OBJECT();
 		this->f.stream.Release(); // anything previously set is now invalid
-		SetFileLogicalSizeLimits( fileLogicalSizeLimits );
+		SetStreamLogicalSizeLimits( fileLogicalSizeLimits );
 		Update( f, sa );
 		if (::IsWindow(hWnd)){ // may be window-less if the owner is window-less
 			__refreshVertically__();
@@ -286,7 +286,7 @@ namespace Yahel{
 		return true;
 	}
 
-	bool CInstance::SetFileLogicalSizeLimits(const TPosInterval &limits){
+	bool CInstance::SetStreamLogicalSizeLimits(const TPosInterval &limits){
 		// changes the min and max File size
 		if (!limits.IsValidNonempty()) // invalid or empty Interval
 			return false;
@@ -304,7 +304,7 @@ namespace Yahel{
 		return true;
 	}
 
-	TPosition CInstance::GetFileLogicalSize() const{
+	TPosition CInstance::GetStreamLogicalSize() const{
 		// returns the LogicalSize of File content
 		EXCLUSIVELY_LOCK_THIS_OBJECT();
 		return	mouseInNcArea
@@ -312,7 +312,7 @@ namespace Yahel{
 				: logicalSize;
 	}
 
-	void CInstance::SetFileLogicalSize(TPosition logicalSize){
+	void CInstance::SetStreamLogicalSize(TPosition logicalSize){
 		// changes the LogicalSize of File content (originally set when Resetting the HexaEditor)
 		logicalSize=std::max( 0L, logicalSize ); // mustn't be negative
 		EXCLUSIVELY_LOCK_THIS_OBJECT();

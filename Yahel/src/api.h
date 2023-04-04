@@ -235,9 +235,6 @@ namespace Yahel
 		virtual void Update(IStream *s,Stream::IAdvisor *sa)=0;
 		virtual bool Update(IStream *s,Stream::IAdvisor *sa,const TPosInterval &fileLogicalSizeLimits)=0;
 		virtual bool Reset(IStream *s,Stream::IAdvisor *sa,const TPosInterval &fileLogicalSizeLimits)=0;
-		virtual bool SetFileLogicalSizeLimits(const TPosInterval &limits)=0;
-		virtual TPosition GetFileLogicalSize() const=0;
-		virtual void SetFileLogicalSize(TPosition logicalSize)=0;
 		virtual TPosition GetCaretPosition() const=0;
 		virtual TPosInterval GetSelectionAsc() const=0;
 		virtual void SetSelection(TPosition selStart,TPosition selEnd)=0;
@@ -253,6 +250,9 @@ namespace Yahel
 		virtual TError SetItemCountPerRow(WORD nItemsInRowMin=1,WORD nItemsInRowMax=-1)=0;
 
 		// "Stream" column
+		virtual bool SetStreamLogicalSizeLimits(const TPosInterval &limits)=0;
+		virtual TPosition GetStreamLogicalSize() const=0;
+		virtual void SetStreamLogicalSize(TPosition logicalSize)=0;
 		virtual WORD GetStreamBytesCountPerRow() const=0;
 
 		// searching
