@@ -1,7 +1,6 @@
 //Microsoft Developer Studio generated resource script.
 //
 #include "resource.h"
-#include "../src/api.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -9,6 +8,7 @@
 // Generated from the TEXTINCLUDE 2 resource.
 //
 #include "windows.h"
+#include "../src/api.h"
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -56,7 +56,7 @@ IDR_YAHEL MENU DISCARDABLE
 BEGIN
     POPUP "x"
     BEGIN
-        MENUITEM "Bookmarkkkuuu here\tCtrl+K",  ID_YAHEL_BOOKMARK_TOGGLE
+        MENUITEM "Bookmark here\tCtrl+K",       ID_YAHEL_BOOKMARK_TOGGLE
         MENUITEM SEPARATOR
         MENUITEM "Copy\tCtrl+C",                ID_YAHEL_EDIT_COPY
         MENUITEM "Copy to file...",             ID_YAHEL_FILE_SAVE_COPY_AS
@@ -219,6 +219,7 @@ END
 2 TEXTINCLUDE DISCARDABLE 
 BEGIN
     "#include ""windows.h""\r\n"
+    "#include ""../src/api.h""\r\n"
     "\0"
 END
 
