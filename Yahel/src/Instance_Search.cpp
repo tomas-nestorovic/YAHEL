@@ -22,7 +22,7 @@ namespace Yahel{
 				patternLength>0;
 	}
 
-	bool TSearchParams::EditModalWithDefaultEnglishDialog(HWND hParent){
+	bool TSearchParams::EditModalWithDefaultEnglishDialog(HWND hParent,HFONT hFont){
 		//
 		// - can't edit invalid Params
 		if (!IsValid())
@@ -117,16 +117,16 @@ namespace Yahel{
 		public:
 			TSearchParams params;
 
-			CParamsDialog(const TSearchParams &params0)
+			CParamsDialog(const TSearchParams &params0,HFONT hFont)
 				: params(params0)
 				, acceptNotification(true)
-				, hexaEditor( (HINSTANCE)&__ImageBase, &hexaEditor, SEARCH_PARAMS, 0 ) {
+				, hexaEditor( (HINSTANCE)&__ImageBase, &hexaEditor, MARK_RECURRENT_USE, hFont ) {
 				IStream *const s=Stream::FromBuffer( params.pattern.bytes, 0 );
 					hexaEditor.Reset( s, nullptr, TPosInterval(1,sizeof(params.pattern.bytes)) );
 				s->Release();
 				hexaEditor.ShowColumns( IInstance::TColumn::MINIMAL );
 			}
-		} d(*this);
+		} d(*this,hFont);
 		// - showing the Dialog and processing its result
 		switch (d.DoModal( IDR_YAHEL_FIND, hParent )){
 			case ID_YAHEL_FIND_PREV:

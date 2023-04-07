@@ -376,6 +376,8 @@ editDelete:				if (!editable) return true; // can't edit content of a disabled w
 				return true;
 			case WM_CONTEXTMENU:{
 				// context menu invocation
+				if (IS_RECURRENT_USE)
+					return true;
 				contextMenu.UpdateUi( *this ); // default update ...
 				contextMenu.UpdateUi( *pOwner ); // ... which the real Owner may override
 				POINT pt=Utils::MakePoint(lParam);
@@ -592,7 +594,7 @@ resetSelectionWithValue:BYTE buf[65535];
 					case ID_YAHEL_FIND:{
 						// find a Pattern in the Content
 						// . ignoring disabled command (e.g. can't search within the "Find" dialog)
-						if (!SEARCH_ENABLED)
+						if (IS_RECURRENT_USE)
 							return true;
 						// . requesting the Owner to begin/continue with a Search session
 						if (LOWORD(wParam)==ID_YAHEL_FIND){

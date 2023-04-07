@@ -55,10 +55,8 @@ namespace Yahel{
 			case ID_YAHEL_GOTO_RECORD_NEXT:
 			case ID_YAHEL_GOTO_RECORD_PREV:
 			case ID_YAHEL_GOTO_ADDRESS:
-				return flags;
 			case ID_YAHEL_FIND:
 			case ID_YAHEL_FIND_NEXT:
-				flags|=MF_GRAYED*!( SEARCH_ENABLED );
 				return flags;
 			case ID_YAHEL_EDIT_PASTE_SPECIAL:
 			case ID_YAHEL_EDIT_DELETE:

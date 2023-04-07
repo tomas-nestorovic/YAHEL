@@ -21,8 +21,8 @@ namespace Yahel{
 
 	#define WM_HEXA_PAINTSCROLLBARS	WM_USER+1
 
-	#define SEARCH_PARAMS	(&CInstance::mouseDragged)
-	#define SEARCH_ENABLED	(param!=SEARCH_PARAMS)
+	#define MARK_RECURRENT_USE	(&CInstance::mouseDragged)
+	#define IS_RECURRENT_USE	(param==MARK_RECURRENT_USE)
 
 	#define CLIPFORMAT_YAHEL_BINARY	_T("tomascz:cfYahelBinary")
 

@@ -474,7 +474,7 @@ namespace Stream
 		return "1;Aa ";
 	}
 
-	bool IInstance::DefineItemUsingDefaultEnglishDialog(char *definitionBuffer,BYTE bufferCapacity,HWND hParent){
+	bool IInstance::DefineItemUsingDefaultEnglishDialog(char *definitionBuffer,BYTE bufferCapacity,HWND hParent,HFONT hFont){
 		//
 		// - the PatternBuffer must accommodate at least one char
 		static_assert( ITEM_STREAM_BYTES_MAX<=99, "" ); // must otherwise revise the below BufferCapacity
@@ -592,12 +592,12 @@ namespace Stream
 		public:
 			CInstance::TItem item;
 
-			CItemDefinitionDialog(PCHAR definitionBuffer,BYTE bufferCapacity)
+			CItemDefinitionDialog(PCHAR definitionBuffer,BYTE bufferCapacity,HFONT hFont)
 				// ctor
 				// . parsing the input Item Pattern
 				: definitionBuffer(definitionBuffer) , bufferCapacity(std::min<BYTE>(bufferCapacity,ARRAYSIZE(item.pattern)))
 				, patternLengthMax( bufferCapacity-1-ITEM_STREAM_BYTES_SPEC_LEN )
-				, hexaEditor( (HINSTANCE)&__ImageBase, &hexaEditor, SEARCH_PARAMS, 0 )
+				, hexaEditor( (HINSTANCE)&__ImageBase, &hexaEditor, MARK_RECURRENT_USE, hFont )
 				, processNotifications(false) {
 				static_assert( ARRAYSIZE(item.pattern)<=99, "must revise ::wsprintf calls in InitDialog!" );
 				definitionBuffer[bufferCapacity-1]='\0'; // mustn't overrun!
@@ -612,7 +612,7 @@ namespace Stream
 				}
 				hexaEditor.ShowColumns(TColumn::VIEW);
 			}
-		} d( definitionBuffer, bufferCapacity );
+		} d( definitionBuffer, bufferCapacity, hFont );
 		// - showing the Dialog and processing its result
 		return d.DoModal( IDR_YAHEL_ITEM_DEFINITION, hParent )==IDOK;
 	}

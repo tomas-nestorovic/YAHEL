@@ -88,7 +88,7 @@ namespace Yahel
 
 		bool IsValid() const;
 		bool IsUsable() const;
-		bool EditModalWithDefaultEnglishDialog(HWND hParent);
+		bool EditModalWithDefaultEnglishDialog(HWND hParent,HFONT hFont=0);
 	};
 
 
@@ -215,7 +215,7 @@ namespace Yahel
 		static UINT YAHEL_DECLSPEC WINAPI GetClipboardFormat();
 		static IInstance YAHEL_DECLSPEC * WINAPI Create(HINSTANCE hInstance,POwner pOwner,PVOID lpParam=0,HFONT hFont=0);
 		static LPCSTR YAHEL_DECLSPEC WINAPI GetDefaultByteItemDefinition();
-		static bool YAHEL_DECLSPEC WINAPI DefineItemUsingDefaultEnglishDialog(char *definitionBuffer,BYTE bufferCapacity,HWND hParent=0);
+		static bool YAHEL_DECLSPEC WINAPI DefineItemUsingDefaultEnglishDialog(char *definitionBuffer,BYTE bufferCapacity,HWND hParent=0,HFONT hFont=0);
 
 		// window manipulation (destroy by simply calling ::DestroyWindow)
 		virtual bool Attach(HWND hYahel)=0;
