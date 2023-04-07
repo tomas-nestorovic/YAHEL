@@ -7,6 +7,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
+#define IDC_STATIC -1
 #include "windows.h"
 #include "../src/api.h"
 
@@ -213,11 +214,11 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 1 TEXTINCLUDE DISCARDABLE 
 BEGIN
     "resource.h\0"
-    "../src/api.h\0"
 END
 
 2 TEXTINCLUDE DISCARDABLE 
 BEGIN
+    "#define IDC_STATIC -1\r\n"
     "#include ""windows.h""\r\n"
     "#include ""../src/api.h""\r\n"
     "\0"

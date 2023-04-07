@@ -2,7 +2,6 @@
 // Microsoft Developer Studio generated include file.
 // Used by resource.rc
 //
-#define IDC_STATIC                      -1
 #define ID_YAHEL_ACCURACY               1500
 #define ID_YAHEL_TEXT                   1502
 #define ID_YAHEL_NUMBER                 1504
