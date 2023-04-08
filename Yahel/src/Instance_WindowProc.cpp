@@ -200,8 +200,8 @@ moveCaretDown:			const auto iRow=__logicalPositionToRow__(caret.streamPosition);
 								caret.streamSelectionA=caret.streamPosition-1;
 							}else{ // in View column - nothing actually deleted yet, merely created a Selection to delete with another press of Backspace
 								const Utils::CVarTempReset<bool> md0( mouseDragged, true ); // adjust Selection by pretending mouse button being pressed
-								caret.iViewHalfbyte=item.iLastPlaceholder;
-								SendMessage( WM_KEYDOWN, VK_RIGHT ); // select current Item
+								caret.iViewHalfbyte=item.iFirstPlaceholder;
+								SendMessage( WM_KEYDOWN, VK_LEFT ); // select current Item
 								std::swap( caret.streamPosition, caret.streamSelectionA );
 								goto caretRefresh;
 							}

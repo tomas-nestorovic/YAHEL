@@ -130,6 +130,8 @@ namespace Stream
 		}
 
 		HRESULT STDMETHODCALLTYPE SetSize(ULARGE_INTEGER libNewSize) override{
+			if (libNewSize.QuadPart>bufferLength)
+				::ZeroMemory( buffer+bufferLength, libNewSize.QuadPart-bufferLength );
 			bufferLength=libNewSize.QuadPart;
 			return S_OK;
 		}

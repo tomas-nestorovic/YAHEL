@@ -80,9 +80,10 @@ namespace Yahel{
 						if (acceptNotification){
 							acceptNotification=false; // preventing from recurrent processing
 								hexaEditor.SetStreamLogicalSize(
-									params.patternLength=::GetDlgItemTextA( hDlg, ID_YAHEL_TEXT, params.pattern.chars, sizeof(params.pattern.chars) )
+									params.patternLength=std::min<int>( GetDlgItemTextLength(ID_YAHEL_TEXT), sizeof(params.pattern.chars)-1 )
 								);
-								hexaEditor.f.SetLength( params.patternLength );
+								hexaEditor.f.SetLength( params.patternLength ); // zeros new space
+								::GetDlgItemTextA( hDlg, ID_YAHEL_TEXT, params.pattern.chars, sizeof(params.pattern.chars) );
 								hexaEditor.RepaintData();
 							acceptNotification=true;
 							EnableDlgItems( SearchButtons, params.patternLength>0 );
@@ -125,6 +126,7 @@ namespace Yahel{
 					hexaEditor.Reset( s, nullptr, TPosInterval(1,sizeof(params.pattern.bytes)) );
 				s->Release();
 				hexaEditor.ShowColumns( IInstance::TColumn::MINIMAL );
+				hexaEditor.SetEditable(true);
 			}
 		} d(*this,hFont);
 		// - showing the Dialog and processing its result
