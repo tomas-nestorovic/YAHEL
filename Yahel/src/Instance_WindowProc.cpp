@@ -537,7 +537,10 @@ resetSelectionWithValue:BYTE buf[65535];
 							return true;
 						if (const LPDATAOBJECT pdo=Stream::CreateDataObject( f, caret.GetSelectionAsc() )){
 							::OleSetClipboard(pdo);
-							pdo->Release();
+							if (lParam) // want pointer to the data now placed into the clipboard?
+								*((LPDATAOBJECT *)lParam)=pdo;
+							else
+								pdo->Release();
 						}
 						return true;
 					case ID_YAHEL_EDIT_PASTE:{
@@ -551,7 +554,7 @@ resetSelectionWithValue:BYTE buf[65535];
 							return true;
 						CComPtr<IStream> ps;
 						STGMEDIUM stg={};
-						for( FORMATETC fmt; SUCCEEDED(pefe->Next(1,&fmt,nullptr)); )
+						for( FORMATETC fmt; pefe->Next(1,&fmt,nullptr)==S_OK; )
 							if (fmt.cfFormat==GetClipboardFormat())
 								if (fmt.tymed==TYMED_HGLOBAL && SUCCEEDED(pdo->GetData(&fmt,&stg))){
 									if (const PVOID pData=::GlobalLock(stg.hGlobal)){
@@ -562,23 +565,6 @@ resetSelectionWithValue:BYTE buf[65535];
 									break;
 								}
 						return true;
-						/*COleDataObject odo;
-						odo.AttachClipboard();
-						if (const HGLOBAL hg=odo.GetGlobalData(cfRideBinary)){
-							const DWORD *p=(PDWORD)::GlobalLock(hg), length=*p; // binary data are prefixed by their length
-								f->Seek( caret.streamPosition, FILE_BEGIN );
-								const auto lengthLimit=logicalSizeLimits.z-caret.streamPosition;
-								if (length<=lengthLimit){
-									f->Write( ++p, length );
-									caret.streamSelectionA = caret.streamPosition+=length; // moving the Caret and cancelling any Selection
-								}else{
-									f->Write( ++p, lengthLimit );
-									caret.streamPosition+=lengthLimit;
-									ShowMessage(IOwner::MSG_LIMIT_UPPER);
-								}
-							::GlobalUnlock(hg);
-							::GlobalFree(hg);
-						}*/
 						SendEditNotification( EN_CHANGE );
 						RepaintData();
 						goto caretCorrectlyMoveTo;

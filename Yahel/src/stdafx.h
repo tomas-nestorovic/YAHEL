@@ -96,4 +96,6 @@ typedef const WORD *PCWORD;
 extern const WNDCLASS EditClass;
 extern HRESULT IgnoreIoResult;
 
+SHSTDAPI SHCreateStdEnumFmtEtc(UINT cfmt, const FORMATETC *afmt,IEnumFORMATETC **ppenumFormatEtc);
+
 #endif STDAFX_H

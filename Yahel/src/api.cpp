@@ -219,7 +219,8 @@ namespace Stream
 
 
 
-	class COleDataObject sealed:public IDataObject{
+	// see also https://github.com/Microsoft/Windows-classic-samples/blob/main/Samples/Win7Samples/winui/shell/appplatform/DragDropVisuals/DataObject.cpp
+	class COleDataObject:public IDataObject{
 		volatile ULONG nReferences;
 		//const UINT cfPasteSucceeded;
 		IStream &s;
@@ -234,6 +235,7 @@ namespace Stream
 				assert( (tymedMask&tymed)==0 );
 				FORMATETC &r=list[n++];
 					r.cfFormat=IInstance::GetClipboardFormat();
+					r.dwAspect=DVASPECT_CONTENT;
 					r.lindex=-1;
 					r.tymed=tymed;
 				tymedMask|=tymed;
@@ -265,7 +267,11 @@ namespace Stream
 		}
 
 		HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid,PVOID *ppvObject) override{
-			return E_NOINTERFACE;
+			static constexpr QITAB qit[]={
+				QITABENT( COleDataObject, IDataObject ),
+				{ 0 },
+			};
+			return ::QISearch( this, qit, riid, ppvObject );
 		}
 
 		// IDataObject methods
@@ -343,67 +349,7 @@ namespace Stream
 				return E_NOTIMPL;
 			if (!ppEnumFormatEtc)
 				return E_INVALIDARG;
-			class CEnumerator:public IEnumFORMATETC{
-				volatile ULONG nReferences;
-				COleDataObject &odo;
-				ULONG i; // index into COleDataObject::supportedFormats
-			public:
-				CEnumerator(COleDataObject &odo)
-					: nReferences(1)
-					, odo(odo) , i(0) {
-					odo.AddRef();
-				}
-				CEnumerator(const CEnumerator &r)
-					: nReferences(1)
-					, odo(r.odo) , i(r.i) {
-					odo.AddRef();
-				}
-				// IUnknown methods
-				ULONG STDMETHODCALLTYPE AddRef() override{
-					return ::InterlockedIncrement(&nReferences);
-				}
-				ULONG STDMETHODCALLTYPE Release() override{
-					if (const auto n=::InterlockedDecrement(&nReferences))
-						return n;
-					delete this;
-					return 0;
-				}
-				HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid,PVOID *ppvObject) override{
-					return E_NOINTERFACE;
-				}
-				// IEnumFORMATETC methods
-				HRESULT STDMETHODCALLTYPE Next(ULONG celt,FORMATETC *rgelt,ULONG *pceltFetched) override{
-					if (!rgelt)
-						return E_INVALIDARG;
-					if (i<odo.supportedFormats.n && celt>0){
-						celt=std::min( celt, odo.supportedFormats.n-i );
-						::memcpy( rgelt, odo.supportedFormats.list+i, celt*sizeof(FORMATETC) );
-						if (pceltFetched)
-							*pceltFetched=celt;
-						i+=celt;
-						return S_OK;
-					}
-					if (pceltFetched)
-						*pceltFetched=0;
-					return S_FALSE;
-				}
-				HRESULT STDMETHODCALLTYPE Skip(ULONG celt) override{
-					i+=celt;
-					return S_OK;
-				}
-				HRESULT STDMETHODCALLTYPE Reset() override{
-					i=0;
-					return S_OK;
-				}
-				HRESULT STDMETHODCALLTYPE Clone(IEnumFORMATETC **ppenum) override{
-					if (!ppenum)
-						return E_INVALIDARG;
-					*ppenum=new CEnumerator(*this);
-					return S_OK;
-				}
-			};
-			*ppEnumFormatEtc=new CEnumerator(*this);
-			return S_OK;
+			return ::SHCreateStdEnumFmtEtc( supportedFormats.n, supportedFormats.list, ppEnumFormatEtc );
 		}
 
 		HRESULT STDMETHODCALLTYPE DAdvise(LPFORMATETC pFormatEtc,DWORD advf,LPADVISESINK pAdvSink,DWORD *pdwConnection) override{
