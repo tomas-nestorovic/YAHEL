@@ -193,7 +193,6 @@ namespace Yahel
 		TPosition YAHEL_DECLSPEC WINAPI GetLength(IStream *s);
 		IStream YAHEL_DECLSPEC * WINAPI FromBuffer(PVOID pBuffer,TPosition length);
 		IStream YAHEL_DECLSPEC * WINAPI FromFileForSharedReading(LPCWSTR fileName,DWORD dwFlagsAndAttributes=FILE_ATTRIBUTE_NORMAL);
-		FORMATETC YAHEL_DECLSPEC WINAPI GetFormatEtc();
 		IDataObject YAHEL_DECLSPEC * WINAPI CreateDataObject(IStream *s,const TPosInterval &range);
 	};
 
@@ -209,6 +208,7 @@ namespace Yahel
 			ALL		= ADDRESS | MINIMAL
 		};
 
+		static LPCTSTR YAHEL_DECLSPEC WINAPI GetVersionString();
 		static void YAHEL_DECLSPEC WINAPI ShowModalAboutDialog();
 		static LPCSTR YAHEL_DECLSPEC WINAPI GetBaseClassNameA(HINSTANCE hInstance);
 		static LPCWSTR YAHEL_DECLSPEC WINAPI GetBaseClassNameW(HINSTANCE hInstance);

@@ -365,11 +365,6 @@ namespace Stream
 		}
 	};
 
-	FORMATETC WINAPI GetFormatEtc(){
-		const FORMATETC tmp={ IInstance::GetClipboardFormat(), nullptr, 0, -1, TYMED_ISTREAM };
-		return tmp;
-	}
-
 	IDataObject * WINAPI CreateDataObject(IStream *s,const TPosInterval &range){
 		//
 		return	s!=nullptr && range.IsValidNonempty()
@@ -390,6 +385,10 @@ namespace Stream
 
 
 
+
+	LPCTSTR IInstance::GetVersionString(){
+		return DLL_VERSION;
+	}
 
 	void IInstance::ShowModalAboutDialog(){
 		::MessageBox( 0,
