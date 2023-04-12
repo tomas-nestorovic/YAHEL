@@ -223,7 +223,7 @@ namespace Stream
 	class COleDataObject:public IDataObject{
 		volatile ULONG nReferences;
 		//const UINT cfPasteSucceeded;
-		IStream &s;
+		const CInstance::TContent f;
 		const TPosInterval range;
 		struct{
 			ULONG n;
@@ -245,13 +245,11 @@ namespace Stream
 		COleDataObject(IStream &s,const TPosInterval &range)
 			: nReferences(1)
 			//, cfPasteSucceeded( ::RegisterClipboardFormat(CFSTR_PASTESUCCEEDED) )
-			, s(s) , range(range) {
-			s.AddRef();
+			, f(&s) , range(range) {
 			::ZeroMemory( &supportedFormats, sizeof(supportedFormats) );
 			supportedFormats.Add(TYMED_HGLOBAL);
 		}
 		virtual ~COleDataObject(){
-			s.Release();
 		}
 
 		// IUnknown methods
@@ -276,46 +274,53 @@ namespace Stream
 
 		// IDataObject methods
         HRESULT STDMETHODCALLTYPE GetData(LPFORMATETC pFormatEtc,LPSTGMEDIUM outMedium) override{
+			if (outMedium->tymed!=TYMED_NULL)
+				return GetDataHere( pFormatEtc, outMedium );
+			outMedium->pUnkForRelease=nullptr;
+			const auto nBytesToRead=range.GetLength();
+			switch ( outMedium->tymed=pFormatEtc->tymed ){
+				case TYMED_HGLOBAL:
+					if (outMedium->hGlobal=::GlobalAlloc( GPTR, nBytesToRead )){
+						const HRESULT hr=GetDataHere( pFormatEtc, outMedium );
+						if (SUCCEEDED(hr)) // some Bytes written ...
+							if (const auto nMissing=range.z-f.GetPosition()) // ... but not all of them?
+								if (const HGLOBAL hRealloc=::GlobalReAlloc( outMedium->hGlobal, nBytesToRead-nMissing, 0 ))
+									outMedium->hGlobal=hRealloc;
+								else{
+									::GlobalFree( outMedium->hGlobal );
+									return E_OUTOFMEMORY;
+								}
+						return hr;
+					}
+					return E_OUTOFMEMORY;
+			}
+			return CO_E_NOT_SUPPORTED; // we shouldn't end up here!
+		}
+
+        HRESULT STDMETHODCALLTYPE GetDataHere(LPFORMATETC pFormatEtc,LPSTGMEDIUM pMedium) override{
 			const HRESULT hResult=QueryGetData(pFormatEtc);
 			if (FAILED(hResult))
 				return hResult;
-			if (!outMedium)
+			if (!pMedium)
 				return E_INVALIDARG;
-			::ZeroMemory( outMedium, sizeof(*outMedium) );
 			auto nBytesToRead=range.GetLength();
-			switch ( outMedium->tymed=pFormatEtc->tymed ){
+			switch (pMedium->tymed){
 				case TYMED_HGLOBAL:
-					if (outMedium->hGlobal!=nullptr)
-						break;
-					if (HGLOBAL hMem=::GlobalAlloc( GPTR, nBytesToRead )){
-						if (const PBYTE pData=(PBYTE)::GlobalLock(hMem)){
-							const CInstance::TContent f=&s;
-							PBYTE p=pData; f.Seek(range.a);
-							while (nBytesToRead>0)
-								if (const auto nBytesRead=f.Read( p, nBytesToRead, IgnoreIoResult ))
-									p+=nBytesRead, nBytesToRead-=nBytesRead;
-								else
-									break;
-							::GlobalUnlock(hMem);
-							if (nBytesToRead>0) // failure during reading?
-								if (const HGLOBAL hRealloc=::GlobalReAlloc( hMem, p-pData, 0 ))
-									hMem=hRealloc;
-								else{
-									::GlobalFree( hMem );
-									return E_OUTOFMEMORY;
-								}
-							outMedium->hGlobal=hMem;
-							return S_OK;
-						}
-						break;
+					if (::GlobalSize(pMedium->hGlobal)<range.GetLength())
+						return E_NOT_SUFFICIENT_BUFFER;
+					if (const PBYTE pData=(PBYTE)::GlobalLock(pMedium->hGlobal)){
+						PBYTE p=pData; f.Seek(range.a);
+						while (nBytesToRead>0)
+							if (const auto nBytesRead=f.Read( p, nBytesToRead, IgnoreIoResult ))
+								p+=nBytesRead, nBytesToRead-=nBytesRead;
+							else
+								break;
+						::GlobalUnlock(pMedium->hGlobal);
+						return S_OK;
 					}else
-						return E_OUTOFMEMORY;
+						return STG_E_LOCKVIOLATION;
 			}
-			return E_UNEXPECTED; // we shouldn't end up here!
-		}
-
-        HRESULT STDMETHODCALLTYPE GetDataHere(LPFORMATETC pformatetc,LPSTGMEDIUM pmedium) override{
-			return E_NOTIMPL;
+			return CO_E_NOT_SUPPORTED; // we shouldn't end up here!
 		}
 
         HRESULT STDMETHODCALLTYPE QueryGetData(LPFORMATETC pFormatEtc) override{
