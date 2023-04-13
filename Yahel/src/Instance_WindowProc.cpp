@@ -537,6 +537,10 @@ resetSelectionWithValue:BYTE buf[65535];
 							return true;
 						if (const LPDATAOBJECT pdo=Stream::CreateDataObject( f, caret.GetSelectionAsc() )){
 							::OleSetClipboard(pdo);
+							if (editable) // if content Editable ...
+								::OleFlushClipboard(); // ... render data immediately
+							else
+								delayedDataInClipboard=pdo;
 							if (lParam) // want pointer to the data now placed into the clipboard?
 								*((LPDATAOBJECT *)lParam)=pdo;
 							else

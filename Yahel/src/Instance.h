@@ -96,6 +96,7 @@ namespace Yahel{
 		BYTE addrLength; // Address format length (see ADDRESS_FORMAT); modified in ShowColumns
 		bool editable; // True <=> content can be edited, otherwise False
 		TState update;
+		CComPtr<IDataObject> delayedDataInClipboard; // an IDataObject whose data were not yet rendered
 	public:
 		struct TItem sealed{
 			BYTE nStreamBytes;

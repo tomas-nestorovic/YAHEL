@@ -217,7 +217,11 @@ namespace Yahel{
 
 	void CInstance::SetEditable(bool _editable){
 		// enables/disables possibility to edit the content of the File (see the Reset function)
-		editable=_editable;
+		if (editable=_editable) // if making content Editable ...
+			if (::OleIsCurrentClipboard(delayedDataInClipboard)==S_OK){
+				::OleFlushClipboard(); // ... render data that we put into clipboard earlier
+				delayedDataInClipboard.Release();
+			}
 		if (::IsWindow(hWnd)){ // may be window-less if the owner is window-less
 			if (::GetFocus()==hWnd){
 				__refreshCaretDisplay__();
@@ -815,50 +819,5 @@ namespace Yahel{
 		::GetClientRect( hWnd, &rc );
 		return rc;
 	}
-
-
-
-
-
-
-
-	/*CInstance::COleBinaryDataSource::COleBinaryDataSource(PContent f,const TPosInterval &streamInterval)
-		// ctor
-		// - initialization
-		: f(f) , dataBegin(streamInterval.a) , dataLength(streamInterval.GetLength()) {
-		// - data target can inform BinaryDataSource on events
-		DelaySetData( ::RegisterClipboardFormat(CFSTR_PASTESUCCEEDED) );
-		// - rendering the data
-		const HGLOBAL hg=::GlobalAlloc( GMEM_FIXED, sizeof(dataLength)+dataLength );
-		const PDWORD p=(PDWORD)::GlobalLock(hg);
-			f->Seek(dataBegin,FILE_BEGIN);
-			*p=f->Read(1+p,dataLength); // File content is prefixed by its length
-		::GlobalUnlock(hg);
-		CacheGlobalData( cfRideBinary, hg );
-		// - delayed rendering of data
-		//DelayRenderFileData( cfRideBinary );	// data to be supplied later
-	}
-
-/*	BOOL CInstance::COleBinaryDataSource::OnRenderFileData(LPFORMATETC lpFormatEtc,CFile *pFile){
-		// rendering File content from Image to COM
-		if (lpFormatEtc->cfFormat==cfBinary){
-			// exporting binary data "as if they were a file"
-			DWORD nBytesToExport=dataLength, nBytesExported=0;
-			pFile->Write(&nBytesExported,sizeof(nBytesExported)); // binary data prefixed by their length (set below)
-				f->Seek(dataBegin,FILE_BEGIN);
-				BYTE buf[65536];
-				for( WORD n=1+dataLength/sizeof(buf); n--; ){
-					const DWORD nBytesBuffered=f->Read(buf, min(nBytesToExport,sizeof(buf)) );
-					pFile->Write(buf,nBytesBuffered);
-					nBytesToExport-=nBytesBuffered, nBytesExported+=nBytesBuffered;
-				}
-			pFile->Seek(0,FILE_BEGIN);
-			pFile->Write(&nBytesExported,sizeof(nBytesExported));
-			pFile->Seek(0,CFile::end);
-			return TRUE;
-		}else
-			// other form of rendering than the "File" one (i.e. other than CFSTR_FILECONTENTS)
-			return __super::OnRenderFileData(lpFormatEtc,pFile);
-	}*/
 
 }
