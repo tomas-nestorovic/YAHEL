@@ -26,7 +26,7 @@ namespace Yahel{
 						else{ // in View column
 							const auto iRow=__logicalPositionToRow__(caret.streamPosition);
 							const auto currRowStart=__firstByteInRowToLogicalPosition__(iRow);
-							if (caret.streamPosition==currRowStart) // about to move Caret "before" current line?
+							if (caret.streamPosition==currRowStart && caret.iViewHalfbyte==item.iFirstPlaceholder) // about to move Caret "before" current line?
 								caret.streamPosition=currRowStart-1, caret.iViewHalfbyte=item.patternLength; // move Caret to previous line
 							do{
 								if (--caret.iViewHalfbyte<0) // Caret into previous Item?
@@ -1111,7 +1111,7 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 					dc.PrintBkSpace(0);
 					dc.FlushPrintBuffer();
 					// : drawing the Record label if the just drawn Row is the Record's first Row
-					if (!isEof){ // yes, a new Record can potentially start at the Row
+					if (!isEof && IsColumnShown(TColumn::LABEL)){ // yes, a new Record can potentially start at the Row
 						WCHAR buf[80];
 						if (const LPCWSTR recordLabel=pStreamAdvisor->GetRecordLabelW( __firstByteInRowToLogicalPosition__(iRowA), buf, ARRAYSIZE(buf), param )){
 							RECT rc={ (charLayout.stream.z+2)*font.GetCharAvgWidth(), y, rcClip.right, rcClip.bottom };

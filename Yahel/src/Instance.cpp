@@ -401,6 +401,10 @@ namespace Yahel{
 			if (const auto err=newItem.SetRowLimits( TInterval<WORD>(nItemsInRowMin,nItemsInRowMax+1) ))
 				return err;
 		item=newItem;
+		if (caret.IsInStream())
+			caret.iViewHalfbyte=-item.iFirstPlaceholder;
+		else
+			caret.iViewHalfbyte=item.iFirstPlaceholder;
 		return ERROR_KOSHER;
 	}
 
@@ -565,16 +569,16 @@ namespace Yahel{
 		nStreamBytes=::atoi( newDef );
 		if (nStreamBytes<1 || std::min(STREAM_BYTES_IN_ROW_MAX,ITEM_STREAM_BYTES_MAX)<nStreamBytes)
 			return ERROR_ITEM_DEF_BYTE_COUNT;
-		for( iLastPlaceholder=-1; const char c=*++p; patternLength++ ){
+		for( iFirstPlaceholder=SCHAR_MAX,iLastPlaceholder=-1; const char c=*++p; patternLength++ ){
 			if (patternLength==ARRAYSIZE(pattern)) // would we overrun the buffer?
 				return ERROR_ITEM_DEF_PATTERN_TOO_LONG;
 			else if ('A'<=c && c<='Z') // upper Halfbyte Placeholder
 				SetPlaceholder( patternLength, c-'A', false );
 			else if ('a'<=c && c<='z') // lower Halfbyte Placeholder
 				SetPlaceholder( patternLength, c-'a', true );
-			else if (::StrChrA("<>\\~'\"",c)) // one of forbidden chars?
+			else if (::StrChrA("{}\\~'\"",c)) // one of forbidden chars?
 				return ERROR_ITEM_DEF_PATTERN_FORBIDDEN;
-			else if (::isprint(c)){ // literal to be printed exactly
+			else if (c>=' '){ // literal to be printed exactly
 				SetPrintableChar( patternLength, c );
 				continue;
 			}else
@@ -593,9 +597,7 @@ namespace Yahel{
 		//
 		if (!limits.IsValidNonempty()) // invalid or empty Interval
 			return ERROR_ITEM_COUNT_INVALID;
-		if (limits.a<1)
-			return ERROR_ITEM_COUNT_INVALID;
-		if (STREAM_BYTES_IN_ROW_MAX<limits.z*nStreamBytes)
+		if (limits.a<1 || STREAM_BYTES_IN_ROW_MAX<limits.a*nStreamBytes)
 			return ERROR_ITEM_COUNT_INVALID;
 		nInRow=( nInRowLimits=limits ).Clip(nInRow);
 		return ERROR_KOSHER;

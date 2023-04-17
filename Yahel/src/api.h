@@ -204,8 +204,9 @@ namespace Yahel
 			ADDRESS	=1,
 			VIEW	=2,
 			STREAM	=4,
+			LABEL	=8,
 			MINIMAL	= VIEW | STREAM,
-			ALL		= ADDRESS | MINIMAL
+			ALL		= ADDRESS | MINIMAL | LABEL
 		};
 
 		static LPCTSTR YAHEL_DECLSPEC WINAPI GetVersionString();
@@ -246,7 +247,7 @@ namespace Yahel
 		virtual int GetAddressColumnWidth() const=0;
 
 		// "View" column
-		virtual TError RedefineItem(LPCSTR newItemDef=nullptr,WORD nItemsInRowMin=1,WORD nItemsInRowMax=-1)=0;
+		virtual TError RedefineItem(LPCSTR newItemDef=nullptr,WORD nItemsInRowMin=1,WORD nItemsInRowMax=-2)=0;
 		virtual TError SetItemCountPerRow(WORD nItemsInRowMin=1,WORD nItemsInRowMax=-1)=0;
 
 		// "Stream" column
