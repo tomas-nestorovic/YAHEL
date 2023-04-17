@@ -422,11 +422,11 @@ namespace Stream
 			return nullptr;
 	}
 
-	LPCSTR IInstance::GetDefaultByteItemDefinition(){
-		return "1;Aa ";
+	LPCWSTR IInstance::GetDefaultByteItemDefinition(){
+		return L"1;Aa ";
 	}
 
-	bool IInstance::DefineItemUsingDefaultEnglishDialog(char *definitionBuffer,BYTE bufferCapacity,HWND hParent,HFONT hFont){
+	bool IInstance::DefineItemUsingDefaultEnglishDialog(PWCHAR definitionBuffer,BYTE bufferCapacity,HWND hParent,HFONT hFont){
 		//
 		// - the PatternBuffer must accommodate at least one char
 		static_assert( ITEM_STREAM_BYTES_MAX<=99, "" ); // must otherwise revise the below BufferCapacity
@@ -434,30 +434,30 @@ namespace Stream
 			return false;
 		// - defining the Dialog
 		class CItemDefinitionDialog sealed:public Utils::CYahelDialog{
-			const PCHAR definitionBuffer;
+			const PWCHAR definitionBuffer;
 			const BYTE bufferCapacity, patternLengthMax;
 			CInstance hexaEditor;
 			BYTE sampleStreamBytes[ITEM_STREAM_BYTES_MAX];
 			bool processNotifications; // notifications on user's interaction with Dialog
 
-			void AddPresetItem(LPCSTR name,LPCSTR pattern){
-				char buf[80];
-				::wsprintfA( buf, "%s  [%s]", name, pattern );
+			void AddPresetItem(LPCWSTR name,LPCWSTR pattern){
+				WCHAR buf[80];
+				::wsprintfW( buf, L"%s  [%s]", name, pattern );
 				const HWND hPresets=GetDlgItemHwnd(IDC_PRESETS);
-				ComboBox_SetItemData( hPresets, ComboBox_AddString(hPresets,buf), pattern );
+				ComboBox_SetItemData( hPresets, ::SendMessageW(hPresets,CB_ADDSTRING,0,(LPARAM)buf), pattern );
 			}
 			void ShowItem(){
 				const Utils::CVarTempReset<bool> pn0( processNotifications, false ); // don't recurrently trigger notifications
 				SetDlgItemInt( IDC_NUMBER, item.nStreamBytes );
-				char pattern[ARRAYSIZE(item.pattern)+1];
-				SetDlgItemText( IDC_PATTERN, item.GetDefinition(pattern) );
+				WCHAR pattern[ARRAYSIZE(item.pattern)+1];
+				SetDlgItemTextW( IDC_PATTERN, item.GetDefinition(pattern) );
 			}
 			bool InitDialog() override{
 				// Dialog initialization
 				// . Presets
-				AddPresetItem( "Byte", GetDefaultByteItemDefinition() );
-				AddPresetItem( "Word", "2;AaBb " );
-				AddPresetItem( "Custom", nullptr );
+				AddPresetItem( L"Byte", GetDefaultByteItemDefinition() );
+				AddPresetItem( L"Word", L"2;AaBb " );
+				AddPresetItem( L"Custom", nullptr );
 				// . labels
 				TCHAR buf[80];
 				GetDlgItemText( IDC_INFO1, buf, ARRAYSIZE(buf) );
@@ -477,7 +477,7 @@ namespace Stream
 			}
 			TError TrySaveDefinition(){
 				// attempts to redefine an Item from current inputs; returns a DWORD-encoded error
-				auto i=GetDlgItemText( IDC_NUMBER, definitionBuffer, bufferCapacity );
+				auto i=GetDlgItemTextW( IDC_NUMBER, definitionBuffer, bufferCapacity );
 				TError err=ERROR_KOSHER; // assumption
 				if (ITEM_STREAM_BYTES_MAX<i)
 					err=ERROR_ITEM_DEF_BYTE_COUNT;
@@ -485,7 +485,7 @@ namespace Stream
 					err=ERROR_ITEM_DEF_PATTERN_INSUFFICIENT_BUFFER;
 				else{
 					definitionBuffer[i++]=';';
-					GetDlgItemText( IDC_PATTERN, definitionBuffer+i, bufferCapacity-i-1 );
+					GetDlgItemTextW( IDC_PATTERN, definitionBuffer+i, bufferCapacity-i-1 );
 					err=item.Redefine(definitionBuffer);
 				}
 				if (EnableDlgItem( IDOK, !err ))
@@ -500,7 +500,7 @@ namespace Stream
 				const auto nItems=ComboBox_GetCount(hPresets);
 				if (TrySaveDefinition()==ERROR_KOSHER)
 					for( auto i=nItems; i>0; )
-						if (!::lstrcmpA( definitionBuffer, (LPCSTR)ComboBox_GetItemData(hPresets,--i) )){
+						if (!::lstrcmpW( definitionBuffer, (LPCWSTR)ComboBox_GetItemData(hPresets,--i) )){
 							ComboBox_SetCurSel( hPresets, i );
 							return;
 						}
@@ -517,7 +517,7 @@ namespace Stream
 					switch (wParam){
 						case MAKELONG(IDC_PRESETS,CBN_SELCHANGE):{
 							const HWND hPresets=GetDlgItemHwnd(IDC_PRESETS);
-							if (const LPCSTR def=(LPCSTR)ComboBox_GetItemData(hPresets,ComboBox_GetCurSel(hPresets))){ // one of Presets?
+							if (const LPCWSTR def=(LPCWSTR)ComboBox_GetItemData(hPresets,ComboBox_GetCurSel(hPresets))){ // one of Presets?
 								item.Redefine(def);
 								ShowItem();
 							}
@@ -544,7 +544,7 @@ namespace Stream
 		public:
 			CInstance::TItem item;
 
-			CItemDefinitionDialog(PCHAR definitionBuffer,BYTE bufferCapacity,HFONT hFont)
+			CItemDefinitionDialog(PWCHAR definitionBuffer,BYTE bufferCapacity,HFONT hFont)
 				// ctor
 				// . parsing the input Item Pattern
 				: definitionBuffer(definitionBuffer) , bufferCapacity(std::min<BYTE>(bufferCapacity,ARRAYSIZE(item.pattern)))

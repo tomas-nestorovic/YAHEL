@@ -391,7 +391,7 @@ namespace Yahel{
 
 
 
-	TError CInstance::RedefineItem(LPCSTR newItemDef,WORD nItemsInRowMin,WORD nItemsInRowMax){
+	TError CInstance::RedefineItem(LPCWSTR newItemDef,WORD nItemsInRowMin,WORD nItemsInRowMax){
 		//
 		if (!newItemDef) // want the default View?
 			newItemDef=GetDefaultByteItemDefinition();
@@ -560,16 +560,16 @@ namespace Yahel{
 
 
 
-	TError CInstance::TItem::Redefine(LPCSTR newDef){
+	TError CInstance::TItem::Redefine(LPCWSTR newDef){
 		//
 		::ZeroMemory( this, sizeof(*this) );
-		LPCSTR p=::strchr( newDef, ';' );
+		LPCWSTR p=::StrChrW( newDef, ';' );
 		if (!p)
 			return ERROR_ITEM_DEF_BYTE_COUNT_UNKNOWN;
-		nStreamBytes=::atoi( newDef );
+		nStreamBytes=::_wtoi( newDef );
 		if (nStreamBytes<1 || std::min(STREAM_BYTES_IN_ROW_MAX,ITEM_STREAM_BYTES_MAX)<nStreamBytes)
 			return ERROR_ITEM_DEF_BYTE_COUNT;
-		for( iFirstPlaceholder=SCHAR_MAX,iLastPlaceholder=-1; const char c=*++p; patternLength++ ){
+		for( iFirstPlaceholder=SCHAR_MAX,iLastPlaceholder=-1; const WCHAR c=*++p; patternLength++ ){
 			if (patternLength==ARRAYSIZE(pattern)) // would we overrun the buffer?
 				return ERROR_ITEM_DEF_PATTERN_TOO_LONG;
 			else if ('A'<=c && c<='Z') // upper Halfbyte Placeholder
@@ -603,12 +603,12 @@ namespace Yahel{
 		return ERROR_KOSHER;
 	}
 
-	LPCSTR CInstance::TItem::GetDefinition(PCHAR def) const{
+	LPCWSTR CInstance::TItem::GetDefinition(PWCHAR def) const{
 		// assuming this Item is valid, composes its string Definition, and returns pointer to the Pattern in the Definition
-		def+=::wsprintfA( def, "%d;", nStreamBytes );
-		const LPCSTR patternBegin=def;
+		def+=::wsprintfW( def, L"%d;", nStreamBytes );
+		const LPCWSTR patternBegin=def;
 		for( BYTE i=0; i<patternLength; i++ )
-			if (const char c=GetPrintableChar(i))
+			if (const WCHAR c=GetPrintableChar(i))
 				*def++=c;
 			else
 				*def++= 'A'+GetByteIndex(i) + ('a'-'A')*IsLowerHalfbyte(i);

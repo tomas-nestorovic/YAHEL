@@ -215,8 +215,8 @@ namespace Yahel
 		static LPCWSTR YAHEL_DECLSPEC WINAPI GetBaseClassNameW(HINSTANCE hInstance);
 		static UINT YAHEL_DECLSPEC WINAPI GetClipboardFormat();
 		static IInstance YAHEL_DECLSPEC * WINAPI Create(HINSTANCE hInstance,POwner pOwner,PVOID lpParam=0,HFONT hFont=0);
-		static LPCSTR YAHEL_DECLSPEC WINAPI GetDefaultByteItemDefinition();
-		static bool YAHEL_DECLSPEC WINAPI DefineItemUsingDefaultEnglishDialog(char *definitionBuffer,BYTE bufferCapacity,HWND hParent=0,HFONT hFont=0);
+		static LPCWSTR YAHEL_DECLSPEC WINAPI GetDefaultByteItemDefinition();
+		static bool YAHEL_DECLSPEC WINAPI DefineItemUsingDefaultEnglishDialog(PWCHAR definitionBuffer,BYTE bufferCapacity,HWND hParent=0,HFONT hFont=0);
 
 		// window manipulation (destroy by simply calling ::DestroyWindow)
 		virtual bool Attach(HWND hYahel)=0;
@@ -247,7 +247,7 @@ namespace Yahel
 		virtual int GetAddressColumnWidth() const=0;
 
 		// "View" column
-		virtual TError RedefineItem(LPCSTR newItemDef=nullptr,WORD nItemsInRowMin=1,WORD nItemsInRowMax=-2)=0;
+		virtual TError RedefineItem(LPCWSTR newItemDef=nullptr,WORD nItemsInRowMin=1,WORD nItemsInRowMax=-2)=0;
 		virtual TError SetItemCountPerRow(WORD nItemsInRowMin=1,WORD nItemsInRowMax=-1)=0;
 
 		// "Stream" column

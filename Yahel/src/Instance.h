@@ -103,17 +103,17 @@ namespace Yahel{
 			char patternLength;
 			char iFirstPlaceholder, iLastPlaceholder; // inclusive!
 			struct{
-				char printableChar; // '\0' = a placeholder for a Halfbyte
+				WCHAR printableChar; // '\0' = a placeholder for a Halfbyte
 				BYTE iStreamHalfByte;
 			} pattern[80]; // e.g. "Hh ABba* 4CcDdEe" where {a...z} and {A...Z} are lower/upper halfbyte references, and the rest characters to print out
 			WORD nInRow; // current # of Items in a full Row
 			TInterval<WORD> nInRowLimits;
 
-			TError Redefine(LPCSTR newDef);
+			TError Redefine(LPCWSTR newDef);
 			TError SetRowLimits(const TInterval<WORD> limits);
-			LPCSTR GetDefinition(PCHAR def) const;
-			inline char GetPrintableChar(BYTE iPattern) const{ return pattern[iPattern].printableChar; }
-			inline void SetPrintableChar(BYTE iPattern,char c){ pattern[iPattern].printableChar=c; }
+			LPCWSTR GetDefinition(PWCHAR def) const;
+			inline WCHAR GetPrintableChar(BYTE iPattern) const{ return pattern[iPattern].printableChar; }
+			inline void SetPrintableChar(BYTE iPattern,WCHAR c){ pattern[iPattern].printableChar=c; }
 			inline bool IsPlaceholder(BYTE iPattern) const{ return !GetPrintableChar(iPattern); }
 			inline void SetPlaceholder(BYTE iPattern,BYTE iByte,bool lowerHalfByte){ pattern[iPattern].iStreamHalfByte=iByte<<1|(BYTE)lowerHalfByte; }
 			inline BYTE GetByteIndex(BYTE iPattern) const{ return pattern[iPattern].iStreamHalfByte>>1; }
@@ -210,7 +210,7 @@ namespace Yahel{
 		int GetAddressColumnWidth() const override;
 
 		// "View" column
-		TError RedefineItem(LPCSTR newItemDef=nullptr,WORD nItemsInRowMin=1,WORD nItemsInRowMax=-1) override;
+		TError RedefineItem(LPCWSTR newItemDef=nullptr,WORD nItemsInRowMin=1,WORD nItemsInRowMax=-1) override;
 		TError SetItemCountPerRow(WORD nItemsInRowMin=1,WORD nItemsInRowMax=-1) override;
 
 		// "Stream" column
