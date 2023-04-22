@@ -45,6 +45,7 @@ namespace Yahel{
 
 
 	typedef class CInstance:public IInstance, public IOwner, TState{
+		static LRESULT WINAPI WndProc(HWND hYahel,UINT msg,WPARAM wParam,LPARAM lParam);
 	protected:
 		static bool ShiftPressedAsync();
 

@@ -168,9 +168,12 @@ namespace Yahel{
 
 	static WNDPROC baseClassWndProc;
 
-	static LRESULT WINAPI WndProc(HWND hYahel,UINT msg,WPARAM wParam,LPARAM lParam){
+	LRESULT WINAPI CInstance::WndProc(HWND hYahel,UINT msg,WPARAM wParam,LPARAM lParam){
 		// window procedure
 		CInstance *const instance=(CInstance *)::GetWindowLong(hYahel,GWL_USERDATA);
+		MSG msgOrg={ hYahel, msg, wParam, lParam };
+		if (::TranslateAccelerator( hYahel, instance->hDefaultAccelerators, &msgOrg ))
+			return 0;
 		LRESULT result;
 		if (instance->ProcessMessage( msg, wParam, lParam, result ))
 			return result;

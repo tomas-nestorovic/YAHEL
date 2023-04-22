@@ -363,7 +363,7 @@ editDelete:				if (!editable) return true; // can't edit content of a disabled w
 				if (caret.IsInStream()) // here Stream mode; hexa-View mode handled in WM_KEYDOWN
 					// Stream modification
 					if (::GetAsyncKeyState(VK_CONTROL)>=0 && ::isprint(wParam)) // Ctrl not pressed, thus character printable
-						if (caret.streamPosition+sizeof(BYTE)<logicalSizeLimits.z){
+						if (caret.streamPosition+(TPosition)sizeof(BYTE)<logicalSizeLimits.z){
 							f.Seek( caret.streamPosition );
 							f.Write( &wParam, sizeof(BYTE), IgnoreIoResult );
 							caret.streamSelectionA = caret.streamPosition+=sizeof(BYTE);
