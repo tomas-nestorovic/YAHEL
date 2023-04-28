@@ -70,8 +70,6 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 #define COLOR_YELLOW 0xffff
 #define COLOR_RED	0xff
 
-extern void WINAPI AfxThrowInvalidArgException();
-
 #ifdef RELEASE_MFC42
 	#if _MSC_VER<=1600
 		#define noexcept
