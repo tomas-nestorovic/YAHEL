@@ -63,6 +63,7 @@
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>C:\WINDDK\inc\atl30;$(IncludePath)</IncludePath>
     <GenerateManifest>false</GenerateManifest>
+    <LibraryPath>D:\puvodni\zaloha\Program Files\Visual Studio 6\VC98\Lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -130,7 +131,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <IgnoreSpecificDefaultLibraries>atlthunk.lib</IgnoreSpecificDefaultLibraries>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
-      <AdditionalDependencies>shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(WindowsSdkDir)Lib\shlwapi.lib;$(WindowsSdkDir)Lib\shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EnableUAC>false</EnableUAC>
     </Link>
   </ItemDefinitionGroup>
