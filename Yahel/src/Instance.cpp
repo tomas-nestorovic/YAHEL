@@ -693,6 +693,8 @@ namespace Yahel{
 		);
 		TPosition currRecordStart, currRecordLength=1;
 		pStreamAdvisor->GetRecordInfo( caret.streamPosition, &currRecordStart, &currRecordLength, nullptr );
+		if (currRecordLength<1)
+			currRecordLength=1;
 		const auto d=div( caret.streamPosition-currRecordStart, currRecordLength );
 		const auto iScrollY=GetVertScrollPos();
 		//if (d.quot>=iScrollY){ // commented out as always guaranteed
