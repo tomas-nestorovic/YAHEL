@@ -121,6 +121,14 @@ namespace Utils{
 		UINT_PTR DoModal(UINT nIDTemplate,HWND hParent=0);
 	};
 
+	class CViewportOrg{
+		const HDC dc;
+		POINT pt0;
+	public:
+		CViewportOrg(HDC dc,TRow r,TCol c,const CYahelFont &font);
+		~CViewportOrg();
+	};
+
 	class CSingleNumberDialog sealed:public CYahelDialog{
 		const LPCTSTR caption,label;
 		const TPosInterval range;

@@ -127,8 +127,9 @@ namespace Yahel{
 		TRow __logicalPositionToRow__(TPosition logPos) const;
 		TPosition __logicalPositionFromPoint__(const POINT &pt,PCHAR piHalfByte=nullptr) const;
 		TRow __scrollToRow__(TRow row);
+		TCol ScrollToColumn(TCol col);
 		void ScrollToCaretAsync();
-		void __refreshVertically__();
+		void RefreshScrollInfo();
 		void __refreshCaretDisplay__() const;
 		void ShowMessage(TMsg id) const;
 		void SendEditNotification(WORD en) const;
@@ -139,6 +140,7 @@ namespace Yahel{
 		inline HWND SetFocus() const{ assert(hWnd); return ::SetFocus(hWnd); }
 		inline void ShowCaret() const{ assert(hWnd); ::ShowCaret(hWnd); }
 		inline void Invalidate(bool erase=true) const{ assert(hWnd); ::InvalidateRect(hWnd,nullptr,erase); }
+		inline TCol GetHorzScrollPos() const{ assert(hWnd); return ::GetScrollPos(hWnd,SB_HORZ); }
 		inline TRow GetVertScrollPos() const{ assert(hWnd); return ::GetScrollPos(hWnd,SB_VERT); }
 		inline LRESULT SendMessage(UINT msg,WPARAM wParam=0,LPARAM lParam=0) const{ assert(hWnd); return ::SendMessage(hWnd,msg,wParam,lParam); }
 		inline bool PostMessage(UINT msg,WPARAM wParam=0,LPARAM lParam=0) const{ assert(hWnd); return ::PostMessage(hWnd,msg,wParam,lParam)!=FALSE; }

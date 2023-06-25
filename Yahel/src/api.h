@@ -62,7 +62,7 @@ namespace Yahel
 		}
 	};
 
-	typedef int TRow;
+	typedef int TRow,TCol;
 	typedef long TPosition,*PPosition;
 	typedef TInterval<TPosition> TPosInterval;
 

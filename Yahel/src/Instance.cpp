@@ -193,7 +193,7 @@ namespace Yahel{
 		if (hWnd){
 	{		EXCLUSIVELY_LOCK_THIS_OBJECT();
 			if (!mouseInNcArea) // when NOT in the non-client area (e.g. over a scrollbar), repainting normally
-				const_cast<PInstance>(this)->__refreshVertically__();
+				const_cast<PInstance>(this)->RefreshScrollInfo();
 	}		RECT rc=GetClientRect();
 			rc.top=HEADER_HEIGHT;
 			::InvalidateRect( hWnd, &rc, TRUE );
@@ -277,7 +277,7 @@ namespace Yahel{
 		SetStreamLogicalSizeLimits( fileLogicalSizeLimits );
 		Update( f, sa );
 		if (::IsWindow(hWnd)){ // may be window-less if the owner is window-less
-			__refreshVertically__();
+			RefreshScrollInfo();
 			Invalidate(FALSE);
 		}
 		return true;
@@ -308,7 +308,7 @@ namespace Yahel{
 			this->logicalSizeLimits = update.logicalSizeLimits = limits; // setting also Update just in case the cursor is in non-client area
 			if (::IsWindow(hWnd)) // may be window-less if the owner is window-less
 				if (f)
-					__refreshVertically__();
+					RefreshScrollInfo();
 		}
 		return true;
 	}
@@ -335,7 +335,7 @@ namespace Yahel{
 			// otherwise, updating the values normally
 			this->logicalSize = update.logicalSize = logicalSize; // setting also Update just in case the cursor is in non-client area
 			if (::IsWindow(hWnd)) // may be window-less if the owner is window-less
-				__refreshVertically__();
+				RefreshScrollInfo();
 		}
 	}
 
@@ -371,7 +371,7 @@ namespace Yahel{
 		// independently from Caret, displays specified LogicalPosition
 		if (moveAlsoCaret)
 			caret.streamSelectionA = caret.streamPosition = logicalPos;
-		__refreshVertically__();
+		RefreshScrollInfo();
 		__scrollToRow__( __logicalPositionToRow__(logicalPos) );
 	}
 
@@ -650,34 +650,36 @@ namespace Yahel{
 		return GetVertScrollPos();
 	}
 
-	/*int CInstance::__scrollToChar__(int c){
-		// scrolls the HexaEditor horizontally so that the specified Char is shown as the first one from top; returns the Row number which it has been really scrolled to
-		SCROLLINFO si={ sizeof(si) };
-		GetScrollInfo( SB_HORZ, &si, SIF_POS|SIF_RANGE|SIF_PAGE ); // getting 32-bit position
-		c=std::min( std::max(c,0), std::max<int>(si.nMax-si.nPage,0) );
-		if (const int dc=si.nPos-c){
-			RECT rcScroll;
-				GetClientRect(&rcScroll);
-				rcScroll.left=GetLayout().address.z;
-			ScrollWindow( dc*font.GetCharAvgWidth(), 0, nullptr, &rcScroll );
-			SetScrollPos(SB_HORZ,c,TRUE); // True = redrawing the scroll-bar, not HexaEditor's canvas!
+	TCol CInstance::ScrollToColumn(TCol col){
+		// scrolls the HexaEditor so that the specified Column is shown as the first one from left; returns the Column number which it has been really scrolled to
+		SCROLLINFO si={ sizeof(si), SIF_POS|SIF_PAGE|SIF_RANGE|SIF_TRACKPOS };
+		::GetScrollInfo( hWnd, SB_HORZ, &si ); // getting 32-bit position
+		col=std::min( std::max(col,0), std::max<TCol>(si.nMax+1-si.nPage,0) );
+		if (const auto dc=si.nPos-col){
+			RECT rcScroll=GetClientRect();
+				rcScroll.left=(addrLength+1)*font.GetCharAvgWidth();
+			::ScrollWindow( hWnd, dc*font.GetCharAvgWidth(), 0, nullptr, &rcScroll );
+			::SetScrollPos( hWnd, SB_HORZ, col, TRUE ); // True = redrawing the scroll-bar, not HexaEditor's canvas!
 			SendMessage( WM_HSCROLL, SB_THUMBPOSITION ); // letting descendants of HexaEditor know that a scrolling occured
 			::DestroyCaret();
 		}
-		return GetScrollPos(SB_HORZ);
-	}*/
+		return GetHorzScrollPos();
+	}
 
-	void CInstance::__refreshVertically__(){
-		// refreshes all parameters that relate to vertical axis
+	void CInstance::RefreshScrollInfo(){
+		// refreshes all parameters that relate scrolling content horizontally or vertically
 		if (!f)
 			return;
 		// - determining the total number of Rows
 	{	EXCLUSIVELY_LOCK_THIS_OBJECT();
 		nLogicalRows=__logicalPositionToRow__( std::max(f.GetLength(),logicalSize) );
-	}	// - setting the scrolling dimensions
+	}	// - setting vertical scroll parameters
 		const RECT r=GetClientRect();
 		nRowsDisplayed=std::max( 0L, (r.bottom-r.top)/font.GetCharHeight()-HEADER_LINES_COUNT );
 		nRowsOnPage=std::max( 0, nRowsDisplayed-1 );
+		// - setting horizontal scroll parameters
+		//nop (in window procedure)
+		// - paint both scrollbars
 		if (::GetCurrentThreadId()==::GetWindowThreadProcessId(hWnd,nullptr)) // do we own the HexaEditor control?
 			SendMessage( WM_HEXA_PAINTSCROLLBARS );
 		else
@@ -707,6 +709,7 @@ namespace Yahel{
 				pos.x+=GetCharLayout().stream.a;
 			else // Caret in the View area
 				pos.x=GetCharLayout().view.a+pos.x/item.nStreamBytes*item.patternLength+caret.iViewHalfbyte;
+			pos.x-=GetHorzScrollPos();
 			pos.x*=font.GetCharAvgWidth();
 			pos.y+=!editable*(font.GetCharHeight()-CARET_DISABLED_HEIGHT);
 			::SetCaretPos( pos.x, pos.y );
@@ -719,7 +722,7 @@ namespace Yahel{
 
 	TPosition CInstance::__logicalPositionFromPoint__(const POINT &pt,PCHAR piPlaceholder) const{
 		// determines and returns the LogicalPosition pointed to by the input Point (or -1 if not pointing at a particular Byte in both the View and Stream columns)
-		int x=pt.x/font.GetCharAvgWidth()-(addrLength+ADDRESS_SPACE_LENGTH);
+		int x=pt.x/font.GetCharAvgWidth()-(addrLength+ADDRESS_SPACE_LENGTH)+GetHorzScrollPos();
 		const TRow r=pt.y/font.GetCharHeight()-HEADER_LINES_COUNT+GetVertScrollPos();
 		const TPosition currLineStart=__firstByteInRowToLogicalPosition__(r);
 		const int nCurrLineBytes=__firstByteInRowToLogicalPosition__(r+1)-currLineStart, currLineLastByte=nCurrLineBytes-1;

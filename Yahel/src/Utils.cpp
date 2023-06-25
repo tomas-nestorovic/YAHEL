@@ -17,6 +17,18 @@ namespace Utils{
 
 
 
+	CViewportOrg::CViewportOrg(HDC dc,TRow r,TCol c,const CYahelFont &font)
+		: dc(dc) {
+		::SetViewportOrgEx( dc, c*font.GetCharAvgWidth(), r*font.GetCharHeight(), &pt0 );
+	}
+
+	CViewportOrg::~CViewportOrg(){
+		::SetViewportOrgEx( dc, pt0.x, pt0.y, nullptr );
+	}
+
+
+
+
 	struct TLogPen:public LOGPEN{
 		TLogPen(BYTE thickness,COLORREF color){
 			::ZeroMemory( this, sizeof(*this) );

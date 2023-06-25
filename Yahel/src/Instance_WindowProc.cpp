@@ -74,10 +74,25 @@ caretCorrectlyMoveTo:	// . adjusting the Caret's Position (aligning towards the 
 caretRefresh:			// refresh of Caret display
 						// . avoid visual artifacts by hiding the Caret first
 						::HideCaret(hWnd);
-						// . scrolling if Caret has been moved to an invisible part of the File content
+						// . scrolling vertically if Caret has been moved to an invisible part of the File content
 						const TRow iRow=__logicalPositionToRow__(caret.streamPosition), iScrollY=GetVertScrollPos();
 						if (iRow<iScrollY) __scrollToRow__(iRow);
 						else if (iRow>=iScrollY+nRowsOnPage) __scrollToRow__(iRow-nRowsOnPage+1);
+						// . scrolling horizontally if Caret has been moved to an invisible part of the File content
+						const auto &&charLayout=GetCharLayout();
+						const auto currRowStart=__firstByteInRowToLogicalPosition__(iRow);
+						TCol iCol;
+						if (caret.IsInStream()) // in Stream column
+							iCol=charLayout.stream.a+caret.streamPosition-currRowStart;
+						else // in View column
+							iCol=charLayout.view.a+(caret.streamPosition-currRowStart)/item.nStreamBytes*item.patternLength+caret.iViewHalfbyte;
+						iCol-=charLayout.address.z+1;
+						SCROLLINFO si={ sizeof(si), SIF_POS|SIF_PAGE|SIF_RANGE|SIF_TRACKPOS };
+						::GetScrollInfo( hWnd, SB_HORZ, &si ); // getting 32-bit position
+						if (iCol<si.nPos)
+							ScrollToColumn(iCol);
+						else if (iCol>=si.nPos+si.nPage)
+							ScrollToColumn(iCol-si.nPage+1);
 						// . displaying the Caret
 						if (::GetFocus()==hWnd){
 							__refreshCaretDisplay__();
@@ -712,20 +727,20 @@ leftMouseDragged:
 					__scrollToRow__( GetVertScrollPos()-zDelta*nLinesToScroll/WHEEL_DELTA );
 				return true;
 			}
-			/*case WM_HSCROLL:{
+			case WM_HSCROLL:{
 				// scrolling horizontally
 				// . determining the char to scroll to
-				SCROLLINFO si={ sizeof(si) };
-				GetScrollInfo( SB_HORZ, &si, SIF_POS|SIF_RANGE|SIF_TRACKPOS ); // getting 32-bit position
-				int c=si.nPos;
+				SCROLLINFO si={ sizeof(si), SIF_POS|SIF_PAGE|SIF_RANGE|SIF_TRACKPOS };
+				::GetScrollInfo( hWnd, SB_HORZ, &si ); // getting 32-bit position
+				TCol c=si.nPos;
 				switch (LOWORD(wParam)){
-					case SB_PAGEUP:		// clicked into the gap above "thumb"
-						c-=nRowsOnPage;	break;
-					case SB_PAGEDOWN:	// clicked into the gap below "thumb"
-						c+=nRowsOnPage; break;
-					case SB_LINEUP:		// clicked on arrow up
+					case SB_PAGELEFT:	// clicked into the gap left to "thumb"
+						c-=si.nPage; break;
+					case SB_PAGERIGHT:	// clicked into the gap right to "thumb"
+						c+=si.nPage; break;
+					case SB_LINELEFT:	// clicked on arrow left
 						c--; break;
-					case SB_LINEDOWN:	// clicked on arrow down
+					case SB_LINERIGHT:	// clicked on arrow right
 						c++; break;
 					case SB_THUMBPOSITION: // "thumb" released
 						break;
@@ -733,9 +748,9 @@ leftMouseDragged:
 						c = si.nTrackPos;	break;
 				}
 				// . redrawing HexaEditor's client and non-client areas
-				RepaintData();
-				break;
-			}*/
+				ScrollToColumn(c);
+				return SendMessage( WM_NCMOUSEMOVE ); // the "thumb" might have been released outside the scrollbar area
+			}
 			case WM_VSCROLL:{
 				// scrolling vertically
 				// . determining the Row to scroll to
@@ -790,7 +805,7 @@ leftMouseDragged:
 					/
 					( IsColumnShown(TColumn::VIEW)*item.patternLength + IsColumnShown(TColumn::STREAM)*item.nStreamBytes )
 				);
-				__refreshVertically__(); // to guarantee that the actual data is always drawn
+				RefreshScrollInfo(); // to guarantee that the actual data is always drawn
 				SendMessage( WM_KEYDOWN, VK_KANJI ); // scroll to refreshed Caret
 				break;
 			case WM_ERASEBKGND:
@@ -845,7 +860,7 @@ leftMouseDragged:
 					}
 
 					inline operator HDC() const{ return handle; }
-					inline const RECT GetPaintRect() const{ return ps.rcPaint; }
+					inline const RECT &GetPaintRect() const{ return ps.rcPaint; }
 
 					void SetPrintRect(RECT &rc){
 						assert( !nCharsBuffered ); // call FlushPrintBuffer first!
@@ -920,212 +935,222 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 						if (currEmphasisColor!=COLOR_WHITE || (currContentFlags&Selected)!=0) // front color is irrelevant, what counts is only the background
 							SetContentPrintState( currContentFlags&~Selected, COLOR_WHITE );
 						if (!n)
-							n=(GetPaintRect().right-pRect->left)/he.font.GetCharAvgWidth()+1 - nCharsBuffered;
+							n=(GetPaintRect().right-pRect->left)/he.font.GetCharAvgWidth()+1+he.GetHorzScrollPos() - nCharsBuffered;
 						while (n-->0)
 							PrintChar(' ');
 					}
 				} dc(*this);
-				// . drawing Header
+				// . determining the visible part of the File content
+				const TRow iRowFirstToPaint=std::max( dc.GetPaintRect().top/font.GetCharHeight()-HEADER_LINES_COUNT, 0L );
+				const TRow iRowA= GetVertScrollPos() + iRowFirstToPaint;
+				const TRow iRowLastToPaint= GetVertScrollPos() + dc.GetPaintRect().bottom/font.GetCharHeight() + 1;
+				const TRow iRowZ=std::min( std::min(nLogicalRows,iRowLastToPaint), GetVertScrollPos()+nRowsOnPage );
+				// . drawing Address column
+				static constexpr RECT FullClientRect={ 0, 0, USHRT_MAX, USHRT_MAX };
+				const RECT singleColumnRect={ 0, 0, font.GetCharAvgWidth(), USHRT_MAX };
+				const RECT singleRowRect={ 0, 0, USHRT_MAX, font.GetCharHeight() };
+				if (addrLength){
+					WCHAR buf[1600],*p=buf;
+					for( TRow r=iRowA; r<=iRowZ; r++ ){
+						const auto address=__firstByteInRowToLogicalPosition__(r);
+						p+=::wsprintfW( p, ADDRESS_FORMAT L"\r\n", HIWORD(address), LOWORD(address) );
+					}
+					const RECT rc={ 0, 0, (ADDRESS_FORMAT_LENGTH+1)*font.GetCharAvgWidth(), HEADER_LINES_COUNT*font.GetCharHeight() };
+					::FillRect( dc, &rc, dc.BtnFaceBrush );
+			{		const Utils::CViewportOrg viewportOrg1( dc, HEADER_LINES_COUNT+iRowFirstToPaint, 0, font );
+					dc.SetContentPrintState( CHexaPaintDC::Normal, ::GetSysColor(COLOR_BTNFACE) );
+					::DrawTextW( dc, buf,p-buf, (LPRECT)&FullClientRect, DT_LEFT|DT_TOP );
+					const Utils::CViewportOrg viewportOrg2( dc, HEADER_LINES_COUNT, ADDRESS_FORMAT_LENGTH, font );
+					::FillRect( dc, &singleColumnRect, Utils::CYahelBrush::White );
+			}		::ExcludeClipRect( dc, 0, 0, rc.right, USHRT_MAX );
+				}
+				// . drawing Header row
+				const auto iHorzScroll=GetHorzScrollPos();
 				const char patternLength=std::max( ITEM_PATTERN_LENGTH_MIN, item.patternLength );
 				const int itemWidth=patternLength*font.GetCharAvgWidth();
-				const auto charLayout=GetCharLayout();
-				RECT rcClip=GetClientRect();
-					rcClip.top=dc.GetPaintRect().top, rcClip.bottom=dc.GetPaintRect().bottom;
-				if (rcClip.top<HEADER_HEIGHT){ // Header drawn only if its region invalid
-					RECT rcHeader={ 0, 0, rcClip.right, HEADER_HEIGHT };
-					::FillRect( dc, &rcHeader, dc.BtnFaceBrush );
-					if (IsColumnShown(TColumn::VIEW)){
-						TCHAR buf[16];
-						dc.SetContentPrintState( CHexaPaintDC::Normal, ::GetSysColor(COLOR_BTNFACE) );
-						rcHeader.left=charLayout.view.a*font.GetCharAvgWidth();
-						for( WORD n=0; n<item.nInRow&&rcHeader.left<rcHeader.right; rcHeader.left+=itemWidth )
-							::DrawText( dc, buf, ::wsprintf(buf,_T("%02X"),n++*item.nStreamBytes), &rcHeader, DT_LEFT|DT_TOP );
-					}
+				const auto &&charLayout=GetCharLayout();
+				if (HEADER_LINES_COUNT){
+					const Utils::CViewportOrg viewportOrg( dc, 0, ADDRESS_FORMAT_LENGTH+1-iHorzScroll, font );
+					::FillRect( dc, &singleRowRect, dc.BtnFaceBrush );
+					dc.SetContentPrintState( CHexaPaintDC::Normal, ::GetSysColor(COLOR_BTNFACE) );
+					TCHAR buf[16];
+					RECT rcHeader=singleRowRect;
+					for( WORD n=0; n<item.nInRow; rcHeader.left+=itemWidth )
+						::DrawText( dc, buf, ::wsprintf(buf,_T("%02X"),n++*item.nStreamBytes), &rcHeader, DT_LEFT|DT_TOP );
 				}
-				// . determining the visible part of the File content
-				const TRow iRowFirstToPaint=std::max( (std::max(rcClip.top,dc.GetPaintRect().top)-HEADER_HEIGHT)/font.GetCharHeight(), 0L );
-				TRow iRowA= GetVertScrollPos() + iRowFirstToPaint;
-				const TRow iRowLastToPaint= GetVertScrollPos() + std::min(rcClip.bottom,dc.GetPaintRect().bottom)/font.GetCharHeight() + 1;
-				const TRow iRowZ=std::min( std::min(nLogicalRows,iRowLastToPaint), iRowA+nRowsOnPage );
-				// . drawing Addresses and data (both View and Stream parts)
-				auto address=__firstByteInRowToLogicalPosition__(iRowA);
-				auto y=HEADER_HEIGHT+iRowFirstToPaint*font.GetCharHeight();
-				const auto selection=caret.GetSelectionAsc();
-				auto itEmp=emphases.lower_bound( TEmphasis(address,0) );
-				if (itEmp!=emphases.begin() && address<itEmp->a) // potentially skipped a relevant Emphasis? (e.g. at Address 48 we have skipped the Emphasis <42;70> by discovering the next Emphasis <72;80>)
-					itEmp--;
-				f.Seek( address );
-				for( WCHAR buf[16]; iRowA<=iRowZ; iRowA++,y+=font.GetCharHeight() ){
-					RECT rcRow={ 0, y, rcClip.right, y+font.GetCharHeight() };
-					while (itEmp->z<address) itEmp++; // choosing the first visible Emphasis
-					// : address
-					dc.SetPrintRect(rcRow);
-					if (addrLength){
-						dc.SetContentPrintState( CHexaPaintDC::Normal, ::GetSysColor(COLOR_BTNFACE) );
-						dc.PrintChars(
-							buf,
-							::wsprintfW( buf, ADDRESS_FORMAT, HIWORD(address), LOWORD(address) )
-						);
-					}
-					dc.PrintBkSpace( ADDRESS_SPACE_LENGTH );
-					// : File content
-					const bool isEof=f.GetPosition()==f.GetLength();
-					auto nBytesExpected=std::min( __firstByteInRowToLogicalPosition__(iRowA+1), f.GetLength() )-address;
-					bool dataReady=false; // assumption
-					pStreamAdvisor->GetRecordInfo( address, nullptr, nullptr, &dataReady );
-					if (dataReady){
-						// Record's data are known (there are some, some with error, or none)
-						BYTE bytes[STREAM_BYTES_IN_ROW_MAX]; TPosition nBytesRead=0;
-						enum:BYTE{ Good, Bad, Fuzzy } byteStates[STREAM_BYTES_IN_ROW_MAX];
-						while (const auto nMissing=nBytesExpected-nBytesRead){
-							HRESULT hIoResult;
-							const auto nNewBytesRead=f.Read( bytes+nBytesRead, nMissing, hIoResult );
-							if (FAILED(hIoResult)) // no Bytes are available
-								break;
-							if (nNewBytesRead>0){ // some more data read - Good or Bad
-								::memset( byteStates+nBytesRead, hIoResult!=S_OK, nNewBytesRead );
-								nBytesRead+=nNewBytesRead;
-							}else if (f.GetPosition()<f.GetLength()){ // no data read - probably because none could have been determined (e.g. fuzzy bits)
-								byteStates[nBytesRead++]=Fuzzy;
-								f.Seek( 1, STREAM_SEEK_CUR );
-							}else{
-								nBytesExpected=nBytesRead;
-								break;
+				// . drawing View and Stream columns
+				RECT rcContent=FullClientRect;
+				if (IsColumnShown(TColumn::VIEW) || IsColumnShown(TColumn::STREAM)){
+					dc.SetPrintRect(rcContent);
+					const Utils::CViewportOrg viewportOrg( dc, HEADER_LINES_COUNT+iRowFirstToPaint, ADDRESS_FORMAT_LENGTH+1-iHorzScroll, font );
+					auto address=__firstByteInRowToLogicalPosition__(iRowA);
+					const auto &&selection=caret.GetSelectionAsc();
+					auto itEmp=emphases.lower_bound( TEmphasis(address,0) );
+					if (itEmp!=emphases.begin() && address<itEmp->a) // potentially skipped a relevant Emphasis? (e.g. at Address 48 we have skipped the Emphasis <42;70> by discovering the next Emphasis <72;80>)
+						itEmp--;
+					f.Seek( address );
+					WCHAR buf[16];
+					for( TRow r=iRowA; r<=iRowZ; r++,rcContent.top+=font.GetCharHeight() ){
+						rcContent.left=0;
+						while (itEmp->z<address) itEmp++; // choosing the first visible Emphasis
+						// : File content
+						const bool isEof=f.GetPosition()==f.GetLength();
+						auto nBytesExpected=std::min( __firstByteInRowToLogicalPosition__(r+1), f.GetLength() )-address;
+						bool dataReady=false; // assumption
+						pStreamAdvisor->GetRecordInfo( address, nullptr, nullptr, &dataReady );
+						if (dataReady){
+							// Record's data are known (there are some, some with error, or none)
+							BYTE bytes[STREAM_BYTES_IN_ROW_MAX]; TPosition nBytesRead=0;
+							enum:BYTE{ Good, Bad, Fuzzy } byteStates[STREAM_BYTES_IN_ROW_MAX];
+							while (const auto nMissing=nBytesExpected-nBytesRead){
+								HRESULT hIoResult;
+								const auto nNewBytesRead=f.Read( bytes+nBytesRead, nMissing, hIoResult );
+								if (FAILED(hIoResult)) // no Bytes are available
+									break;
+								if (nNewBytesRead>0){ // some more data read - Good or Bad
+									::memset( byteStates+nBytesRead, hIoResult!=S_OK, nNewBytesRead );
+									nBytesRead+=nNewBytesRead;
+								}else if (f.GetPosition()<f.GetLength()){ // no data read - probably because none could have been determined (e.g. fuzzy bits)
+									byteStates[nBytesRead++]=Fuzzy;
+									f.Seek( 1, STREAM_SEEK_CUR );
+								}else{
+									nBytesExpected=nBytesRead;
+									break;
+								}
 							}
-						}
-						if (nBytesRead==nBytesExpected){
-							// entire Row available
-							static constexpr WCHAR NonprintableChar=L'\x2219'; // if original character not really printable, displaying a substitute one
-							static constexpr WCHAR FuzzyChar=L'\x2592';
-							const auto itNearestBookmark=bookmarks.lower_bound(address);
-							// | View column
-							if (IsColumnShown(TColumn::VIEW)){
-								auto itEmpView=itEmp;
-								auto itNearestBm=itNearestBookmark;
-								auto aView=address; auto aNearestBm=itNearestBm!=bookmarks.end()?*itNearestBm:Stream::GetErrorPosition();
-								const auto d=div( nBytesRead, (TPosition)item.nStreamBytes );
-								const bool readIncompleteItem=d.rem!=0;
-								const WORD nCompleteItems=std::min<WORD>( item.nInRow, d.quot );
-								for( WORD n=0; n<nCompleteItems+readIncompleteItem; n++ ){
-									const BYTE nStreamBytes=readIncompleteItem && n==nCompleteItems // drawing an incomplete last Item in the Row?
-															? d.rem
-															: item.nStreamBytes;
-									const BYTE printFlags =	selection.Contains( aView, nStreamBytes )
-															? CHexaPaintDC::Selected
-															: CHexaPaintDC::Normal;
-									for( char i=0; i<item.patternLength; i++ ){
-										COLORREF emphasisColor=	itEmpView->Contains( aView, nStreamBytes ) // whole Item contained in a single Emphasis?
-																? itEmpView->color
-																: COLOR_WHITE; // assumption (no Emphasis)
-										WCHAR c=item.GetPrintableChar(i);
-										if (nStreamBytes!=item.nStreamBytes) // drawing an incomplete last Item in the Row?
-											c=L'\x2026', i=CHAR_MAX-1; // when the ellipsis printed, terminate this cycle
-										if (c){
-											dc.SetContentPrintState( printFlags, emphasisColor );
-											dc.PrintChar(c);
-										}else{
-											if (emphasisColor==COLOR_WHITE){
-												const auto a=aView+item.GetByteIndex(i);
-												for( auto it=itEmpView; it->a<=a; it++ )
-													if (it->Contains(a)){
-														emphasisColor=it->color;
-														break;
-													}
-											}
-											const BYTE iByte=n*nStreamBytes+item.GetByteIndex(i);
-											if (byteStates[iByte]==Good)
+							if (nBytesRead==nBytesExpected){
+								// entire Row available
+								static constexpr WCHAR NonprintableChar=L'\x2219'; // if original character not really printable, displaying a substitute one
+								static constexpr WCHAR FuzzyChar=L'\x2592';
+								const auto itNearestBookmark=bookmarks.lower_bound(address);
+								// | View column
+								if (IsColumnShown(TColumn::VIEW)){
+									auto itEmpView=itEmp;
+									auto itNearestBm=itNearestBookmark;
+									auto aView=address; auto aNearestBm=itNearestBm!=bookmarks.end()?*itNearestBm:Stream::GetErrorPosition();
+									const auto d=div( nBytesRead, (TPosition)item.nStreamBytes );
+									const bool readIncompleteItem=d.rem!=0;
+									const WORD nCompleteItems=std::min<WORD>( item.nInRow, d.quot );
+									for( WORD n=0; n<nCompleteItems+readIncompleteItem; n++ ){
+										const BYTE nStreamBytes=readIncompleteItem && n==nCompleteItems // drawing an incomplete last Item in the Row?
+																? d.rem
+																: item.nStreamBytes;
+										const BYTE printFlags =	selection.Contains( aView, nStreamBytes )
+																? CHexaPaintDC::Selected
+																: CHexaPaintDC::Normal;
+										for( char i=0; i<item.patternLength; i++ ){
+											COLORREF emphasisColor=	itEmpView->Contains( aView, nStreamBytes ) // whole Item contained in a single Emphasis?
+																	? itEmpView->color
+																	: COLOR_WHITE; // assumption (no Emphasis)
+											WCHAR c=item.GetPrintableChar(i);
+											if (nStreamBytes!=item.nStreamBytes) // drawing an incomplete last Item in the Row?
+												c=L'\x2026', i=CHAR_MAX-1; // when the ellipsis printed, terminate this cycle
+											if (c){
 												dc.SetContentPrintState( printFlags, emphasisColor );
-											else
-												dc.SetContentPrintState( printFlags|CHexaPaintDC::Erroneous, emphasisColor );
-											if (byteStates[iByte]!=Fuzzy){
-												::wsprintfW( buf, VIEW_HALFBYTE_FORMAT, item.IsLowerHalfbyte(i)?bytes[iByte]&0xf:bytes[iByte]>>4 );
-												dc.PrintChar(*buf);
-											}else
-												dc.PrintChar(FuzzyChar);
+												dc.PrintChar(c);
+											}else{
+												if (emphasisColor==COLOR_WHITE){
+													const auto a=aView+item.GetByteIndex(i);
+													for( auto it=itEmpView; it->a<=a; it++ )
+														if (it->Contains(a)){
+															emphasisColor=it->color;
+															break;
+														}
+												}
+												const BYTE iByte=n*nStreamBytes+item.GetByteIndex(i);
+												if (byteStates[iByte]==Good)
+													dc.SetContentPrintState( printFlags, emphasisColor );
+												else
+													dc.SetContentPrintState( printFlags|CHexaPaintDC::Erroneous, emphasisColor );
+												if (byteStates[iByte]!=Fuzzy){
+													::wsprintfW( buf, VIEW_HALFBYTE_FORMAT, item.IsLowerHalfbyte(i)?bytes[iByte]&0xf:bytes[iByte]>>4 );
+													dc.PrintChar(*buf);
+												}else
+													dc.PrintChar(FuzzyChar);
+											}
+											while (itEmpView->z<aView)
+												itEmpView++;
 										}
-										while (itEmpView->z<aView)
-											itEmpView++;
+										aView+=nStreamBytes;
+										if (aNearestBm<aView){
+											dc.FlushPrintBuffer(); // to print the Bookmark over the File content!
+											const LONG x=charLayout.view.a*font.GetCharAvgWidth()+n*itemWidth;
+											const RECT rcBookmark={ x, rcContent.top, x+itemWidth, rcContent.top+font.GetCharHeight() };
+											::FrameRect( dc, &rcBookmark, Utils::CYahelBrush::Black );
+											aNearestBm=	( itNearestBm=bookmarks.lower_bound(aView) )!=bookmarks.end()
+														? *itNearestBm
+														: Stream::GetErrorPosition();
+										}
 									}
-									aView+=nStreamBytes;
-									if (aNearestBm<aView){
-										dc.FlushPrintBuffer(); // to print the Bookmark over the File content and update the rcView!
-										const LONG x=charLayout.view.a*font.GetCharAvgWidth()+n*itemWidth;
-										const RECT rcBookmark={ x, y, x+itemWidth, y+font.GetCharHeight() };
-										::FrameRect( dc, &rcBookmark, Utils::CYahelBrush::Black );
-										aNearestBm=	( itNearestBm=bookmarks.lower_bound(aView) )!=bookmarks.end()
-													? *itNearestBm
-													: Stream::GetErrorPosition();
-									}
+									dc.PrintBkSpace(
+										charLayout.view.GetLength()-nCompleteItems*item.patternLength-readIncompleteItem // blank space caused by lack of Items
+										+
+										VIEW_SPACE_LENGTH
+									);
 								}
-								dc.PrintBkSpace(
-									charLayout.view.GetLength()-nCompleteItems*item.patternLength-readIncompleteItem // blank space caused by lack of Items
-									+
-									VIEW_SPACE_LENGTH
-								);
-							}
-							// | Stream column
-							if (IsColumnShown(TColumn::STREAM)){
-								auto itEmpStream=itEmp;
-								auto itNearestBm=itNearestBookmark;
-								auto aStream=address; auto aNearestBm=itNearestBm!=bookmarks.end()?*itNearestBm:Stream::GetErrorPosition();
-								for( WORD i=0; i<nBytesRead; i++ ){
-									// > choose colors
-									if (aStream==itEmpStream->z)
-										itEmpStream++;
-									const COLORREF emphasisColor= itEmpStream->Contains(aStream) ? itEmpStream->color : COLOR_WHITE;
-									BYTE printFlags= byteStates[i]==Good ? CHexaPaintDC::Normal : CHexaPaintDC::Erroneous;
-									if (selection.Contains(aStream))
-										printFlags|=CHexaPaintDC::Selected;
-									dc.SetContentPrintState( printFlags, emphasisColor );
-									// > print
-									if (byteStates[i]!=Fuzzy){
-										const WCHAR wByte=bytes[i];
-										dc.PrintChar( ::isprint(wByte) ? wByte : NonprintableChar ); // if original character not printable, displaying a substitute one
-									}else
-										dc.PrintChar(FuzzyChar);
-									if (aStream++==aNearestBm){
-										dc.FlushPrintBuffer(); // to print the Bookmark over the File content and update the rcStream!
-										const RECT rcBookmark={ rcRow.left-font.GetCharAvgWidth(), y, rcRow.left, y+font.GetCharHeight() };
-										::FrameRect( dc, &rcBookmark, Utils::CYahelBrush::Black );
-										aNearestBm= ++itNearestBm!=bookmarks.end() ? *itNearestBm : Stream::GetErrorPosition();
+								// | Stream column
+								if (IsColumnShown(TColumn::STREAM)){
+									auto itEmpStream=itEmp;
+									auto itNearestBm=itNearestBookmark;
+									auto aStream=address; auto aNearestBm=itNearestBm!=bookmarks.end()?*itNearestBm:Stream::GetErrorPosition();
+									for( WORD i=0; i<nBytesRead; i++ ){
+										// > choose colors
+										if (aStream==itEmpStream->z)
+											itEmpStream++;
+										const COLORREF emphasisColor= itEmpStream->Contains(aStream) ? itEmpStream->color : COLOR_WHITE;
+										BYTE printFlags= byteStates[i]==Good ? CHexaPaintDC::Normal : CHexaPaintDC::Erroneous;
+										if (selection.Contains(aStream))
+											printFlags|=CHexaPaintDC::Selected;
+										dc.SetContentPrintState( printFlags, emphasisColor );
+										// > print
+										if (byteStates[i]!=Fuzzy){
+											const WCHAR wByte=bytes[i];
+											dc.PrintChar( ::isprint(wByte) ? wByte : NonprintableChar ); // if original character not printable, displaying a substitute one
+										}else
+											dc.PrintChar(FuzzyChar);
+										if (aStream++==aNearestBm){
+											dc.FlushPrintBuffer(); // to print the Bookmark over the File content!
+											const RECT rcBookmark={ rcContent.left-font.GetCharAvgWidth(), rcContent.top, rcContent.left, rcContent.top+font.GetCharHeight() };
+											::FrameRect( dc, &rcBookmark, Utils::CYahelBrush::Black );
+											aNearestBm= ++itNearestBm!=bookmarks.end() ? *itNearestBm : Stream::GetErrorPosition();
+										}
 									}
+									dc.PrintBkSpace( charLayout.stream.GetLength()-nBytesRead );
 								}
-								dc.PrintBkSpace( charLayout.stream.GetLength()-nBytesRead );
+								address+=nBytesRead;
+							}else if (!isEof){
+								// content not available (e.g. irrecoverable Sector read error)
+								f.Seek( address+=nBytesExpected );
+								#define ERR_MSG	L"» No data «"
+								dc.SetContentPrintState( CHexaPaintDC::Erroneous, COLOR_WHITE );
+								dc.PrintChars( ERR_MSG, ARRAYSIZE(ERR_MSG)-1 );
 							}
-							address+=nBytesRead;
 						}else if (!isEof){
-							// content not available (e.g. irrecoverable Sector read error)
+							// Record's data are not yet known - caller will refresh the HexaEditor when data for this Record are known
 							f.Seek( address+=nBytesExpected );
-							#define ERR_MSG	L"» No data «"
-							dc.SetContentPrintState( CHexaPaintDC::Erroneous, COLOR_WHITE );
-							dc.PrintChars( ERR_MSG, ARRAYSIZE(ERR_MSG)-1 );
+							#define STATUS_MSG	L"» Fetching data ... «"
+							dc.SetContentPrintState( CHexaPaintDC::Unknown, COLOR_WHITE );
+							dc.PrintChars( STATUS_MSG, ARRAYSIZE(STATUS_MSG)-1 );
 						}
-					}else if (!isEof){
-						// Record's data are not yet known - caller will refresh the HexaEditor when data for this Record are known
-						f.Seek( address+=nBytesExpected );
-						#define STATUS_MSG	L"» Fetching data ... «"
-						dc.SetContentPrintState( CHexaPaintDC::Unknown, COLOR_WHITE );
-						dc.PrintChars( STATUS_MSG, ARRAYSIZE(STATUS_MSG)-1 );
-					}
-					// : filling the rest of the Row with background color (e.g. the last Row in a Record may not span up to the end)
-					dc.PrintBkSpace(0);
-					dc.FlushPrintBuffer();
-					// : drawing the Record label if the just drawn Row is the Record's first Row
-					if (!isEof && IsColumnShown(TColumn::LABEL)){ // yes, a new Record can potentially start at the Row
-						WCHAR buf[80];
-						if (const LPCWSTR recordLabel=pStreamAdvisor->GetRecordLabelW( __firstByteInRowToLogicalPosition__(iRowA), buf, ARRAYSIZE(buf), param )){
-							RECT rc={ (charLayout.stream.z+2)*font.GetCharAvgWidth(), y, rcClip.right, rcClip.bottom };
-							const COLORREF textColor0=::SetTextColor(dc,dc.LabelColor), bgColor0=::SetBkColor(dc,COLOR_WHITE);
-								::DrawTextW( dc, recordLabel, -1, &rc, DT_LEFT|DT_TOP );
-								::MoveToEx( dc, addrLength*font.GetCharAvgWidth(), y, nullptr );
-								::LineTo( dc, rcClip.right, y );
-							::SetTextColor(dc,textColor0), ::SetBkColor(dc,bgColor0);
+						// : filling the rest of the Row with background color (e.g. the last Row in a Record may not span up to the end)
+						dc.PrintBkSpace(0);
+						dc.FlushPrintBuffer();
+						// : drawing the Record label if the just drawn Row is the Record's first Row
+						if (!isEof && IsColumnShown(TColumn::LABEL)){ // yes, a new Record can potentially start at the Row
+							WCHAR buf[80];
+							if (const LPCWSTR recordLabel=pStreamAdvisor->GetRecordLabelW( __firstByteInRowToLogicalPosition__(r), buf, ARRAYSIZE(buf), param )){
+								RECT rc={ (charLayout.stream.z-charLayout.view.a+2)*font.GetCharAvgWidth(), rcContent.top, USHRT_MAX, USHRT_MAX };
+								const COLORREF textColor0=::SetTextColor(dc,dc.LabelColor), bgColor0=::SetBkColor(dc,COLOR_WHITE);
+									::DrawTextW( dc, recordLabel, -1, &rc, DT_LEFT|DT_TOP );
+									::MoveToEx( dc, 0, rcContent.top, nullptr );
+									::LineTo( dc, USHRT_MAX, rcContent.top );
+								::SetTextColor(dc,textColor0), ::SetBkColor(dc,bgColor0);
+							}
 						}
 					}
 				}
 				// . filling the rest of HexaEditor with background color
-				rcClip.top=y;
-				::FillRect( dc, &rcClip, Utils::CYahelBrush::White );
+				::FillRect( dc, &rcContent, Utils::CYahelBrush::White );
 				return true;
 			}
 			case WM_HEXA_PAINTSCROLLBARS:{
@@ -1139,16 +1164,14 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 					::ShowScrollBar( hWnd, SB_VERT, vertScrollbarNecessary );
 				}
 				// . horizontal scrollbar
-			/*	CRect rc;
-				GetClientRect(&rc);
-				const LONG nCharsInRow=GetLayout().stream.z/font.GetCharAvgWidth();
-				const int nCharsInRowDisplayed=std::max( 0, rc.Width()/font.GetCharAvgWidth() );
-				si.nMax=nCharsInRow-1, si.nPage=nCharsInRowDisplayed-1;
-				SetScrollInfo( SB_HORZ, &si, TRUE );
+				const auto &&charLayout=GetCharLayout();
+				si.nMax=charLayout.stream.z-charLayout.view.a-1; // "-1" = see vertical scrollbar
+				si.nPage=GetClientRect().right/font.GetCharAvgWidth()-(addrLength+1);
+				::SetScrollInfo( hWnd, SB_HORZ, &si, TRUE );
 				if (mouseInNcArea){
-					const BOOL horzScrollbarNecessary=si.nPage<nCharsInRow;
-					ShowScrollBar( SB_HORZ, horzScrollbarNecessary );
-				}*/
+					const BOOL horzScrollbarNecessary=si.nPage<si.nMax;
+					::ShowScrollBar( hWnd, SB_HORZ, horzScrollbarNecessary );
+				}
 				return true;
 			}
 			case WM_DESTROY:
