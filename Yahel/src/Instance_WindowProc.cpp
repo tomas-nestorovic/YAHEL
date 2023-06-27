@@ -979,10 +979,10 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 						::DrawText( dc, buf, ::wsprintf(buf,_T("%02X"),n++*item.nStreamBytes), &rcHeader, DT_LEFT|DT_TOP );
 				}
 				// . drawing View and Stream columns
+				const Utils::CViewportOrg viewportOrg( dc, HEADER_LINES_COUNT+iRowFirstToPaint, ADDRESS_FORMAT_LENGTH+1-iHorzScroll, font );
 				RECT rcContent=FullClientRect;
 				if (IsColumnShown(TColumn::VIEW) || IsColumnShown(TColumn::STREAM)){
 					dc.SetPrintRect(rcContent);
-					const Utils::CViewportOrg viewportOrg( dc, HEADER_LINES_COUNT+iRowFirstToPaint, ADDRESS_FORMAT_LENGTH+1-iHorzScroll, font );
 					auto address=__firstByteInRowToLogicalPosition__(iRowA);
 					const auto &&selection=caret.GetSelectionAsc();
 					auto itEmp=emphases.lower_bound( TEmphasis(address,0) );
@@ -990,8 +990,7 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 						itEmp--;
 					f.Seek( address );
 					WCHAR buf[16];
-					for( TRow r=iRowA; r<=iRowZ; r++,rcContent.top+=font.GetCharHeight() ){
-						rcContent.left=0;
+					for( TRow r=iRowA; rcContent.left=0,r<=iRowZ; r++,rcContent.top+=font.GetCharHeight() ){
 						while (itEmp->z<address) itEmp++; // choosing the first visible Emphasis
 						// : File content
 						const bool isEof=f.GetPosition()==f.GetLength();
