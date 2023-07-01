@@ -651,6 +651,7 @@ resetSelectionWithValue:BYTE buf[65535];
 							ShowColumns( columns&~c );
 						else
 							ShowColumns( columns|c );
+						RefreshScrollInfo(); // to guarantee that the actual data is always drawn
 						goto caretRefresh;
 					}
 				}
@@ -987,11 +988,13 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 				if (HEADER_LINES_COUNT){
 					const Utils::CViewportOrg viewportOrg( dc, 0, addrLength+1-iHorzScroll, font );
 					::FillRect( dc, &singleRowRect, dc.BtnFaceBrush );
-					dc.SetContentPrintState( CHexaPaintDC::Normal, ::GetSysColor(COLOR_BTNFACE) );
-					TCHAR buf[16];
-					RECT rcHeader=singleRowRect;
-					for( WORD n=0; n<item.nInRow; rcHeader.left+=itemWidth )
-						::DrawText( dc, buf, ::wsprintf(buf,_T("%02X"),n++*item.nStreamBytes), &rcHeader, DT_LEFT|DT_TOP );
+					if (IsColumnShown(TColumn::VIEW)){
+						dc.SetContentPrintState( CHexaPaintDC::Normal, ::GetSysColor(COLOR_BTNFACE) );
+						TCHAR buf[16];
+						RECT rcHeader=singleRowRect;
+						for( WORD n=0; n<item.nInRow; rcHeader.left+=itemWidth )
+							::DrawText( dc, buf, ::wsprintf(buf,_T("%02X"),n++*item.nStreamBytes), &rcHeader, DT_LEFT|DT_TOP );
+					}
 				}
 				// . drawing View and Stream columns
 				const Utils::CViewportOrg viewportOrg( dc, HEADER_LINES_COUNT+iRowFirstToPaint, addrLength+1-iHorzScroll, font );
