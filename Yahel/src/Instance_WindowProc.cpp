@@ -955,14 +955,18 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 						const auto address=__firstByteInRowToLogicalPosition__(r);
 						p+=::wsprintfW( p, ADDRESS_FORMAT L"\r\n", HIWORD(address), LOWORD(address) );
 					}
-					const RECT rc={ 0, 0, (ADDRESS_FORMAT_LENGTH+1)*font.GetCharAvgWidth(), HEADER_LINES_COUNT*font.GetCharHeight() };
+					const RECT rc={ 0, 0, (addrLength+1)*font.GetCharAvgWidth(), HEADER_LINES_COUNT*font.GetCharHeight() };
 					::FillRect( dc, &rc, dc.BtnFaceBrush );
 			{		const Utils::CViewportOrg viewportOrg1( dc, HEADER_LINES_COUNT+iRowFirstToPaint, 0, font );
 					dc.SetContentPrintState( CHexaPaintDC::Normal, ::GetSysColor(COLOR_BTNFACE) );
 					::DrawTextW( dc, buf,p-buf, (LPRECT)&FullClientRect, DT_LEFT|DT_TOP );
-					const Utils::CViewportOrg viewportOrg2( dc, HEADER_LINES_COUNT, ADDRESS_FORMAT_LENGTH, font );
+					const Utils::CViewportOrg viewportOrg2( dc, HEADER_LINES_COUNT, addrLength, font );
 					::FillRect( dc, &singleColumnRect, Utils::CYahelBrush::White );
 			}		::ExcludeClipRect( dc, 0, 0, rc.right, USHRT_MAX );
+				}else{
+					const Utils::CViewportOrg viewportOrg( dc, HEADER_LINES_COUNT+iRowFirstToPaint, 0, font );
+					::FillRect( dc, &singleColumnRect, Utils::CYahelBrush::White );
+					::ExcludeClipRect( dc, 0, 0, singleColumnRect.right, USHRT_MAX );
 				}
 				// . drawing Header row
 				const auto iHorzScroll=GetHorzScrollPos();
@@ -970,7 +974,7 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 				const int itemWidth=patternLength*font.GetCharAvgWidth();
 				const auto &&charLayout=GetCharLayout();
 				if (HEADER_LINES_COUNT){
-					const Utils::CViewportOrg viewportOrg( dc, 0, ADDRESS_FORMAT_LENGTH+1-iHorzScroll, font );
+					const Utils::CViewportOrg viewportOrg( dc, 0, addrLength+1-iHorzScroll, font );
 					::FillRect( dc, &singleRowRect, dc.BtnFaceBrush );
 					dc.SetContentPrintState( CHexaPaintDC::Normal, ::GetSysColor(COLOR_BTNFACE) );
 					TCHAR buf[16];
@@ -979,7 +983,7 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 						::DrawText( dc, buf, ::wsprintf(buf,_T("%02X"),n++*item.nStreamBytes), &rcHeader, DT_LEFT|DT_TOP );
 				}
 				// . drawing View and Stream columns
-				const Utils::CViewportOrg viewportOrg( dc, HEADER_LINES_COUNT+iRowFirstToPaint, ADDRESS_FORMAT_LENGTH+1-iHorzScroll, font );
+				const Utils::CViewportOrg viewportOrg( dc, HEADER_LINES_COUNT+iRowFirstToPaint, addrLength+1-iHorzScroll, font );
 				RECT rcContent=FullClientRect;
 				if (IsColumnShown(TColumn::VIEW) || IsColumnShown(TColumn::STREAM)){
 					dc.SetPrintRect(rcContent);
