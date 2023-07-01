@@ -642,6 +642,17 @@ resetSelectionWithValue:BYTE buf[65535];
 						}else
 							return true;
 					}
+					case ID_YAHEL_COLUMN_ADDRESS:
+					case ID_YAHEL_COLUMN_ITEMS:
+					case ID_YAHEL_COLUMN_STREAM:
+					case ID_YAHEL_COLUMN_LABEL:{
+						const TColumn c=(TColumn)( 1<<(LOWORD(wParam)-ID_YAHEL_COLUMN_ADDRESS) );
+						if (IsColumnShown(c))
+							ShowColumns( columns&~c );
+						else
+							ShowColumns( columns|c );
+						goto caretRefresh;
+					}
 				}
 				break;
 			case WM_LBUTTONDOWN:

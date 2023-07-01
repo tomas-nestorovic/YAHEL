@@ -34,6 +34,10 @@
 #define ID_YAHEL_EDIT_COPY				41017
 #define ID_YAHEL_EDIT_RESET_ZERO		41018
 #define ID_YAHEL_EDIT_RESET				41019
+#define ID_YAHEL_COLUMN_ADDRESS         41020
+#define ID_YAHEL_COLUMN_ITEMS           41021
+#define ID_YAHEL_COLUMN_STREAM          41022
+#define ID_YAHEL_COLUMN_LABEL           41023
 
 namespace Yahel
 {
@@ -205,7 +209,8 @@ namespace Yahel
 			VIEW	=2,
 			STREAM	=4,
 			LABEL	=8,
-			MINIMAL	= VIEW | STREAM,
+			DATA	= VIEW | STREAM,
+			MINIMAL	= DATA,
 			ALL		= ADDRESS | MINIMAL | LABEL
 		};
 

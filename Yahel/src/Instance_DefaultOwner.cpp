@@ -70,6 +70,14 @@ namespace Yahel{
 			case ID_YAHEL_BOOKMARK_NEXT:
 				flags|=MF_GRAYED*!( bookmarks.size()>0 && caret.streamPosition<*bookmarks.crbegin() );
 				return flags;
+			case ID_YAHEL_COLUMN_ITEMS:
+			case ID_YAHEL_COLUMN_STREAM:
+				flags|=MF_GRAYED* ( (columns&TColumn::DATA)==(1<<(cmd-ID_YAHEL_COLUMN_ADDRESS)) ); // last visible Data Column has disabled interactivity
+				//fallthrough
+			case ID_YAHEL_COLUMN_ADDRESS:
+			case ID_YAHEL_COLUMN_LABEL:
+				flags|=MF_CHECKED*IsColumnShown( (TColumn)(1<<(cmd-ID_YAHEL_COLUMN_ADDRESS)) );
+				return flags;
 		}
 		return -1; // unknown command
 	}

@@ -93,6 +93,12 @@ BEGIN
             MENUITEM SEPARATOR
             MENUITEM "Address...\tCtrl+G",          ID_YAHEL_GOTO_ADDRESS
         END
+        POPUP "Columns"
+        BEGIN
+            MENUITEM "Address",                     ID_YAHEL_COLUMN_ADDRESS
+            MENUITEM "Items",                       ID_YAHEL_COLUMN_ITEMS
+            MENUITEM "Stream",                      ID_YAHEL_COLUMN_STREAM
+        END
     END
 END
 
