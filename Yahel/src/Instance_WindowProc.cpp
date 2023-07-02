@@ -187,8 +187,8 @@ moveCaretDown:			const auto iRow=__logicalPositionToRow__(caret.streamPosition);
 						goto caretCorrectlyMoveTo;
 					case VK_TAB:{
 						const bool shiftPressed=ShiftPressedAsync();
-						if (shiftPressed ^ caret.IsInStream()  ||  (columns&TColumn::MINIMAL)!=TColumn::MINIMAL){
-							// leaving the HexaEditor control if (a) Tab alone pressed while in Stream part, or (b) Shift+Tab pressed while in the hexa-View part, or (c) there is nowhere to switch to
+						if (shiftPressed ^ caret.IsInStream()  ||  (columns&TColumn::DATA)!=TColumn::DATA){
+							// leaving the HexaEditor control if (a) Tab alone pressed while in Stream part, or (b) Shift+Tab pressed while in the hexa-View part, or (c) there is nowhere else to switch to
 							::SetFocus(  ::GetNextDlgTabItem( ::GetTopWindow(hWnd), hWnd, shiftPressed )  );
 							break;
 						}else{
@@ -647,9 +647,13 @@ resetSelectionWithValue:BYTE buf[65535];
 					case ID_YAHEL_COLUMN_STREAM:
 					case ID_YAHEL_COLUMN_LABEL:{
 						const TColumn c=(TColumn)( 1<<(LOWORD(wParam)-ID_YAHEL_COLUMN_ADDRESS) );
-						if (IsColumnShown(c))
+						if (IsColumnShown(c)){ // want hide a shown Column?
 							ShowColumns( columns&~c );
-						else
+							if (c==TColumn::STREAM && caret.IsInStream()) // hid the Caret in Stream column?
+								caret.iViewHalfbyte+=item.patternLength; // move to remembered Halfbyte in View column
+							else if (c==TColumn::VIEW && !caret.IsInStream()) // hid the Caret in View column?
+								caret.iViewHalfbyte-=item.patternLength; // remember Halfbyte in View column
+						}else
 							ShowColumns( columns|c );
 						RefreshScrollInfo(); // to guarantee that the actual data is always drawn
 						goto caretRefresh;
