@@ -971,7 +971,7 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 						const auto address=__firstByteInRowToLogicalPosition__(r);
 						p+=::wsprintfW( p, ADDRESS_FORMAT L"\r\n", HIWORD(address), LOWORD(address) );
 					}
-					const RECT rc={ 0, 0, (addrLength+1)*font.GetCharAvgWidth(), HEADER_LINES_COUNT*font.GetCharHeight() };
+					const RECT rc={ 0, 0, (addrLength+ADDRESS_SPACE_LENGTH)*font.GetCharAvgWidth(), HEADER_LINES_COUNT*font.GetCharHeight() };
 					::FillRect( dc, &rc, dc.BtnFaceBrush );
 			{		const Utils::CViewportOrg viewportOrg1( dc, HEADER_LINES_COUNT+iRowFirstToPaint, 0, font );
 					dc.SetContentPrintState( CHexaPaintDC::Normal, ::GetSysColor(COLOR_BTNFACE) );
@@ -990,7 +990,7 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 				const int itemWidth=patternLength*font.GetCharAvgWidth();
 				const auto &&charLayout=GetCharLayout();
 				if (HEADER_LINES_COUNT){
-					const Utils::CViewportOrg viewportOrg( dc, 0, addrLength+1-iHorzScroll, font );
+					const Utils::CViewportOrg viewportOrg( dc, 0, addrLength+ADDRESS_SPACE_LENGTH-iHorzScroll, font );
 					::FillRect( dc, &singleRowRect, dc.BtnFaceBrush );
 					if (IsColumnShown(TColumn::VIEW)){
 						dc.SetContentPrintState( CHexaPaintDC::Normal, ::GetSysColor(COLOR_BTNFACE) );
@@ -1001,7 +1001,7 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 					}
 				}
 				// . drawing View and Stream columns
-				const Utils::CViewportOrg viewportOrg( dc, HEADER_LINES_COUNT+iRowFirstToPaint, addrLength+1-iHorzScroll, font );
+				const Utils::CViewportOrg viewportOrg( dc, HEADER_LINES_COUNT+iRowFirstToPaint, addrLength+ADDRESS_SPACE_LENGTH-iHorzScroll, font );
 				RECT rcContent=FullClientRect;
 				if (IsColumnShown(TColumn::VIEW) || IsColumnShown(TColumn::STREAM)){
 					dc.SetPrintRect(rcContent);
@@ -1187,7 +1187,7 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 				// . horizontal scrollbar
 				const auto &&charLayout=GetCharLayout();
 				si.nMax=charLayout.stream.z-charLayout.view.a-1; // "-1" = see vertical scrollbar
-				si.nPage=GetClientRect().right/font.GetCharAvgWidth()-(addrLength+1);
+				si.nPage=GetClientRect().right/font.GetCharAvgWidth()-(addrLength+ADDRESS_SPACE_LENGTH);
 				::SetScrollInfo( hWnd, SB_HORZ, &si, TRUE );
 				if (mouseInNcArea){
 					const BOOL horzScrollbarNecessary=si.nPage<si.nMax;

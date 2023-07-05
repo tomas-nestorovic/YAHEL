@@ -657,7 +657,7 @@ namespace Yahel{
 		col=std::min( std::max(col,0), std::max<TCol>(si.nMax+1-si.nPage,0) );
 		if (const auto dc=si.nPos-col){
 			RECT rcScroll=GetClientRect();
-				rcScroll.left=(addrLength+1)*font.GetCharAvgWidth();
+				rcScroll.left=(addrLength+ADDRESS_SPACE_LENGTH)*font.GetCharAvgWidth();
 			::ScrollWindow( hWnd, dc*font.GetCharAvgWidth(), 0, nullptr, &rcScroll );
 			::SetScrollPos( hWnd, SB_HORZ, col, TRUE ); // True = redrawing the scroll-bar, not HexaEditor's canvas!
 			SendMessage( WM_HSCROLL, SB_THUMBPOSITION ); // letting descendants of HexaEditor know that a scrolling occured
