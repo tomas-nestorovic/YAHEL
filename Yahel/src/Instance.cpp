@@ -112,6 +112,7 @@ namespace Yahel{
 		, caret(0) , hPreviouslyFocusedWnd(0)
 		, logPosScrolledTo(0)
 		, pStreamAdvisor(&DefaultStreamAdvisor)
+		, nLabelChars(16)
 		, editable(false) {
 		RemoveAllHighlights(); // to correctly initialize
 		::InitializeCriticalSection(&locker);
@@ -815,10 +816,12 @@ namespace Yahel{
 	CInstance::TCharLayout CInstance::GetCharLayout() const{
 		const int xViewA=addrLength+ADDRESS_SPACE_LENGTH, xViewZ=xViewA+IsColumnShown(TColumn::VIEW)*item.patternLength*item.nInRow;
 		const int xStreamA=xViewZ+IsColumnShown(TColumn::VIEW)*VIEW_SPACE_LENGTH, xStreamZ=xStreamA+IsColumnShown(TColumn::STREAM)*GetStreamBytesCountPerRow();
+		const int xLabelA=xStreamZ+IsColumnShown(TColumn::STREAM)*LABEL_SPACE_LENGTH, xLabelZ=xLabelA+IsColumnShown(TColumn::LABEL)*std::abs(nLabelChars);
 		const TCharLayout result={
 			TInterval<LONG>( 0, addrLength ),
 			TInterval<LONG>( xViewA, xViewZ ),
-			TInterval<LONG>( xStreamA, xStreamZ )
+			TInterval<LONG>( xStreamA, xStreamZ ),
+			TInterval<LONG>( xLabelA, xLabelZ )
 		};
 		return result;
 	}

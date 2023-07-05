@@ -1160,7 +1160,7 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 						if (!isEof && IsColumnShown(TColumn::LABEL)){ // yes, a new Record can potentially start at the Row
 							WCHAR buf[80];
 							if (const LPCWSTR recordLabel=pStreamAdvisor->GetRecordLabelW( __firstByteInRowToLogicalPosition__(r), buf, ARRAYSIZE(buf), param )){
-								RECT rc={ (charLayout.stream.z-charLayout.view.a+2)*font.GetCharAvgWidth(), rcContent.top, USHRT_MAX, USHRT_MAX };
+								RECT rc={ (charLayout.label.a-charLayout.view.a)*font.GetCharAvgWidth(), rcContent.top, USHRT_MAX, USHRT_MAX };
 								const COLORREF textColor0=::SetTextColor(dc,dc.LabelColor), bgColor0=::SetBkColor(dc,COLOR_WHITE);
 									::DrawTextW( dc, recordLabel, -1, &rc, DT_LEFT|DT_TOP );
 									::MoveToEx( dc, 0, rcContent.top, nullptr );
@@ -1186,7 +1186,7 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 				}
 				// . horizontal scrollbar
 				const auto &&charLayout=GetCharLayout();
-				si.nMax=charLayout.stream.z-charLayout.view.a-1; // "-1" = see vertical scrollbar
+				si.nMax=charLayout.label.z-charLayout.view.a-1; // "-1" = see vertical scrollbar
 				si.nPage=GetClientRect().right/font.GetCharAvgWidth()-(addrLength+ADDRESS_SPACE_LENGTH);
 				::SetScrollInfo( hWnd, SB_HORZ, &si, TRUE );
 				if (mouseInNcArea){

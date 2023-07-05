@@ -19,6 +19,8 @@ namespace Yahel{
 
 	#define STREAM_BYTES_IN_ROW_MAX	512
 
+	#define LABEL_SPACE_LENGTH		2
+
 	#define WM_HEXA_PAINTSCROLLBARS	WM_USER+1
 
 	#define MARK_RECURRENT_USE	(&CInstance::mouseDragged)
@@ -95,6 +97,7 @@ namespace Yahel{
 		Stream::IAdvisor *pStreamAdvisor;
 		BYTE columns; // TColumn flags
 		BYTE addrLength; // Address format length (see ADDRESS_FORMAT); modified in ShowColumns
+		char nLabelChars; // negative = Label Column always visible without scrolling; zero = visible but no chars reserved for the Label Column; positive = Label Column always visible with eventual scrolling
 		bool editable; // True <=> content can be edited, otherwise False
 		TState update;
 		CComPtr<IDataObject> delayedDataInClipboard; // an IDataObject whose data were not yet rendered
@@ -134,7 +137,7 @@ namespace Yahel{
 		void ShowMessage(TMsg id) const;
 		void SendEditNotification(WORD en) const;
 		void PasteStreamAtCaretAndShowError(IStream *s);
-		struct TCharLayout sealed{ TInterval<LONG> address,view,stream; } GetCharLayout() const;
+		struct TCharLayout sealed{ TInterval<LONG> address,view,stream,label; } GetCharLayout() const;
 		RECT GetClientRect() const;
 
 		inline HWND SetFocus() const{ assert(hWnd); return ::SetFocus(hWnd); }
