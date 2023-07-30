@@ -51,7 +51,7 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 #define DLL_FULLNAME	_T("Yet Another Hexa-Editor Library")
 #define DLL_ABBREVIATION _T("YAHEL")
-#define DLL_VERSION		_T("1.1")
+#define DLL_VERSION		_T("1.2")
 #define DLL_CLASSNAME	_T("Afx:tomascz.") DLL_ABBREVIATION
 
 #define FONT_SYMBOL			_T("Symbol")

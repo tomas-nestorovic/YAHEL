@@ -162,7 +162,7 @@ namespace Yahel{
 	public:
 		static bool mouseDragged,mouseInNcArea;
 
-		struct TContent sealed{
+		struct TContent{
 			CComPtr<IStream> stream;
 
 			inline TContent(IStream *s=nullptr) : stream(s) {}

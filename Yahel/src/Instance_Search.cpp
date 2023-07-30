@@ -194,9 +194,21 @@ namespace Yahel{
 			pie[i]=k;
 		}
 		// - search for next match of the Pattern
-		CInstance::TContent f;
-		if (FAILED(this->f.stream->Clone( &f.stream.p )))
-			return Stream::GetErrorPosition();
+		struct TContent sealed:public CInstance::TContent{
+			TPosition posOrg;
+
+			TContent()
+				: posOrg(Stream::GetErrorPosition()) {
+			}
+			~TContent(){
+				if (posOrg!=Stream::GetErrorPosition())
+					Seek(posOrg);
+			}
+		} f;
+		if (FAILED(this->f.stream->Clone( &f.stream.p ))){ // have to reuse existing Stream?
+			ASSERT(FALSE); // using here the same Stream always requires attention; YAHEL is fine with that - is also the client app fine with that?
+			f.stream=this->f.stream, f.posOrg=f.GetPosition();
+		}
 		f.Seek( range.a );
 		for( BYTE posMatched=0,b; f.GetPosition()<range.z; )
 			if (cancel)
