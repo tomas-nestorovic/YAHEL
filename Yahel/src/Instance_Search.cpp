@@ -206,7 +206,7 @@ namespace Yahel{
 			}
 		} f;
 		if (FAILED(this->f.stream->Clone( &f.stream.p ))){ // have to reuse existing Stream?
-			ASSERT(FALSE); // using here the same Stream always requires attention; YAHEL is fine with that - is also the client app fine with that?
+			assert(false); // using here the same Stream always requires attention; YAHEL is fine with that - is also the client app fine with that?
 			f.stream=this->f.stream, f.posOrg=f.GetPosition();
 		}
 		f.Seek( range.a );
