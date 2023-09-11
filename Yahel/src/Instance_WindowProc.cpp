@@ -765,7 +765,7 @@ leftMouseDragged:
 				}
 				// . redrawing HexaEditor's client and non-client areas
 				ScrollToColumn(c);
-				return SendMessage( WM_NCMOUSEMOVE ); // the "thumb" might have been released outside the scrollbar area
+				return SendMessage( WM_NCMOUSEMOVE )!=0; // the "thumb" might have been released outside the scrollbar area
 			}
 			case WM_VSCROLL:{
 				// scrolling vertically

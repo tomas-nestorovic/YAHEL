@@ -261,6 +261,9 @@ namespace Yahel
 		virtual void SetStreamLogicalSize(TPosition logicalSize)=0;
 		virtual WORD GetStreamBytesCountPerRow() const=0;
 
+		// "Label" column
+		virtual TError SetLabelColumnParams(char nCharsSpace)=0;
+
 		// searching
 		virtual TPosition FindNextOccurence(const TPosInterval &range,volatile const bool &cancel) const=0;
 

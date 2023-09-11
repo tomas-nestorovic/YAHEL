@@ -225,6 +225,9 @@ namespace Yahel{
 		void SetStreamLogicalSize(TPosition logicalSize) override;
 		WORD GetStreamBytesCountPerRow() const override;
 
+		// "Label" column
+		TError SetLabelColumnParams(char nCharsSpace) override;
+
 		// searching
 		TPosition FindNextOccurence(const TPosInterval &range,volatile const bool &cancel) const override;
 

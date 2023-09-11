@@ -431,6 +431,22 @@ namespace Yahel{
 
 
 
+	TError CInstance::SetLabelColumnParams(char nCharsSpace){
+		// sets properties of the Label Column
+		if (nCharsSpace>=0){ // want the Label Column visible?
+			columns|=TColumn::LABEL;
+			nLabelChars=nCharsSpace;
+		}else
+			columns&=~TColumn::LABEL;
+		ShowColumns( columns );
+		return ERROR_KOSHER;
+	}
+
+
+
+
+
+
 	bool CInstance::ToggleBookmarkAt(TPosition pos){
 		// - erasing an existing Bookmark at Position
 		const auto it=bookmarks.find(pos);
