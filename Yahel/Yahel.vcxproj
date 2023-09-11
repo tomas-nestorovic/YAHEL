@@ -123,6 +123,7 @@
       <CallingConvention>StdCall</CallingConvention>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
       <AdditionalOptions>/QIfist %(AdditionalOptions)</AdditionalOptions>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
