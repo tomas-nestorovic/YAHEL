@@ -215,7 +215,7 @@ namespace Yahel
 		};
 
 		static LPCTSTR YAHEL_DECLSPEC WINAPI GetVersionString();
-		static void YAHEL_DECLSPEC WINAPI ShowModalAboutDialog();
+		static void YAHEL_DECLSPEC WINAPI ShowModalAboutDialog(HWND hParent);
 		static LPCSTR YAHEL_DECLSPEC WINAPI GetBaseClassNameA(HINSTANCE hInstance);
 		static LPCWSTR YAHEL_DECLSPEC WINAPI GetBaseClassNameW(HINSTANCE hInstance);
 		static UINT YAHEL_DECLSPEC WINAPI GetClipboardFormat();

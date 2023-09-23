@@ -395,8 +395,9 @@ namespace Stream
 		return DLL_VERSION;
 	}
 
-	void IInstance::ShowModalAboutDialog(){
-		::MessageBox( 0,
+	void IInstance::ShowModalAboutDialog(HWND hParent){
+		::MessageBox(
+			hParent,
 			DLL_FULLNAME _T("\n\nVersion ") DLL_VERSION _T("\n\n\ntomascz, 2023"),
 			_T("About ") DLL_ABBREVIATION,
 			MB_OK
