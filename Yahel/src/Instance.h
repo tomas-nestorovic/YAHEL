@@ -130,7 +130,6 @@ namespace Yahel{
 		TRow __logicalPositionToRow__(TPosition logPos) const;
 		TPosition __logicalPositionFromPoint__(const POINT &pt,PCHAR piHalfByte=nullptr) const;
 		TRow __scrollToRow__(TRow row);
-		TCol ScrollToColumn(TCol col);
 		void ScrollToCaretAsync();
 		void RefreshScrollInfo();
 		void __refreshCaretDisplay__() const;
@@ -210,7 +209,8 @@ namespace Yahel{
 		void SetSelection(TPosition selStart,TPosition selEnd) override;
 		TPosInterval GetVisiblePart() const override;
 		void ScrollTo(TPosition logicalPos,bool moveAlsoCaret=false) override;
-		void ScrollToRow(TRow iRow,bool moveAlsoCaret=false) override;
+		void ScrollToColumn(TCol col) override;
+		void ScrollToRow(TRow iRow) override;
 
 		// "Address" column
 		int GetAddressColumnWidth() const override;

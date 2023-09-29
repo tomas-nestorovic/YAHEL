@@ -246,7 +246,8 @@ namespace Yahel
 		virtual void SetSelection(TPosition selStart,TPosition selEnd)=0;
 		virtual TPosInterval GetVisiblePart() const=0;
 		virtual void ScrollTo(TPosition logicalPos,bool moveAlsoCaret=false)=0;
-		virtual void ScrollToRow(TRow iRow,bool moveAlsoCaret=false)=0;
+		virtual void ScrollToColumn(TCol col)=0;
+		virtual void ScrollToRow(TRow iRow)=0;
 
 		// "Address" column
 		virtual int GetAddressColumnWidth() const=0;

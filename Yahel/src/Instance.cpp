@@ -376,9 +376,9 @@ namespace Yahel{
 		__scrollToRow__( __logicalPositionToRow__(logicalPos) );
 	}
 
-	void CInstance::ScrollToRow(TRow iRow,bool moveAlsoCaret){
+	void CInstance::ScrollToRow(TRow iRow){
 		// independently from Caret, displays specified LogicalPosition
-		ScrollTo( __firstByteInRowToLogicalPosition__(iRow), moveAlsoCaret );
+		ScrollTo( __firstByteInRowToLogicalPosition__(iRow), false );
 	}
 
 
@@ -667,7 +667,7 @@ namespace Yahel{
 		return GetVertScrollPos();
 	}
 
-	TCol CInstance::ScrollToColumn(TCol col){
+	void CInstance::ScrollToColumn(TCol col){
 		// scrolls the HexaEditor so that the specified Column is shown as the first one from left; returns the Column number which it has been really scrolled to
 		SCROLLINFO si={ sizeof(si), SIF_POS|SIF_PAGE|SIF_RANGE|SIF_TRACKPOS };
 		::GetScrollInfo( hWnd, SB_HORZ, &si ); // getting 32-bit position
@@ -680,7 +680,6 @@ namespace Yahel{
 			SendMessage( WM_HSCROLL, SB_THUMBPOSITION ); // letting descendants of HexaEditor know that a scrolling occured
 			::DestroyCaret();
 		}
-		return GetHorzScrollPos();
 	}
 
 	void CInstance::RefreshScrollInfo(){
