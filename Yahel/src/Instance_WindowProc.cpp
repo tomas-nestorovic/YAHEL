@@ -339,7 +339,7 @@ editDelete:				if (!editable) return true; // can't edit content of a disabled w
 							if (std::min(nextRowStart,f.GetLength())-caret.streamPosition<item.nStreamBytes) // Item under Caret incomplete?
 								if (iRow<nLogicalRows) // incomplete Item in the middle of the File?
 									break;
-								else if (caret.streamPosition+item.nStreamBytes<=logicalSizeLimits.z){ // can append new Item to the end of File?
+								else if (caret.streamPosition+item.nStreamBytes<logicalSizeLimits.z){ // can append new Item to the end of File?
 									const auto newLength=caret.streamPosition+item.nStreamBytes;
 									f.SetLength( newLength );
 									SetStreamLogicalSize( newLength );
