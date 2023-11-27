@@ -24,7 +24,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        454
-#define _APS_NEXT_COMMAND_VALUE         41024
+#define _APS_NEXT_COMMAND_VALUE         41026
 #define _APS_NEXT_CONTROL_VALUE         1517
 #define _APS_NEXT_SYMED_VALUE           103
 #endif

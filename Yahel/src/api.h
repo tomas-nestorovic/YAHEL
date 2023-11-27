@@ -38,6 +38,8 @@
 #define ID_YAHEL_COLUMN_ITEMS           41021
 #define ID_YAHEL_COLUMN_STREAM          41022
 #define ID_YAHEL_COLUMN_LABEL           41023
+#define ID_YAHEL_EDIT_INCREASE          41024
+#define ID_YAHEL_EDIT_DECREASE          41025
 
 namespace Yahel
 {

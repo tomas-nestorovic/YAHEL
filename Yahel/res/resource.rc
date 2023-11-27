@@ -35,8 +35,10 @@ BEGIN
     "A",            ID_YAHEL_SELECT_NONE,   VIRTKEY, SHIFT, CONTROL, 
                                                     NOINVERT
     "C",            ID_YAHEL_EDIT_COPY,     VIRTKEY, CONTROL, NOINVERT
+    "D",            ID_YAHEL_EDIT_DECREASE, VIRTKEY, CONTROL, NOINVERT
     "F",            ID_YAHEL_FIND,          VIRTKEY, CONTROL, NOINVERT
     "G",            ID_YAHEL_GOTO_ADDRESS,  VIRTKEY, CONTROL, NOINVERT
+    "I",            ID_YAHEL_EDIT_INCREASE, VIRTKEY, CONTROL, NOINVERT
     "K",            ID_YAHEL_BOOKMARK_TOGGLE, VIRTKEY, CONTROL, NOINVERT
     "R",            ID_YAHEL_SELECT_CURRENT, VIRTKEY, CONTROL, NOINVERT
     "V",            ID_YAHEL_EDIT_PASTE,    VIRTKEY, CONTROL, NOINVERT
@@ -64,6 +66,9 @@ BEGIN
         MENUITEM "Paste\tCtrl+V",               ID_YAHEL_EDIT_PASTE
         MENUITEM "Paste from file...",          ID_YAHEL_EDIT_PASTE_SPECIAL
         MENUITEM "Delete\tDel",                 ID_YAHEL_EDIT_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "Increase value\tCtrl+I",      ID_YAHEL_EDIT_INCREASE
+        MENUITEM "Decrease value\tCtrl+D",      ID_YAHEL_EDIT_DECREASE
         MENUITEM SEPARATOR
         MENUITEM "Find...\tCtrl+F",             ID_YAHEL_FIND
         MENUITEM "Find next\tF3",               ID_YAHEL_FIND_NEXT

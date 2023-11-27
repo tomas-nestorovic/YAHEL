@@ -578,6 +578,40 @@ resetSelectionWithValue:BYTE buf[65535];
 					case ID_YAHEL_EDIT_DELETE:
 						// deleting content of the current selection
 						goto editDelete;
+					case ID_YAHEL_EDIT_INCREASE:{
+						// increment value under Caret
+						HRESULT hr;
+						BYTE b=ReadByteUnderCaret(hr);
+						if (FAILED(hr))
+							break;
+						if (caret.IsInStream()) // in Stream column
+							b++;
+						else // in View column
+							if (item.IsLowerHalfbyte(caret.iViewHalfbyte))
+								b = b&0xf0 | (b+1)&0x0f;
+							else
+								b += 0x10;
+						f.Seek( -1, STREAM_SEEK_CUR );
+						f.Write( &b, sizeof(b), IgnoreIoResult );
+						goto finishWritingClearSelection;
+					}
+					case ID_YAHEL_EDIT_DECREASE:{
+						// decrement value under Caret
+						HRESULT hr;
+						BYTE b=ReadByteUnderCaret(hr);
+						if (FAILED(hr))
+							break;
+						if (caret.IsInStream()) // in Stream column
+							b--;
+						else // in View column
+							if (item.IsLowerHalfbyte(caret.iViewHalfbyte))
+								b = b&0xf0 | (b-1)&0x0f;
+							else
+								b -= 0x10;
+						f.Seek( -1, STREAM_SEEK_CUR );
+						f.Write( &b, sizeof(b), IgnoreIoResult );
+						goto finishWritingClearSelection;
+					}
 					case ID_YAHEL_FIND_NEXT:
 						// find next occurence of Pattern in the Content
 						if (!searchParams.IsUsable()) // no Pattern specified yet
