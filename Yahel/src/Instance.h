@@ -134,6 +134,7 @@ namespace Yahel{
 		void RefreshScrollInfo();
 		void __refreshCaretDisplay__() const;
 		void ShowMessage(TMsg id) const;
+		BYTE ReadByteUnderCaret(HRESULT &outResult) const;
 		void SendEditNotification(WORD en) const;
 		void PasteStreamAtCaretAndShowError(IStream *s);
 		struct TCharLayout sealed{ TInterval<LONG> address,view,stream,label; } GetCharLayout() const;

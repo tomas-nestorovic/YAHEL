@@ -778,6 +778,17 @@ namespace Yahel{
 		::PostMessage( hWnd, WM_LBUTTONDOWN, 0, -1 ); // recovering the focus; "-1" = [x,y] = nonsense value; can't use mere SetFocus because this alone doesn't work
 	}
 
+	BYTE CInstance::ReadByteUnderCaret(HRESULT &outResult) const{
+		//
+		if (caret.IsInStream()) // in Stream column
+			f.Seek( caret.streamPosition );
+		else
+			f.Seek( caret.streamPosition+item.GetByteIndex(caret.iViewHalfbyte) );
+		BYTE b=0;
+		f.Read( &b, sizeof(b), outResult );
+		return b;
+	}
+
 	void CInstance::SendEditNotification(WORD en) const{
 		::SendMessage( ::GetParent(hWnd), WM_COMMAND, MAKELONG(GetWindowLong(hWnd,GWL_ID),en), 0 );
 	}

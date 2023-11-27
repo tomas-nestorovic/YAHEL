@@ -311,9 +311,7 @@ editDelete:				if (!editable) return true; // can't edit content of a disabled w
 						// . refreshing the scrollbar
 						f.SetLength( logicalSize );
 						SetStreamLogicalSize( logicalSize );
-						SendEditNotification( EN_CHANGE );
-						RepaintData();
-						goto caretCorrectlyMoveTo;
+						goto finishWriting;
 					}
 					case VK_RETURN:
 						// refocusing the window that has previously lost the focus in favor of this HexaEditor
@@ -349,22 +347,19 @@ editDelete:				if (!editable) return true; // can't edit content of a disabled w
 									ShowMessage(MSG_LIMIT_UPPER);
 									break;
 								}
-							BYTE b=0;
-							f.Seek( caret.streamPosition+item.GetByteIndex(caret.iViewHalfbyte) );
-							f.Read( &b, sizeof(b), IgnoreIoResult );
+							BYTE b=ReadByteUnderCaret( IgnoreIoResult );
 							if (item.IsLowerHalfbyte(caret.iViewHalfbyte))
 								b = b&0xf0 | (BYTE)wParam;
 							else
 								b = b&0xf | (BYTE)(wParam<<4);
 							f.Seek( -1, STREAM_SEEK_CUR );
 							f.Write( &b, sizeof(b), IgnoreIoResult );
-							caret.CancelSelection(); // cancelling any Selection
-							SetStreamLogicalSize(  std::max( logicalSize, f.GetLength() )  );
-							SendEditNotification( EN_CHANGE );
-							RepaintData();
 							SendMessage( WM_KEYDOWN, VK_RIGHT ); // advance Caret
-							caret.CancelSelection();
-							return true;
+							SetStreamLogicalSize(  std::max( logicalSize, f.GetLength() )  );
+finishWritingClearSelection:caret.CancelSelection(); // cancelling any Selection
+finishWriting:				SendEditNotification( EN_CHANGE );
+							RepaintData();
+							goto caretCorrectlyMoveTo;
 						}
 						break;
 				}
@@ -381,11 +376,8 @@ editDelete:				if (!editable) return true; // can't edit content of a disabled w
 						if (caret.streamPosition+(TPosition)sizeof(BYTE)<logicalSizeLimits.z){
 							f.Seek( caret.streamPosition );
 							f.Write( &wParam, sizeof(BYTE), IgnoreIoResult );
-							caret.streamSelectionA = caret.streamPosition+=sizeof(BYTE);
-							SetStreamLogicalSize(  std::max( logicalSize, f.GetLength() )  );
-							SendEditNotification( EN_CHANGE );
-							RepaintData();
-							goto caretRefresh;
+							caret.streamPosition+=sizeof(BYTE); // advance Caret
+							goto finishWritingClearSelection;
 						}else
 							ShowMessage(MSG_LIMIT_UPPER);
 				return true;
@@ -524,9 +516,7 @@ resetSelectionWithValue:BYTE buf[65535];
 								break;
 							}
 						}
-						SendEditNotification( EN_CHANGE );
-						RepaintData();
-						goto caretCorrectlyMoveTo;
+						goto finishWriting;
 					}
 					case ID_YAHEL_EDIT_RESET:{
 						// resetting Selection with user-defined value
@@ -583,10 +573,7 @@ resetSelectionWithValue:BYTE buf[65535];
 									}
 									break;
 								}
-						return true;
-						SendEditNotification( EN_CHANGE );
-						RepaintData();
-						goto caretCorrectlyMoveTo;
+						goto finishWriting;
 					}
 					case ID_YAHEL_EDIT_DELETE:
 						// deleting content of the current selection
