@@ -431,11 +431,11 @@ namespace Yahel{
 
 
 
-	TError CInstance::SetLabelColumnParams(char nCharsSpace){
+	TError CInstance::SetLabelColumnParams(char nLabelCharsMax){
 		// sets properties of the Label Column
-		if (nCharsSpace>=0){ // want the Label Column visible?
+		if (nLabelCharsMax!=0){ // want the Label Column visible?
 			columns|=TColumn::LABEL;
-			nLabelChars=nCharsSpace;
+			nLabelChars=nLabelCharsMax;
 		}else
 			columns&=~TColumn::LABEL;
 		ShowColumns( columns );

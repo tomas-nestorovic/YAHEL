@@ -838,6 +838,8 @@ leftMouseDragged:
 						addrLength - ADDRESS_SPACE_LENGTH
 						-
 						IsColumnShown(TColumn::VIEW)*VIEW_SPACE_LENGTH
+						-
+						(IsColumnShown(TColumn::LABEL)&&nLabelChars<0)*(LABEL_SPACE_LENGTH-nLabelChars)
 					)
 					/
 					( IsColumnShown(TColumn::VIEW)*item.patternLength + IsColumnShown(TColumn::STREAM)*item.nStreamBytes )

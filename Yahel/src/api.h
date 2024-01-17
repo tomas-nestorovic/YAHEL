@@ -265,7 +265,7 @@ namespace Yahel
 		virtual WORD GetStreamBytesCountPerRow() const=0;
 
 		// "Label" column
-		virtual TError SetLabelColumnParams(char nCharsSpace)=0;
+		virtual TError SetLabelColumnParams(char nLabelCharsMax)=0; // 'zero' = hidden column, 'positive' = shown and must scroll to see the column, 'negative' = shown and always visible
 
 		// searching
 		virtual TPosition FindNextOccurence(const TPosInterval &range,volatile const bool &cancel) const=0;
