@@ -92,12 +92,21 @@ namespace Yahel{
 			inline bool IsSameColorNext(const TEmphasis &r) const{ return z==r.a && color==r.color; }
 		};
 		std::set<TEmphasis> emphases;
+
+		struct TLabelColumn{
+			char nCharsMax; // negative = Label Column always visible without scrolling; zero = Column hidden; positive = Label Column always visible with eventual scrolling
+			Utils::CYahelBrush bgBrush;
+
+			inline TLabelColumn()
+				: nCharsMax(16)
+				, bgBrush(NULL_BRUSH) {
+			}
+		} label;
 		
 		const POwner pOwner;
 		Stream::IAdvisor *pStreamAdvisor;
 		BYTE columns; // TColumn flags
 		BYTE addrLength; // Address format length (see ADDRESS_FORMAT); modified in ShowColumns
-		char nLabelChars; // negative = Label Column always visible without scrolling; zero = visible but no chars reserved for the Label Column; positive = Label Column always visible with eventual scrolling
 		bool editable; // True <=> content can be edited, otherwise False
 		TState update;
 		CComPtr<IDataObject> delayedDataInClipboard; // an IDataObject whose data were not yet rendered
@@ -227,7 +236,7 @@ namespace Yahel{
 		WORD GetStreamBytesCountPerRow() const override;
 
 		// "Label" column
-		TError SetLabelColumnParams(char nCharsSpace) override;
+		TError SetLabelColumnParams(char nCharsSpace,COLORREF bgColor) override;
 
 		// searching
 		TPosition FindNextOccurence(const TPosInterval &range,volatile const bool &cancel) const override;

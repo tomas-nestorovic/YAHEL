@@ -53,31 +53,31 @@ namespace Utils{
 	
 
 
-	struct TLogBrush:public LOGBRUSH{
-		TLogBrush(int stockObjectId){
-			::GetObject( ::GetStockObject(stockObjectId), sizeof(*this), this );
-		}
-		TLogBrush(COLORREF solidColor){
-			::ZeroMemory( this, sizeof(*this) );
-			lbStyle=BS_SOLID;
-			lbColor=solidColor;
-		}
-	};
 	CYahelBrush::CYahelBrush(int stockObjectId)
 		// ctor
-		: LOGBRUSH( TLogBrush(stockObjectId) )
-		, handle( (HBRUSH)::GetStockObject(stockObjectId) ) {
+		: handle( (HBRUSH)::GetStockObject(stockObjectId) ) {
+		::GetObject( ::GetStockObject(stockObjectId), sizeof(LOGBRUSH), static_cast<LPLOGBRUSH>(this) );
 	}
 
-	CYahelBrush::CYahelBrush(COLORREF solidColor,bool sysColor)
+	CYahelBrush::CYahelBrush(COLORREF solidColor,bool sysColor){
 		// ctor
-		: LOGBRUSH(  TLogBrush( sysColor?::GetSysColor(solidColor):solidColor )  )
-		, handle( ::CreateBrushIndirect(this) ) {
+		::ZeroMemory( this, sizeof(*this) );
+		lbStyle=BS_SOLID;
+		lbColor= sysColor ? ::GetSysColor(solidColor) : solidColor;
+		handle=::CreateBrushIndirect(this);
 	}
 
 	CYahelBrush::~CYahelBrush(){
 		// dtor
 		::DeleteObject(handle);
+	}
+
+	CYahelBrush &CYahelBrush::operator=(CYahelBrush &&r){
+		// reset
+		::DeleteObject(handle);
+		*this=r;
+		r.handle=nullptr;
+		return *this;
 	}
 
 	const CYahelBrush CYahelBrush::None=NULL_BRUSH;

@@ -48,7 +48,7 @@ namespace Utils{
 	};
 
 	class CYahelBrush:public LOGBRUSH{
-		const HBRUSH handle;
+		HBRUSH handle;
 	public:
 		static const CYahelBrush None,Black,White;
 
@@ -58,6 +58,7 @@ namespace Utils{
 
 		inline operator HBRUSH() const{ return handle; }
 		inline operator COLORREF() const{ return lbColor; }
+		CYahelBrush &operator=(CYahelBrush &&r);
 	};
 
 	class CYahelFont{

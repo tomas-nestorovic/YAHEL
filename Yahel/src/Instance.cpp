@@ -112,9 +112,9 @@ namespace Yahel{
 		, caret(0) , hPreviouslyFocusedWnd(0)
 		, logPosScrolledTo(0)
 		, pStreamAdvisor(&DefaultStreamAdvisor)
-		, nLabelChars(16)
 		, editable(false) {
 		RemoveAllHighlights(); // to correctly initialize
+		SetLabelColumnParams( 16, CLR_DEFAULT ); // to correctly initialize
 		::InitializeCriticalSection(&locker);
 		Reset( nullptr, nullptr, TPosInterval(0) );
 		ShowColumns(TColumn::ALL);
@@ -431,11 +431,15 @@ namespace Yahel{
 
 
 
-	TError CInstance::SetLabelColumnParams(char nLabelCharsMax){
+	TError CInstance::SetLabelColumnParams(char nLabelCharsMax,COLORREF bgColor){
 		// sets properties of the Label Column
 		if (nLabelCharsMax!=0){ // want the Label Column visible?
 			columns|=TColumn::LABEL;
-			nLabelChars=nLabelCharsMax;
+			label.nCharsMax=nLabelCharsMax;
+			label.bgBrush=Utils::CYahelBrush(
+				bgColor>=CLR_DEFAULT ? Utils::GetBlendedColor(::GetSysColor(COLOR_WINDOW),::GetSysColor(COLOR_BTNFACE),0.85f) : bgColor,
+				false
+			);
 		}else
 			columns&=~TColumn::LABEL;
 		ShowColumns( columns );
@@ -842,7 +846,7 @@ namespace Yahel{
 	CInstance::TCharLayout CInstance::GetCharLayout() const{
 		const int xViewA=addrLength+ADDRESS_SPACE_LENGTH, xViewZ=xViewA+IsColumnShown(TColumn::VIEW)*item.patternLength*item.nInRow;
 		const int xStreamA=xViewZ+IsColumnShown(TColumn::VIEW)*VIEW_SPACE_LENGTH, xStreamZ=xStreamA+IsColumnShown(TColumn::STREAM)*GetStreamBytesCountPerRow();
-		const int xLabelA=xStreamZ+IsColumnShown(TColumn::STREAM)*LABEL_SPACE_LENGTH, xLabelZ=xLabelA+IsColumnShown(TColumn::LABEL)*std::abs(nLabelChars);
+		const int xLabelA=xStreamZ+IsColumnShown(TColumn::STREAM)*LABEL_SPACE_LENGTH, xLabelZ=xLabelA+IsColumnShown(TColumn::LABEL)*std::abs(label.nCharsMax);
 		const TCharLayout result={
 			TInterval<LONG>( 0, addrLength ),
 			TInterval<LONG>( xViewA, xViewZ ),

@@ -839,7 +839,7 @@ leftMouseDragged:
 						-
 						IsColumnShown(TColumn::VIEW)*VIEW_SPACE_LENGTH
 						-
-						(IsColumnShown(TColumn::LABEL)&&nLabelChars<0)*(LABEL_SPACE_LENGTH-nLabelChars)
+						(IsColumnShown(TColumn::LABEL)&&label.nCharsMax<0)*(LABEL_SPACE_LENGTH-label.nCharsMax)
 					)
 					/
 					( IsColumnShown(TColumn::VIEW)*item.patternLength + IsColumnShown(TColumn::STREAM)*item.nStreamBytes )
@@ -1181,10 +1181,11 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 						dc.FlushPrintBuffer();
 						// : drawing the Record label if the just drawn Row is the Record's first Row
 						if (!isEof && IsColumnShown(TColumn::LABEL)){ // yes, a new Record can potentially start at the Row
+							RECT rc={ (charLayout.label.a-charLayout.view.a)*font.GetCharAvgWidth(), rcContent.top, USHRT_MAX, rcContent.top+font.GetCharHeight() };
+							::FillRect( dc, &rc, label.bgBrush );
 							WCHAR buf[80];
 							if (const LPCWSTR recordLabel=pStreamAdvisor->GetRecordLabelW( __firstByteInRowToLogicalPosition__(r), buf, ARRAYSIZE(buf), param )){
-								RECT rc={ (charLayout.label.a-charLayout.view.a)*font.GetCharAvgWidth(), rcContent.top, USHRT_MAX, USHRT_MAX };
-								const COLORREF textColor0=::SetTextColor(dc,dc.LabelColor), bgColor0=::SetBkColor(dc,COLOR_WHITE);
+								const COLORREF textColor0=::SetTextColor(dc,dc.LabelColor), bgColor0=::SetBkColor(dc,label.bgBrush.lbColor);
 									::DrawTextW( dc, recordLabel, -1, &rc, DT_LEFT|DT_TOP );
 									::MoveToEx( dc, 0, rcContent.top, nullptr );
 									::LineTo( dc, USHRT_MAX, rcContent.top );
