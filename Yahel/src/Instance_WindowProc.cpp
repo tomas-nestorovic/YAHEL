@@ -999,6 +999,8 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 			{		const Utils::CViewportOrg viewportOrg1( dc, HEADER_LINES_COUNT+iRowFirstToPaint, 0, font );
 					dc.SetContentPrintState( CHexaPaintDC::Normal, ::GetSysColor(COLOR_BTNFACE) );
 					::DrawTextW( dc, buf,p-buf, (LPRECT)&FullClientRect, DT_LEFT|DT_TOP );
+					const RECT rcWhite={ 0, (HEADER_LINES_COUNT+iRowZ)*font.GetCharHeight(), addrLength*font.GetCharAvgWidth(), USHRT_MAX };
+					::FillRect( dc, &rcWhite, Utils::CYahelBrush::White );
 					const Utils::CViewportOrg viewportOrg2( dc, HEADER_LINES_COUNT, addrLength, font );
 					::FillRect( dc, &singleColumnRect, Utils::CYahelBrush::White );
 			}		::ExcludeClipRect( dc, 0, 0, rc.right, USHRT_MAX );
@@ -1013,14 +1015,16 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 				const int itemWidth=patternLength*font.GetCharAvgWidth();
 				const auto &&charLayout=GetCharLayout();
 				if (HEADER_LINES_COUNT){
-					const Utils::CViewportOrg viewportOrg( dc, 0, addrLength+ADDRESS_SPACE_LENGTH-iHorzScroll, font );
+					const Utils::CViewportOrg viewportOrg( dc, 0, addrLength-iHorzScroll, font );
 					::FillRect( dc, &singleRowRect, dc.BtnFaceBrush );
 					if (IsColumnShown(TColumn::VIEW)){
 						dc.SetContentPrintState( CHexaPaintDC::Normal, ::GetSysColor(COLOR_BTNFACE) );
 						TCHAR buf[16];
 						RECT rcHeader=singleRowRect;
+						static_assert( ADDRESS_SPACE_LENGTH==1, "see wsprint-ed count of spaces below" );
+						static_assert( ITEM_PATTERN_LENGTH_MIN>=3, "see wsprint-ed pattern length below" );
 						for( WORD n=0; n<item.nInRow; rcHeader.left+=itemWidth )
-							::DrawText( dc, buf, ::wsprintf(buf,_T("%02X"),n++*item.nStreamBytes), &rcHeader, DT_LEFT|DT_TOP );
+							::DrawText( dc, buf, ::wsprintf(buf,_T(" %02X"),n++*item.nStreamBytes), &rcHeader, DT_LEFT|DT_TOP );
 					}
 				}
 				// . drawing View and Stream columns
