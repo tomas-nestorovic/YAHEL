@@ -60,6 +60,8 @@ namespace Yahel{
 				return flags;
 			case ID_YAHEL_EDIT_PASTE_SPECIAL:
 			case ID_YAHEL_EDIT_DELETE:
+			case ID_YAHEL_EDIT_INCREASE:
+			case ID_YAHEL_EDIT_DECREASE:
 			case ID_YAHEL_EDIT_RESET_ZERO:
 			case ID_YAHEL_EDIT_RESET:
 				flags|=MF_GRAYED*!( editable );
