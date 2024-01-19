@@ -830,8 +830,12 @@ leftMouseDragged:
 				mouseInNcArea=false;
 				break;
 			}
-			case WM_SIZE:
+			case WM_SIZE:{
 				// window size has changed
+				// . can't work with zero width
+				if (!LOWORD(lParam))
+					break;
+				// . determining how many Items fit in a single Row
 				item.nInRow=item.nInRowLimits.Clip(
 					(	std::min( LOWORD(lParam)/font.GetCharAvgWidth(), STREAM_BYTES_IN_ROW_MAX )
 						-
@@ -844,9 +848,22 @@ leftMouseDragged:
 					/
 					( IsColumnShown(TColumn::VIEW)*item.patternLength + IsColumnShown(TColumn::STREAM)*item.nStreamBytes )
 				);
+				// . updating horizontal scrollbar
+				const auto &&charLayout=GetCharLayout();
+				SCROLLINFO si={ sizeof(si), SIF_RANGE|SIF_PAGE,
+					0, charLayout.label.z-charLayout.view.a-1, // "-1" = see vertical scrollbar
+					LOWORD(lParam)/font.GetCharAvgWidth()-(addrLength+ADDRESS_SPACE_LENGTH)
+				};
+				::SetScrollInfo( hWnd, SB_HORZ, &si, TRUE );
+				if (mouseInNcArea){
+					const BOOL horzScrollbarNecessary=si.nPage<si.nMax;
+					::ShowScrollBar( hWnd, SB_HORZ, horzScrollbarNecessary );
+				}
+				// . updating vertical scrollbar
 				RefreshScrollInfo(); // to guarantee that the actual data is always drawn
-				SendMessage( WM_KEYDOWN, VK_KANJI ); // scroll to refreshed Caret
+				//SendMessage( WM_KEYDOWN, VK_KANJI ); // scroll to refreshed Caret
 				break;
+			}
 			case WM_ERASEBKGND:
 				// drawing the background
 				outResult=TRUE;
@@ -1213,14 +1230,7 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 					::ShowScrollBar( hWnd, SB_VERT, vertScrollbarNecessary );
 				}
 				// . horizontal scrollbar
-				const auto &&charLayout=GetCharLayout();
-				si.nMax=charLayout.label.z-charLayout.view.a-1; // "-1" = see vertical scrollbar
-				si.nPage=GetClientRect().right/font.GetCharAvgWidth()-(addrLength+ADDRESS_SPACE_LENGTH);
-				::SetScrollInfo( hWnd, SB_HORZ, &si, TRUE );
-				if (mouseInNcArea){
-					const BOOL horzScrollbarNecessary=si.nPage<si.nMax;
-					::ShowScrollBar( hWnd, SB_HORZ, horzScrollbarNecessary );
-				}
+				//nop (in WM_SIZE)
 				return true;
 			}
 			case WM_DESTROY:
