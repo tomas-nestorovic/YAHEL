@@ -1141,8 +1141,7 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 										aView+=nStreamBytes;
 										if (aNearestBm<aView){
 											dc.FlushPrintBuffer(); // to print the Bookmark over the File content!
-											const LONG x=charLayout.view.a*font.GetCharAvgWidth()+n*itemWidth;
-											const RECT rcBookmark={ x, rcContent.top, x+itemWidth, rcContent.top+font.GetCharHeight() };
+											const RECT rcBookmark={ rcContent.left-item.patternLength*font.GetCharAvgWidth(), rcContent.top, rcContent.left, rcContent.top+font.GetCharHeight() };
 											::FrameRect( dc, &rcBookmark, Utils::CYahelBrush::Black );
 											aNearestBm=	( itNearestBm=bookmarks.lower_bound(aView) )!=bookmarks.end()
 														? *itNearestBm
