@@ -580,6 +580,7 @@ resetSelectionWithValue:BYTE buf[65535];
 						goto editDelete;
 					case ID_YAHEL_EDIT_INCREASE:{
 						// increment value under Caret
+						if (!editable) return true; // can't edit content of a disabled window
 						HRESULT hr;
 						BYTE b=ReadByteUnderCaret(hr);
 						if (FAILED(hr))
@@ -597,6 +598,7 @@ resetSelectionWithValue:BYTE buf[65535];
 					}
 					case ID_YAHEL_EDIT_DECREASE:{
 						// decrement value under Caret
+						if (!editable) return true; // can't edit content of a disabled window
 						HRESULT hr;
 						BYTE b=ReadByteUnderCaret(hr);
 						if (FAILED(hr))
