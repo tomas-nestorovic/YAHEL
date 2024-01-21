@@ -1038,12 +1038,12 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 					::FillRect( dc, &singleRowRect, dc.BtnFaceBrush );
 					if (IsColumnShown(TColumn::VIEW)){
 						dc.SetContentPrintState( CHexaPaintDC::Normal, ::GetSysColor(COLOR_BTNFACE) );
-						TCHAR buf[16];
+						WCHAR buf[16];
 						RECT rcHeader=singleRowRect;
 						static_assert( ADDRESS_SPACE_LENGTH==1, "see wsprint-ed count of spaces below" );
 						static_assert( ITEM_PATTERN_LENGTH_MIN>=3, "see wsprint-ed pattern length below" );
 						for( WORD n=0; n<item.nInRow; rcHeader.left+=itemWidth )
-							::DrawText( dc, buf, ::wsprintf(buf,_T(" %02X"),n++*item.nStreamBytes), &rcHeader, DT_LEFT|DT_TOP );
+							::DrawTextW( dc, buf, ::wsprintfW(buf,L" %02X",n++*item.nStreamBytes), &rcHeader, DT_LEFT|DT_TOP );
 					}
 				}
 				// . drawing View and Stream columns

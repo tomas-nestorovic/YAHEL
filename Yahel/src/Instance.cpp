@@ -604,7 +604,7 @@ namespace Yahel{
 				SetPlaceholder( patternLength, c-'A', false );
 			else if ('a'<=c && c<='z') // lower Halfbyte Placeholder
 				SetPlaceholder( patternLength, c-'a', true );
-			else if (::StrChrA("{}\\~'\"",c)) // one of forbidden chars?
+			else if (::StrChrW(L"{}\\~'\"",c)) // one of forbidden chars?
 				return ERROR_ITEM_DEF_PATTERN_FORBIDDEN;
 			else if (c>=' '){ // literal to be printed exactly
 				SetPrintableChar( patternLength, c );

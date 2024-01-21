@@ -252,6 +252,17 @@ namespace Utils{
 		return enabled;
 	}
 
+	void CYahelDialog::InitDlgItemTextW(WORD id,...) const{
+		//
+		va_list argList;
+		va_start( argList, id );
+			WCHAR buf[80];
+			GetDlgItemTextW( id, buf, ARRAYSIZE(buf) );
+				::wvsprintfW( buf, buf, argList );
+			SetDlgItemTextW( id, buf );
+		va_end(argList);
+	}
+
 	int CYahelDialog::GetDlgItemTextLength(WORD id) const{
 		return ::GetWindowTextLength( GetDlgItemHwnd(id) );
 	}
@@ -303,9 +314,9 @@ namespace Utils{
 		const HWND hValue=GetDlgItemHwnd(IDC_NUMBER);
 		if (hexa){
 			::SetWindowLong( hValue, GWL_STYLE, ::GetWindowLong(hValue,GWL_STYLE)&~ES_NUMBER );
-			TCHAR buf[32];
-			::wsprintf( buf, _T("0x%X"), Value );
-			SetDlgItemText( IDC_NUMBER, buf );
+			WCHAR buf[32];
+			::wsprintfW( buf, L"0x%X", Value );
+			SetDlgItemTextW( IDC_NUMBER, buf );
 		}else{
 			::SetWindowLong( hValue, GWL_STYLE, ::GetWindowLong(hValue,GWL_STYLE)|ES_NUMBER );
 			SetDlgItemInt( IDC_NUMBER, Value );

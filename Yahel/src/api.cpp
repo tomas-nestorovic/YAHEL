@@ -460,13 +460,8 @@ namespace Stream
 				AddPresetItem( L"Word", L"2;AaBb " );
 				AddPresetItem( L"Custom", nullptr );
 				// . labels
-				TCHAR buf[80];
-				GetDlgItemText( IDC_INFO1, buf, ARRAYSIZE(buf) );
-					::wsprintf( buf, buf, ITEM_STREAM_BYTES_MAX );
-				SetDlgItemText( IDC_INFO1, buf );
-				GetDlgItemText( IDC_INFO2, buf, ARRAYSIZE(buf) );
-					::wsprintf( buf, buf, ITEM_PATTERN_LENGTH_MIN, patternLengthMax );
-				SetDlgItemText( IDC_INFO2, buf );
+				InitDlgItemTextW( IDC_INFO1, ITEM_STREAM_BYTES_MAX );
+				InitDlgItemTextW( IDC_INFO2, ITEM_PATTERN_LENGTH_MIN, patternLengthMax );
 				// . seeing if initial Item is one of Presets
 				ShowItem();
 				RecognizePresetItem();
@@ -490,9 +485,9 @@ namespace Stream
 					err=item.Redefine(definitionBuffer);
 				}
 				if (EnableDlgItem( IDOK, !err ))
-					SetDlgItemText( IDC_ERROR, nullptr );
+					SetDlgItemTextW( IDC_ERROR, nullptr );
 				else
-					::SetDlgItemTextW( hDlg, IDC_ERROR, IOwner::GetDefaultEnglishMessage(err.code) );
+					SetDlgItemTextW( IDC_ERROR, IOwner::GetDefaultEnglishMessage(err.code) );
 				return err;
 			}
 			void RecognizePresetItem(){
