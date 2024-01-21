@@ -920,6 +920,16 @@ leftMouseDragged:
 					inline operator HDC() const{ return handle; }
 					inline const RECT &GetPaintRect() const{ return ps.rcPaint; }
 
+					RECT CreateRect(TCol right,TRow bottom) const{
+						const RECT tmp={ 0, 0, right*he.font.GetCharAvgWidth(), bottom*he.font.GetCharHeight() };
+						return tmp;
+					}
+
+					RECT CreateRect(TCol left,TRow top,TCol right,TRow bottom) const{
+						const RECT tmp={ left*he.font.GetCharAvgWidth(), top*he.font.GetCharHeight(), right*he.font.GetCharAvgWidth(), bottom*he.font.GetCharHeight() };
+						return tmp;
+					}
+
 					void SetPrintRect(RECT &rc){
 						assert( !nCharsBuffered ); // call FlushPrintBuffer first!
 						pRect=&rc;
@@ -999,32 +1009,37 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 					}
 				} dc(*this);
 				// . determining the visible part of the File content
-				const TRow iRowFirstToPaint=std::max( dc.GetPaintRect().top/font.GetCharHeight()-HEADER_LINES_COUNT, 0L );
-				const TRow iRowA= GetVertScrollPos() + iRowFirstToPaint;
-				const TRow iRowLastToPaint= GetVertScrollPos() + dc.GetPaintRect().bottom/font.GetCharHeight() + 1;
-				const TRow iRowZ=std::min( std::min(nLogicalRows,iRowLastToPaint), GetVertScrollPos()+nRowsOnPage );
+				const TRow iVertScroll=GetVertScrollPos();
+				/*const TInterval<TRow> iRowsVisible(
+					iVertScroll,
+					iVertScroll+std::min( nRowsOnPage, nLogicalRows )
+				);*/
+				const TInterval<TRow> iRowsPaint(
+					std::max( dc.GetPaintRect().top/font.GetCharHeight()-HEADER_LINES_COUNT, 0L ),
+					std::max(  std::min( dc.GetPaintRect().bottom/font.GetCharHeight()-HEADER_LINES_COUNT, (LONG)std::min(nRowsOnPage,nLogicalRows) ),  0L  )
+				);
 				// . drawing Address column
 				static constexpr RECT FullClientRect={ 0, 0, USHRT_MAX, USHRT_MAX };
 				const RECT singleColumnRect={ 0, 0, font.GetCharAvgWidth(), USHRT_MAX };
 				const RECT singleRowRect={ 0, 0, USHRT_MAX, font.GetCharHeight() };
 				if (addrLength){
 					WCHAR buf[1600],*p=buf;
-					for( TRow r=iRowA; r<=iRowZ; r++ ){
-						const auto address=__firstByteInRowToLogicalPosition__(r);
+					for( TRow r=iRowsPaint.a; r<=iRowsPaint.z; r++ ){
+						const auto address=__firstByteInRowToLogicalPosition__(iVertScroll+r);
 						p+=::wsprintfW( p, ADDRESS_FORMAT L"\r\n", HIWORD(address), LOWORD(address) );
 					}
-					const RECT rc={ 0, 0, (addrLength+ADDRESS_SPACE_LENGTH)*font.GetCharAvgWidth(), HEADER_LINES_COUNT*font.GetCharHeight() };
+					const RECT &&rc=dc.CreateRect( addrLength+ADDRESS_SPACE_LENGTH, HEADER_LINES_COUNT );
 					::FillRect( dc, &rc, dc.BtnFaceBrush );
-			{		const Utils::CViewportOrg viewportOrg1( dc, HEADER_LINES_COUNT+iRowFirstToPaint, 0, font );
-					dc.SetContentPrintState( CHexaPaintDC::Normal, ::GetSysColor(COLOR_BTNFACE) );
+			{		const Utils::CViewportOrg viewportOrg1( dc, HEADER_LINES_COUNT+iRowsPaint.a, 0, font );
+					dc.SetContentPrintState( CHexaPaintDC::Normal, dc.BtnFaceBrush.lbColor );
 					::DrawTextW( dc, buf,p-buf, (LPRECT)&FullClientRect, DT_LEFT|DT_TOP );
-					const RECT rcWhite={ 0, (HEADER_LINES_COUNT+iRowZ)*font.GetCharHeight(), addrLength*font.GetCharAvgWidth(), USHRT_MAX };
+					const RECT &&rcWhite=dc.CreateRect( 0, HEADER_LINES_COUNT+iRowsPaint.z, addrLength, USHRT_MAX );
 					::FillRect( dc, &rcWhite, Utils::CYahelBrush::White );
 					const Utils::CViewportOrg viewportOrg2( dc, HEADER_LINES_COUNT, addrLength, font );
 					::FillRect( dc, &singleColumnRect, Utils::CYahelBrush::White );
 			}		::ExcludeClipRect( dc, 0, 0, rc.right, USHRT_MAX );
 				}else{
-					const Utils::CViewportOrg viewportOrg( dc, HEADER_LINES_COUNT+iRowFirstToPaint, 0, font );
+					const Utils::CViewportOrg viewportOrg( dc, HEADER_LINES_COUNT+iRowsPaint.a, 0, font );
 					::FillRect( dc, &singleColumnRect, Utils::CYahelBrush::White );
 					::ExcludeClipRect( dc, 0, 0, singleColumnRect.right, USHRT_MAX );
 				}
@@ -1047,18 +1062,19 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 					}
 				}
 				// . drawing View and Stream columns
-				const Utils::CViewportOrg viewportOrg( dc, HEADER_LINES_COUNT+iRowFirstToPaint, addrLength+ADDRESS_SPACE_LENGTH-iHorzScroll, font );
+				const Utils::CViewportOrg viewportOrg( dc, HEADER_LINES_COUNT+iRowsPaint.a, addrLength+ADDRESS_SPACE_LENGTH-iHorzScroll, font );
 				RECT rcContent=FullClientRect;
 				if (IsColumnShown(TColumn::VIEW) || IsColumnShown(TColumn::STREAM)){
 					dc.SetPrintRect(rcContent);
-					auto address=__firstByteInRowToLogicalPosition__(iRowA);
+					auto address=__firstByteInRowToLogicalPosition__(iVertScroll+iRowsPaint.a);
 					const auto &&selection=caret.GetSelectionAsc();
 					auto itEmp=emphases.lower_bound( TEmphasis(address,0) );
 					if (itEmp!=emphases.begin() && address<itEmp->a) // potentially skipped a relevant Emphasis? (e.g. at Address 48 we have skipped the Emphasis <42;70> by discovering the next Emphasis <72;80>)
 						itEmp--;
 					f.Seek( address );
 					WCHAR buf[16];
-					for( TRow r=iRowA; rcContent.left=0,r<=iRowZ; r++,rcContent.top+=font.GetCharHeight() ){
+					for( TRow irp=iRowsPaint.a; rcContent.left=0,irp<=iRowsPaint.z; irp++,rcContent.top+=font.GetCharHeight() ){
+						const TRow r=iVertScroll+irp;
 						while (itEmp->z<address) itEmp++; // choosing the first visible Emphasis
 						// : File content
 						const bool isEof=f.GetPosition()==f.GetLength();
