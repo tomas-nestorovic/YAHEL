@@ -145,6 +145,8 @@ namespace Yahel{
 	bool CInstance::Attach(HWND hWnd){
 		if (!hWnd || !::IsWindow(hWnd)) // must be a valid window handle
 			return false;
+		if (::GetCurrentThreadId()!=::GetWindowThreadProcessId(hWnd,nullptr)) // must be called from the GUI Thread
+			return false;
 		WCHAR baseClassName[80];
 		const auto n=::GetClassNameW( hWnd, baseClassName, ARRAYSIZE(baseClassName) );
 		if (!n)
@@ -155,6 +157,7 @@ namespace Yahel{
 		if (this->hWnd && this->hWnd!=hWnd) // has already a different window buddy?
 			return false;
 		this->hWnd=hWnd;
+		SendMessage( WM_SIZE, 0, GetClientRect().right ); // refresh horizontally
 		if (f!=nullptr)
 			ScrollTo( logPosScrolledTo ); // recovering the scroll position
 		return true;
@@ -186,6 +189,7 @@ namespace Yahel{
 			return nullptr;
 		::SetWindowLong( hBaseClassWnd, GWL_USERDATA, (LONG)this );
 		baseClassWndProc=(WNDPROC)::SetWindowLong( hBaseClassWnd, GWL_WNDPROC, (LONG)WndProc );
+		SendMessage( WM_SIZE, 0, GetClientRect().right ); // refresh horizontally
 		return WndProc;
 	}
 
@@ -693,12 +697,12 @@ namespace Yahel{
 		// - determining the total number of Rows
 	{	EXCLUSIVELY_LOCK_THIS_OBJECT();
 		nLogicalRows=__logicalPositionToRow__( std::max(f.GetLength(),logicalSize) );
-	}	// - setting vertical scroll parameters
+	}	// - setting horizontal scroll parameters
+		//nop (in WM_SIZE)
+		// - setting vertical scroll parameters
 		const RECT r=GetClientRect();
 		nRowsDisplayed=std::max( 0L, (r.bottom-r.top)/font.GetCharHeight()-HEADER_LINES_COUNT );
 		nRowsOnPage=std::max( 0, nRowsDisplayed-1 );
-		// - setting horizontal scroll parameters
-		//nop (in window procedure)
 		// - paint both scrollbars
 		if (::GetCurrentThreadId()==::GetWindowThreadProcessId(hWnd,nullptr)) // do we own the HexaEditor control?
 			SendMessage( WM_HEXA_PAINTSCROLLBARS );

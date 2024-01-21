@@ -863,7 +863,7 @@ leftMouseDragged:
 				}
 				// . updating vertical scrollbar
 				RefreshScrollInfo(); // to guarantee that the actual data is always drawn
-				//SendMessage( WM_KEYDOWN, VK_KANJI ); // scroll to refreshed Caret
+				SendMessage( WM_KEYDOWN, VK_KANJI ); // scroll to refreshed Caret
 				break;
 			}
 			case WM_ERASEBKGND:
