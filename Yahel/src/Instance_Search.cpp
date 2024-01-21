@@ -110,7 +110,7 @@ namespace Yahel{
 						//fallthrough
 					case MAKELONG(ID_YAHEL_NUMBER,EN_CHANGE):
 						if (acceptNotification)
-							EnableDlgItems( SearchButtons, ::GetDlgItemTextA(hDlg,ID_YAHEL_NUMBER,params.pattern.chars,sizeof(params.pattern.chars))>0 );
+							EnableDlgItems( SearchButtons, GetDlgItemTextLength(ID_YAHEL_NUMBER)>0 );
 						return true;
 				}
 				return false; // unrecognized command
