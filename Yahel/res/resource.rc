@@ -142,7 +142,7 @@ BEGIN
     LTEXT           "An item consists of [1-%d Bytes]:",IDC_INFO1,7,35,102,8,
                     NOT WS_GROUP
     EDITTEXT        IDC_NUMBER,7,45,48,14,ES_AUTOHSCROLL | ES_NUMBER
-    EDITTEXT        IDC_FILE,7,61,277,46,ES_AUTOHSCROLL
+    EDITTEXT        IDC_FILE,7,61,277,46,WS_CLIPSIBLINGS
     LTEXT           "An item is displayed by the following pattern [%d-%d chars]:",
                     IDC_INFO2,7,114,185,8,NOT WS_GROUP
     EDITTEXT        IDC_PATTERN,7,124,277,14,ES_AUTOHSCROLL
