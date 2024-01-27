@@ -106,7 +106,7 @@ namespace Yahel{
 		const POwner pOwner;
 		Stream::IAdvisor *pStreamAdvisor;
 		BYTE columns; // TColumn flags
-		BYTE addrLength; // Address format length (see ADDRESS_FORMAT); modified in ShowColumns
+		TCol addrLength; // Address format length (see ADDRESS_FORMAT); modified in ShowColumns
 		bool editable; // True <=> content can be edited, otherwise False
 		TState update;
 		CComPtr<IDataObject> delayedDataInClipboard; // an IDataObject whose data were not yet rendered
@@ -146,7 +146,7 @@ namespace Yahel{
 		BYTE ReadByteUnderCaret(HRESULT &outResult) const;
 		void SendEditNotification(WORD en) const;
 		void PasteStreamAtCaretAndShowError(IStream *s);
-		struct TCharLayout sealed{ TInterval<LONG> address,view,stream,label; } GetCharLayout() const;
+		struct TCharLayout sealed{ TInterval<TCol> address,view,stream,label; } GetCharLayout() const;
 		RECT GetClientRect() const;
 
 		inline HWND SetFocus() const{ assert(hWnd); return ::SetFocus(hWnd); }

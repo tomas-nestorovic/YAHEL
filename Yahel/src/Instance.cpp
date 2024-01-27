@@ -848,14 +848,14 @@ namespace Yahel{
 	}
 
 	CInstance::TCharLayout CInstance::GetCharLayout() const{
-		const int xViewA=addrLength+ADDRESS_SPACE_LENGTH, xViewZ=xViewA+IsColumnShown(TColumn::VIEW)*item.patternLength*item.nInRow;
-		const int xStreamA=xViewZ+IsColumnShown(TColumn::VIEW)*VIEW_SPACE_LENGTH, xStreamZ=xStreamA+IsColumnShown(TColumn::STREAM)*GetStreamBytesCountPerRow();
-		const int xLabelA=xStreamZ+IsColumnShown(TColumn::STREAM)*LABEL_SPACE_LENGTH, xLabelZ=xLabelA+IsColumnShown(TColumn::LABEL)*std::abs(label.nCharsMax);
+		const TCol xViewA=addrLength+ADDRESS_SPACE_LENGTH, xViewZ=xViewA+IsColumnShown(TColumn::VIEW)*item.patternLength*item.nInRow;
+		const TCol xStreamA=xViewZ+IsColumnShown(TColumn::VIEW)*VIEW_SPACE_LENGTH, xStreamZ=xStreamA+IsColumnShown(TColumn::STREAM)*GetStreamBytesCountPerRow();
+		const TCol xLabelA=xStreamZ+IsColumnShown(TColumn::STREAM)*LABEL_SPACE_LENGTH, xLabelZ=xLabelA+IsColumnShown(TColumn::LABEL)*std::abs(label.nCharsMax);
 		const TCharLayout result={
-			TInterval<LONG>( 0, addrLength ),
-			TInterval<LONG>( xViewA, xViewZ ),
-			TInterval<LONG>( xStreamA, xStreamZ ),
-			TInterval<LONG>( xLabelA, xLabelZ )
+			TInterval<TCol>( 0, addrLength ),
+			TInterval<TCol>( xViewA, xViewZ ),
+			TInterval<TCol>( xStreamA, xStreamZ ),
+			TInterval<TCol>( xLabelA, xLabelZ )
 		};
 		return result;
 	}
