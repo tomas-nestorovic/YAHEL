@@ -1019,6 +1019,7 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 					std::max(  std::min( dc.GetPaintRect().bottom/font.GetCharHeight()-HEADER_LINES_COUNT, (LONG)std::min(nRowsOnPage,nLogicalRows) ),  0L  )
 				);
 				// . drawing Address column
+				dc.SetContentPrintState( CHexaPaintDC::Normal, dc.BtnFaceBrush );
 				static constexpr RECT FullClientRect={ 0, 0, USHRT_MAX, USHRT_MAX };
 				const RECT singleColumnRect={ 0, 0, font.GetCharAvgWidth(), USHRT_MAX };
 				const RECT singleRowRect={ 0, 0, USHRT_MAX, font.GetCharHeight() };
@@ -1031,7 +1032,6 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 					const RECT &&rc=dc.CreateRect( addrLength+ADDRESS_SPACE_LENGTH, HEADER_LINES_COUNT );
 					::FillRect( dc, &rc, dc.BtnFaceBrush );
 			{		const Utils::CViewportOrg viewportOrg1( dc, HEADER_LINES_COUNT+iRowsPaint.a, 0, font );
-					dc.SetContentPrintState( CHexaPaintDC::Normal, dc.BtnFaceBrush.lbColor );
 					::DrawTextW( dc, buf,p-buf, (LPRECT)&FullClientRect, DT_LEFT|DT_TOP );
 					const RECT &&rcWhite=dc.CreateRect( 0, HEADER_LINES_COUNT+iRowsPaint.z, addrLength, USHRT_MAX );
 					::FillRect( dc, &rcWhite, Utils::CYahelBrush::White );
@@ -1052,7 +1052,6 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 					const Utils::CViewportOrg viewportOrg( dc, 0, addrLength-iHorzScroll, font );
 					::FillRect( dc, &singleRowRect, dc.BtnFaceBrush );
 					if (IsColumnShown(TColumn::VIEW)){
-						dc.SetContentPrintState( CHexaPaintDC::Normal, ::GetSysColor(COLOR_BTNFACE) );
 						WCHAR buf[16];
 						RECT rcHeader=singleRowRect;
 						static_assert( ADDRESS_SPACE_LENGTH==1, "see wsprint-ed count of spaces below" );
@@ -1223,7 +1222,7 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 							::FillRect( dc, &rc, label.bgBrush );
 							WCHAR buf[80];
 							if (const LPCWSTR recordLabel=pStreamAdvisor->GetRecordLabelW( __firstByteInRowToLogicalPosition__(r), buf, ARRAYSIZE(buf), param )){
-								const COLORREF textColor0=::SetTextColor(dc,dc.LabelColor), bgColor0=::SetBkColor(dc,label.bgBrush.lbColor);
+								const COLORREF textColor0=::SetTextColor(dc,dc.LabelColor), bgColor0=::SetBkColor(dc,label.bgBrush);
 									::DrawTextW( dc, recordLabel, -1, &rc, DT_LEFT|DT_TOP );
 									::MoveToEx( dc, 0, rcContent.top, nullptr );
 									::LineTo( dc, USHRT_MAX, rcContent.top );
