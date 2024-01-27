@@ -447,9 +447,19 @@ namespace Stream
 				const HWND hPresets=GetDlgItemHwnd(IDC_PRESETS);
 				ComboBox_SetItemData( hPresets, ::SendMessageW(hPresets,CB_ADDSTRING,0,(LPARAM)buf), pattern );
 			}
+			void UpdateStreamLength(){
+				if (IStream *const s=hexaEditor.GetCurrentStream()){
+					ULARGE_INTEGER uli;
+						uli.QuadPart=item.nStreamBytes;
+					s->SetSize(uli);
+					s->Release();
+				}
+				hexaEditor.RepaintData();
+			}
 			void ShowItem(){
 				const Utils::CVarTempReset<bool> pn0( processNotifications, false ); // don't recurrently trigger notifications
 				SetDlgItemInt( IDC_NUMBER, item.nStreamBytes );
+				UpdateStreamLength();
 				WCHAR pattern[ARRAYSIZE(item.pattern)+1];
 				SetDlgItemTextW( IDC_PATTERN, item.GetDefinition(pattern) );
 			}
@@ -520,15 +530,8 @@ namespace Stream
 							break;
 						}
 						case MAKELONG(IDC_NUMBER,EN_CHANGE):
-							if (TrySaveDefinition()==ERROR_KOSHER){
-								ULARGE_INTEGER uli;
-									uli.QuadPart=item.nStreamBytes;
-								if (IStream *const s=hexaEditor.GetCurrentStream()){
-									s->SetSize(uli);
-									s->Release();
-								}
-								hexaEditor.RepaintData();
-							}
+							if (TrySaveDefinition()==ERROR_KOSHER)
+								UpdateStreamLength();
 							//fallthrough
 						case MAKELONG(IDC_PATTERN,EN_CHANGE):
 							if (TrySaveDefinition()==ERROR_KOSHER)
