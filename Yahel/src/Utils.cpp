@@ -56,7 +56,7 @@ namespace Utils{
 	CYahelBrush::CYahelBrush(int stockObjectId)
 		// ctor
 		: handle( (HBRUSH)::GetStockObject(stockObjectId) ) {
-		::GetObject( ::GetStockObject(stockObjectId), sizeof(LOGBRUSH), static_cast<LPLOGBRUSH>(this) );
+		::GetObjectW( ::GetStockObject(stockObjectId), sizeof(LOGBRUSH), static_cast<LPLOGBRUSH>(this) );
 	}
 
 	CYahelBrush::CYahelBrush(COLORREF solidColor,bool sysColor){
@@ -87,29 +87,29 @@ namespace Utils{
 
 
 
-	CYahelFont::TLogFont::TLogFont(LPCTSTR face,int pointHeight){
+	CYahelFont::TLogFont::TLogFont(LPCWSTR face,int pointHeight){
 		// ctor
 		::ZeroMemory( this, sizeof(*this) );
 		lfHeight=(10*-pointHeight)/72;
 		lfCharSet=DEFAULT_CHARSET;
 		lfQuality=ANTIALIASED_QUALITY;
-		::lstrcpyn( lfFaceName, face, ARRAYSIZE(lfFaceName) );
+		::lstrcpynW( lfFaceName, face, ARRAYSIZE(lfFaceName) );
 	}
 
 	CYahelFont::TLogFont::TLogFont(HFONT hFont){
 		// ctor
-		::GetObject( hFont, sizeof(*this), this );
+		::GetObjectW( hFont, sizeof(*this), this );
 	}
 
-	CYahelFont::CYahelFont(const LOGFONT &lf)
+	CYahelFont::CYahelFont(const LOGFONTW &lf)
 		// ctor
 		// - initialization
-		: handle( ::CreateFontIndirect(&lf) ) {
+		: handle( ::CreateFontIndirectW(&lf) ) {
 		// - determining the AvgWidth and Height of Font characters
 		const HDC screen=::GetDC(0);
 			const HGDIOBJ hFont0=::SelectObject( screen, handle );
-				TEXTMETRIC tm;
-				::GetTextMetrics( screen, &tm );
+				TEXTMETRICW tm;
+				::GetTextMetricsW( screen, &tm );
 				charAvgWidth=tm.tmAveCharWidth;
 				charHeight=tm.tmHeight;
 			::SelectObject(screen,hFont0);

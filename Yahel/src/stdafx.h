@@ -54,12 +54,11 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 #define DLL_VERSION		_T("1.4")
 #define DLL_CLASSNAME	_T("Afx:tomascz.") DLL_ABBREVIATION
 
-#define FONT_SYMBOL			_T("Symbol")
-#define FONT_VERDANA		_T("Verdana")
-#define FONT_WEBDINGS		_T("Webdings")
-#define FONT_WINGDINGS		_T("Wingdings")
-#define FONT_COURIER_NEW	_T("Courier New")
-#define FONT_LUCIDA_CONSOLE	_T("Lucida Console")
+#define FONT_SYMBOL			L"Symbol"
+#define FONT_WEBDINGS		L"Webdings"
+#define FONT_WINGDINGS		L"Wingdings"
+#define FONT_COURIER_NEW	L"Courier New"
+#define FONT_LUCIDA_CONSOLE	L"Lucida Console"
 
 #define GITHUB_HTTPS_NAME		_T("https://github.com")
 #define GITHUB_API_SERVER_NAME	_T("api.github.com")

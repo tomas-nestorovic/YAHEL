@@ -65,12 +65,12 @@ namespace Utils{
 		const HFONT handle;
 		int charAvgWidth,charHeight;
 	public:
-		struct TLogFont:public LOGFONT{
-			TLogFont(LPCTSTR face,int pointHeight);
+		struct TLogFont:public LOGFONTW{
+			TLogFont(LPCWSTR face,int pointHeight);
 			TLogFont(HFONT hFont);
 		};
 
-		CYahelFont(const LOGFONT &lf);
+		CYahelFont(const LOGFONTW &lf);
 		~CYahelFont();
 
 		inline operator HFONT() const{ return handle; }
