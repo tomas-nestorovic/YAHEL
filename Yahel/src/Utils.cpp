@@ -203,8 +203,43 @@ namespace Utils{
 
 	UINT_PTR CYahelDialog::DoModal(UINT nIDTemplate,HWND hParent){
 		assert(!hDlg);
-		return	::DialogBoxParam(
-					(HINSTANCE)&__ImageBase, MAKEINTRESOURCE(nIDTemplate),
+		// - adopting Parent's Font or default system Font
+		HFONT hFont=(HFONT)::SendMessageW( hParent, WM_GETFONT, 0, 0 );
+		if (!hFont)
+			hFont=(HFONT)::GetStockObject(DEFAULT_GUI_FONT);
+		// - injecting Font information into the Dialog template
+		const HRSRC hRes=::FindResource( (HINSTANCE)&__ImageBase, MAKEINTRESOURCE(nIDTemplate), RT_DIALOG );
+		const HGLOBAL gRes=::LoadResource( (HINSTANCE)&__ImageBase, hRes );
+		const LPCDLGTEMPLATE lpRes=(LPCDLGTEMPLATE)::LockResource( gRes ); // MSDN: doesn't actually lock memory; it is just used to obtain a pointer to the memory containing the resource data
+			const auto cbRes=::SizeofResource( (HINSTANCE)&__ImageBase, hRes );
+			struct{
+				DLGTEMPLATE header;
+				WCHAR str[4096];
+			} dlgTemplate;
+			if (hFont && (lpRes->style&DS_SETFONT)==0){ // just to be sure (Font determined, and the Dialog lacks explicit Font settings)
+				// . copying template before Font information
+				LPCWSTR p0=(LPCWSTR)(lpRes+1);
+				for( BYTE n=3; n>0; n-=*p0++=='\0' );
+				auto nBytesBeforeFont=(PBYTE)p0-(PBYTE)lpRes;
+				::memcpy( &dlgTemplate, lpRes, nBytesBeforeFont );
+				// . injecting Font (adopted from MFC library)
+				PWCHAR p=(PWCHAR)((PBYTE)&dlgTemplate+nBytesBeforeFont);
+				const CYahelFont::TLogFont lf(hFont);
+				const HDC hDC=::GetDC(nullptr);
+					*p++=::MulDiv( std::abs(lf.lfHeight), 72, ::GetDeviceCaps(hDC,LOGPIXELSY) );
+				::ReleaseDC( nullptr, hDC );
+				p+=::lstrlenW( ::lstrcpyW(p,lf.lfFaceName) );
+				*(LPDWORD)p++=0;
+				dlgTemplate.header.style|=DS_SETFONT;
+				// . copying template after Font information (aligned to a DWORD, aka. 4 Bytes)
+				nBytesBeforeFont=(nBytesBeforeFont+3)&~3;
+				p+=((INT_PTR)p&3)!=0;
+				::memcpy( p, (PBYTE)lpRes+nBytesBeforeFont, cbRes-nBytesBeforeFont );
+			}else
+				::memcpy( &dlgTemplate, lpRes, cbRes );
+		::FreeResource(gRes);
+		return	::DialogBoxIndirectParamW(
+					(HINSTANCE)&__ImageBase, &dlgTemplate.header,
 					hParent, DialogProc, (LPARAM)this
 				);
 	}
