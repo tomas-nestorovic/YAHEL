@@ -33,20 +33,20 @@ namespace Yahel
 			case MSG_READY:
 				return L"Ready";
 			case MSG_LIMIT_UPPER:
-				return L"The content has reached its upper limit";
+				return L"The content reached its upper limit";
 			case MSG_SELECTION_SAVED_PARTIALLY:
 				return L"Selection saved only partially";
 			case MSG_SELECTION_RESET_PARTIALLY:
-				return L"Selection only partially reset";
+				return L"Selection reset only partially";
 			case MSG_PASTED_PARTIALLY:
 				return L"Pasted only partially";
 			case MSG_PADDED_TO_MINIMUM_SIZE:
 				return L"To preserve the minimum size, the content has been padded with zeros";
 
 			case QUERY_DELETE_SELECTED_BOOKMARKS:
-				return L"Sure to delete selected bookmarks?";
+				return L"Delete selected bookmarks?";
 			case QUERY_DELETE_ALL_BOOKMARKS:
-				return L"Sure to delete all bookmarks?";
+				return L"Delete all bookmarks?";
 
 			default:
 				return	id<MSG_READY ? L"General error" : nullptr;
