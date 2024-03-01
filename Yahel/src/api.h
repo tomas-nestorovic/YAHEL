@@ -40,6 +40,9 @@
 #define ID_YAHEL_COLUMN_LABEL           41023
 #define ID_YAHEL_EDIT_INCREASE          41024
 #define ID_YAHEL_EDIT_DECREASE          41025
+#define ID_YAHEL_CHECKSUM_ADD           41026
+#define ID_YAHEL_CHECKSUM_XOR           41027
+#define ID_YAHEL_CHECKSUM_CCITT16       41028
 
 namespace Yahel
 {
@@ -126,6 +129,27 @@ namespace Yahel
 
 
 
+	struct YAHEL_DECLSPEC TChecksumParams{
+		enum:BYTE{
+			Add,
+			Xor,
+			Ccitt16,
+			Last
+		} type;
+		int initValue;
+		TPosInterval range;
+
+		static int GetDefaultInitValue();
+		static int GetErrorChecksumValue();
+
+		TChecksumParams();
+
+		bool IsValid() const;
+		bool EditModalWithDefaultEnglishDialog(HWND hParent);
+	};
+
+
+
 	enum TMsg:BYTE{
 		ERROR_KOSHER,
 		ERROR_ITEM_DEF_BYTE_COUNT_UNKNOWN,
@@ -174,6 +198,9 @@ namespace Yahel
 		virtual bool QueryAddressToGoTo(TGoToParams &outGtp) const=0;
 		// resetting
 		virtual bool QueryByteToResetSelectionWith(TResetSelectionParams &outRsp) const=0;
+		// checksum
+		virtual bool QueryChecksumParams(TChecksumParams &outCp) const=0;
+		virtual int ComputeChecksum(const TChecksumParams &cp) const=0;
 		// GUI
 		virtual int GetCustomCommandMenuFlags(WORD cmd) const=0;
 		virtual bool ShowOpenFileDialog(LPCWSTR singleFilter,DWORD ofnFlags,PWCHAR lpszFileNameBuffer,WORD bufferCapacity) const=0;
@@ -263,6 +290,7 @@ namespace Yahel
 		virtual TPosition GetStreamLogicalSize() const=0;
 		virtual void SetStreamLogicalSize(TPosition logicalSize)=0;
 		virtual WORD GetStreamBytesCountPerRow() const=0;
+		virtual int GetChecksum(const TChecksumParams &cp,volatile const bool &cancel) const=0;
 
 		// "Label" column
 		virtual TError SetLabelColumnParams(char nLabelCharsMax,COLORREF bgColor)=0; // 'zero' = hidden column, 'positive' = shown and must scroll to see the column, 'negative' = shown and always visible

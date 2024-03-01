@@ -28,6 +28,17 @@ namespace Yahel{
 
 
 
+	// checksum
+	bool CInstance::QueryChecksumParams(TChecksumParams &outCp) const{
+		return false;
+	}
+
+	int CInstance::ComputeChecksum(const TChecksumParams &cp) const{
+		return TChecksumParams::GetErrorChecksumValue();
+	}
+
+
+
 	// GUI
 	int CInstance::GetCustomCommandMenuFlags(WORD cmd) const{
 		// custom command GUI update
@@ -35,6 +46,9 @@ namespace Yahel{
 		switch (cmd){
 			case ID_YAHEL_EDIT_COPY:
 			case ID_YAHEL_FILE_SAVE_COPY_AS:
+			case ID_YAHEL_CHECKSUM_ADD:
+			case ID_YAHEL_CHECKSUM_XOR:
+			case ID_YAHEL_CHECKSUM_CCITT16:
 				flags|=MF_GRAYED*!( caret.SelectionExists() );
 				return flags;
 			case ID_YAHEL_EDIT_PASTE:

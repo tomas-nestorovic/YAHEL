@@ -98,6 +98,12 @@ BEGIN
             MENUITEM SEPARATOR
             MENUITEM "Address...\tCtrl+G",          ID_YAHEL_GOTO_ADDRESS
         END
+        POPUP "Checksum (stream)"
+        BEGIN
+            MENUITEM "Add...",                      ID_YAHEL_CHECKSUM_ADD
+            MENUITEM "Xor...",                      ID_YAHEL_CHECKSUM_XOR
+            MENUITEM "CRC16-CCITT...",              ID_YAHEL_CHECKSUM_CCITT16
+        END
         POPUP "Columns"
         BEGIN
             MENUITEM "Address",                     ID_YAHEL_COLUMN_ADDRESS

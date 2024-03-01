@@ -150,6 +150,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="src\Instance.cpp" />
+    <ClCompile Include="src\Instance_Checksum.cpp" />
     <ClCompile Include="src\Instance_DefaultOwner.cpp" />
     <ClCompile Include="src\Instance_Navigation.cpp" />
     <ClCompile Include="src\Instance_Reset.cpp" />

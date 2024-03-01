@@ -665,6 +665,28 @@ resetSelectionWithValue:BYTE buf[65535];
 						}else
 							return true;
 					}
+					case ID_YAHEL_CHECKSUM_ADD:
+					case ID_YAHEL_CHECKSUM_XOR:
+					case ID_YAHEL_CHECKSUM_CCITT16:{
+						// computation of Checksum
+						// . ignoring disabled command (e.g. can't search within the "Find" dialog)
+						if (IS_RECURRENT_USE)
+							return true;
+						// . requesting the Owner for Checksum computation parameters
+						TChecksumParams cp;
+						cp.type=(decltype(cp.type))(wParam-ID_YAHEL_CHECKSUM_ADD);
+						cp.range=caret.GetSelectionAsc();
+						if (pOwner->QueryChecksumParams(cp) && cp.IsValid()){
+							const auto checksum=pOwner->ComputeChecksum(cp);
+							if (checksum!=cp.GetErrorChecksumValue()){
+								TCHAR msg[80];
+								::wsprintf( msg, _T("Checksum of selected stream is %d (0x%X)"), checksum, checksum );
+								::MessageBox( hWnd, msg, _T(""), 0 );
+							}
+						}
+						SetFocus();
+						return true;
+					}
 					case ID_YAHEL_COLUMN_ADDRESS:
 					case ID_YAHEL_COLUMN_ITEMS:
 					case ID_YAHEL_COLUMN_STREAM:
