@@ -34,7 +34,14 @@ namespace Yahel{
 
 			bool InitDialog() override{
 				hexaEditor.SubclassAndAttach( GetDlgItemHwnd(IDC_FILE) );
-				return true; // set the keyboard focus to the default control
+				const Utils::CVarTempReset<bool> an0( acceptNotification, false );
+					char patternText[sizeof(params.pattern.chars)+1];
+					SetDlgItemText( ID_YAHEL_TEXT, ::lstrcpynA(patternText,params.pattern.chars,params.patternLength+1) );
+				static constexpr WORD EditControls[]={ ID_YAHEL_TEXT, IDC_FILE, ID_YAHEL_NUMBER };
+				const HWND hEdit=GetDlgItemHwnd( EditControls[params.type] );
+				::SetFocus(hEdit);
+				::SendMessage( hEdit, EM_SETSEL, 0, params.patternLength );
+				return false; // focus already set manually
 			}
 
 			bool ValidateDialog() override{
@@ -122,7 +129,7 @@ namespace Yahel{
 				: params(params0)
 				, acceptNotification(true)
 				, hexaEditor( (HINSTANCE)&__ImageBase, &hexaEditor, MARK_RECURRENT_USE, hFont ) {
-				IStream *const s=Stream::FromBuffer( params.pattern.bytes, 0 );
+				IStream *const s=Stream::FromBuffer( params.pattern.bytes, params.patternLength );
 					hexaEditor.Reset( s, nullptr, TPosInterval(1,sizeof(params.pattern.bytes)) );
 				s->Release();
 				hexaEditor.ShowColumns( IInstance::TColumn::MINIMAL );
@@ -185,6 +192,7 @@ namespace Yahel{
 				return Stream::GetErrorPosition();
 		}
 		// - preparation for KMP search (Knuth-Morris-Pratt)
+		static_assert( sizeof(*params.pattern.bytes)==sizeof(*params.pattern.chars), "" ); // musn't mix Bytes and (for instance) Unicode
 		BYTE pie[sizeof(params.pattern.bytes)];
 		*pie=0;
 		for( BYTE i=1,k=0; i<params.patternLength; i++ ){
