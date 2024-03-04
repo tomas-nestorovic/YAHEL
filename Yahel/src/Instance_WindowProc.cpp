@@ -304,6 +304,7 @@ editDelete:				if (!editable) return true; // can't edit content of a disabled w
 						if (!nBytesToMove) // successfully moved all Bytes?
 							posSrc = logicalSize = std::max( logicalSize+posDst-posSrc, logicalSizeLimits.a );
 						if (posDst<posSrc){
+							f.Seek(posDst);
 							for( static constexpr BYTE Zero=0; posDst++<posSrc; f.Write(&Zero,1,IgnoreIoResult) );
 							if (!nBytesToMove) // successfully moved all Bytes?
 								ShowMessage( MSG_PADDED_TO_MINIMUM_SIZE );
