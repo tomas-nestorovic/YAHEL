@@ -561,18 +561,28 @@ resetSelectionWithValue:BYTE buf[65535];
 						CComPtr<IEnumFORMATETC> pefe;
 						if (FAILED(pdo->EnumFormatEtc( DATADIR_GET, &pefe.p )))
 							return true;
-						CComPtr<IStream> ps;
-						STGMEDIUM stg={};
-						for( FORMATETC fmt; pefe->Next(1,&fmt,nullptr)==S_OK; )
+						for( FORMATETC fmt; pefe->Next(1,&fmt,nullptr)==S_OK; ){
+							BYTE nIgnoredTailBytes;
 							if (fmt.cfFormat==GetClipboardFormat())
-								if (fmt.tymed==TYMED_HGLOBAL && SUCCEEDED(pdo->GetData(&fmt,&stg))){
-									if (const PVOID pData=::GlobalLock(stg.hGlobal)){
-										ps.Attach( Stream::FromBuffer(pData,::GlobalSize(stg.hGlobal)) );
-										PasteStreamAtCaretAndShowError(ps);
-										::GlobalUnlock(stg.hGlobal);
-									}
-									break;
-								}
+								nIgnoredTailBytes=0;
+							else if (fmt.cfFormat==CF_TEXT)
+								nIgnoredTailBytes=sizeof(char);
+							else if (fmt.cfFormat==CF_UNICODETEXT)
+								nIgnoredTailBytes=sizeof(WCHAR);
+							else
+								continue;
+							if (fmt.tymed&TYMED_ISTREAM)
+								fmt.tymed=TYMED_ISTREAM;
+							else if (fmt.tymed&TYMED_HGLOBAL)
+								fmt.tymed=TYMED_HGLOBAL;
+							else
+								continue;
+							STGMEDIUM stg={};
+							if (FAILED(pdo->GetData(&fmt,&stg)))
+								return true;
+							PasteAtCaretAndShowError( stg, nIgnoredTailBytes );
+							break;
+						}
 						goto finishWriting;
 					}
 					case ID_YAHEL_EDIT_DELETE:

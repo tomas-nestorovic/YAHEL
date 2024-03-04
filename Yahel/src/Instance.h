@@ -145,7 +145,8 @@ namespace Yahel{
 		void ShowMessage(TMsg id) const;
 		BYTE ReadByteUnderCaret(HRESULT &outResult) const;
 		void SendEditNotification(WORD en) const;
-		void PasteStreamAtCaretAndShowError(IStream *s);
+		void PasteStreamAtCaretAndShowError(IStream *s,BYTE nIgnoredTailBytes=0);
+		void PasteAtCaretAndShowError(const STGMEDIUM &stg,BYTE nIgnoredTailBytes=0);
 		struct TCharLayout sealed{ TInterval<TCol> address,view,stream,label; } GetCharLayout() const;
 		RECT GetClientRect() const;
 

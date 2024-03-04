@@ -52,7 +52,7 @@ namespace Yahel{
 				flags|=MF_GRAYED*!( caret.SelectionExists() );
 				return flags;
 			case ID_YAHEL_EDIT_PASTE:
-				flags|=MF_GRAYED*!( editable && ::IsClipboardFormatAvailable(GetClipboardFormat()) );
+				flags|=MF_GRAYED*!( editable && (::IsClipboardFormatAvailable(GetClipboardFormat())||::IsClipboardFormatAvailable(CF_TEXT)||::IsClipboardFormatAvailable(CF_UNICODETEXT)) );
 				return flags;
 			case ID_YAHEL_BOOKMARK_TOGGLE:
 				flags|=MF_GRAYED*!(

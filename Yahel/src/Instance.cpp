@@ -803,13 +803,13 @@ namespace Yahel{
 		::SendMessage( ::GetParent(hWnd), WM_COMMAND, MAKELONG(GetWindowLong(hWnd,GWL_ID),en), 0 );
 	}
 
-	void CInstance::PasteStreamAtCaretAndShowError(IStream *s){
+	void CInstance::PasteStreamAtCaretAndShowError(IStream *s,BYTE nIgnoredTailBytes){
 		// pastes input Stream at Caret's CurrentPosition, showing also an eventual error
 		if (s!=nullptr){
 			caret.CancelSelection(); // select what has been pasted
 			f.Seek(caret.streamPosition);
 			const auto lengthLimit=logicalSizeLimits.z-caret.streamPosition;
-			const auto streamLength=Stream::GetLength(s);
+			const auto streamLength=Stream::GetLength(s)-nIgnoredTailBytes;
 			struct{ TMsg msg; DWORD code; } error={};
 			TPosition nBytesToRead;
 			if (streamLength<=lengthLimit)
@@ -839,6 +839,29 @@ namespace Yahel{
 				pOwner->ShowInformation( error.msg, error.code );
 		}else
 			pOwner->ShowInformation( ERROR_PASTE_FAILED, ::GetLastError() );
+	}
+
+	void CInstance::PasteAtCaretAndShowError(const STGMEDIUM &stg,BYTE nIgnoredTailBytes){
+		// pastes stored content at Caret's CurrentPosition, showing also an eventual error
+		switch (stg.tymed){
+			case TYMED_ISTREAM:{
+				static constexpr LARGE_INTEGER Origin={};
+				stg.pstm->Seek( Origin, STREAM_SEEK_SET, 0 );
+				PasteStreamAtCaretAndShowError( stg.pstm, nIgnoredTailBytes );
+				break;
+			}
+			case TYMED_HGLOBAL:{
+				STGMEDIUM tmp={ TYMED_ISTREAM };
+				if (FAILED(::CreateStreamOnHGlobal( stg.hGlobal, FALSE, &tmp.pstm )))
+					break;
+				PasteAtCaretAndShowError( tmp, nIgnoredTailBytes );
+				tmp.pstm->Release();
+				break;
+			}
+			default:
+				assert(false);
+				break;
+		}
 	}
 
 	void CInstance::ScrollToCaretAsync(){
