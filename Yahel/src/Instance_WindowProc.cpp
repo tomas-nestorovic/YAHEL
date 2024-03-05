@@ -379,6 +379,9 @@ finishWriting:				SendEditNotification( EN_CHANGE );
 						}else
 							ShowMessage(MSG_LIMIT_UPPER);
 				return true;
+			case EM_SETSEL:
+				SetSelection( wParam, lParam );
+				return true;
 			case WM_CONTEXTMENU:{
 				// context menu invocation
 				if (IS_RECURRENT_USE)

@@ -396,9 +396,13 @@ namespace Stream
 	}
 
 	void IInstance::ShowModalAboutDialog(HWND hParent){
+		SYSTEMTIME st;
+		::GetLocalTime(&st);
+		TCHAR buf[80];
+		::wsprintf( buf, DLL_FULLNAME _T("\n\nVersion ") DLL_VERSION _T("\n\n\ntomascz, 2023-%d"), st.wYear );
 		::MessageBox(
 			hParent,
-			DLL_FULLNAME _T("\n\nVersion ") DLL_VERSION _T("\n\n\ntomascz, 2023"),
+			buf,
 			_T("About ") DLL_ABBREVIATION,
 			MB_OK
 		);
