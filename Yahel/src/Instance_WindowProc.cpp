@@ -94,10 +94,7 @@ caretRefresh:			// refresh of Caret display
 						else if (iCol>=si.nPos+si.nPage)
 							ScrollToColumn(iCol-si.nPage+1);
 						// . displaying the Caret
-						if (::GetFocus()==hWnd){
-							__refreshCaretDisplay__();
-							ShowCaret();
-						}
+						RefreshCaretDisplay();
 						return true;
 					}
 					case VK_RIGHT:

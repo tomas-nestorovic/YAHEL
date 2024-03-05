@@ -141,13 +141,14 @@ namespace Yahel{
 		TRow __scrollToRow__(TRow row);
 		void ScrollToCaretAsync();
 		void RefreshScrollInfo();
-		void __refreshCaretDisplay__() const;
+		void RefreshCaretDisplay() const;
 		void ShowMessage(TMsg id) const;
 		BYTE ReadByteUnderCaret(HRESULT &outResult) const;
 		void SendEditNotification(WORD en) const;
 		void PasteStreamAtCaretAndShowError(IStream *s,BYTE nIgnoredTailBytes=0);
 		void PasteAtCaretAndShowError(const STGMEDIUM &stg,BYTE nIgnoredTailBytes=0);
 		struct TCharLayout sealed{ TInterval<TCol> address,view,stream,label; } GetCharLayout() const;
+		struct TMatrix sealed{ TInterval<TRow> rows; TInterval<TCol> cols; } GetVisibleMatrix() const;
 		RECT GetClientRect() const;
 
 		inline HWND SetFocus() const{ assert(hWnd); return ::SetFocus(hWnd); }

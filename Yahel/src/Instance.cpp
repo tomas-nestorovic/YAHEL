@@ -199,6 +199,7 @@ namespace Yahel{
 	}		RECT rc=GetClientRect();
 			rc.top=HEADER_HEIGHT;
 			::InvalidateRect( hWnd, &rc, TRUE );
+			RefreshCaretDisplay();
 		}
 	}
 
@@ -227,14 +228,7 @@ namespace Yahel{
 				::OleFlushClipboard(); // ... render data that we put into clipboard earlier
 				delayedDataInClipboard.Release();
 			}
-		if (::IsWindow(hWnd)){ // may be window-less if the owner is window-less
-			if (::GetFocus()==hWnd){
-				__refreshCaretDisplay__();
-				SetFocus();
-				ShowCaret();
-			}
-			Invalidate(FALSE);
-		}
+		RepaintData();
 	}
 
 	bool CInstance::IsEditable() const{
@@ -365,12 +359,23 @@ namespace Yahel{
 		ScrollToCaretAsync();
 	}
 
+	CInstance::TMatrix CInstance::GetVisibleMatrix() const{
+		// returns visible matrix
+		TMatrix result;
+		const auto iVert=GetVertScrollPos();
+		result.rows=TInterval<TRow>( iVert, iVert+nRowsDisplayed );
+		const auto iHorz=GetHorzScrollPos();
+		const auto nColsDisplayed=GetClientRect().right/font.GetCharAvgWidth() - addrLength-ADDRESS_SPACE_LENGTH;
+		result.cols=TInterval<TCol>( iHorz, iHorz+nColsDisplayed );
+		return result;
+	}
+
 	TPosInterval CInstance::GetVisiblePart() const{
 		// gets the beginning and end of visible portion of the File content
-		const auto i=GetVertScrollPos();
+		const auto rows=GetVisibleMatrix().rows;
 		return	TPosInterval(
-					__firstByteInRowToLogicalPosition__(i),
-					__firstByteInRowToLogicalPosition__(i+nRowsDisplayed)
+					__firstByteInRowToLogicalPosition__(rows.a),
+					__firstByteInRowToLogicalPosition__(rows.z)
 				);
 	}
 
@@ -672,7 +677,7 @@ namespace Yahel{
 			::ScrollWindow( hWnd, 0, dr*font.GetCharHeight(), nullptr, &rcScroll );
 			::SetScrollPos( hWnd, SB_VERT, row, TRUE ); // True = redrawing the scroll-bar, not HexaEditor's canvas!
 			SendMessage( WM_VSCROLL, SB_THUMBPOSITION ); // letting descendants of HexaEditor know that a scrolling occured
-			::DestroyCaret();
+			RefreshCaretDisplay();
 		}
 		return GetVertScrollPos();
 	}
@@ -688,7 +693,7 @@ namespace Yahel{
 			::ScrollWindow( hWnd, dc*font.GetCharAvgWidth(), 0, nullptr, &rcScroll );
 			::SetScrollPos( hWnd, SB_HORZ, col, TRUE ); // True = redrawing the scroll-bar, not HexaEditor's canvas!
 			SendMessage( WM_HSCROLL, SB_THUMBPOSITION ); // letting descendants of HexaEditor know that a scrolling occured
-			::DestroyCaret();
+			RefreshCaretDisplay();
 		}
 	}
 
@@ -712,38 +717,36 @@ namespace Yahel{
 			PostMessage( WM_HEXA_PAINTSCROLLBARS );
 	}
 
-	void CInstance::__refreshCaretDisplay__() const{
-		// shows Caret on screen at position that corresponds with Caret's actual Position in the underlying File content (e.g. the 12345-th Byte of the File)
+	void CInstance::RefreshCaretDisplay() const{
+		// shows Caret at current Position in the File (e.g. the 12345-th Byte of the File), otherwise False
+		assert(hWnd);
+		::HideCaret(hWnd);
+		if (::GetFocus()!=hWnd)
+			return;
+		const auto &&matrix=GetVisibleMatrix();
+		const auto iRow=__logicalPositionToRow__(caret.streamPosition);
+		if (!matrix.rows.Contains(iRow)) // invisible Row?
+			return;
+		POINT pos={
+			caret.streamPosition-__firstByteInRowToLogicalPosition__(iRow), // translated below to a particular X pixel position
+			( HEADER_LINES_COUNT + iRow - matrix.rows.a )*font.GetCharHeight() // already a particular Y pixel position
+		};
+		if (caret.IsInStream()) // Caret in the Stream ("Ascii") area
+			pos.x+=GetCharLayout().stream.a;
+		else // Caret in the View area
+			pos.x=GetCharLayout().view.a+pos.x/item.nStreamBytes*item.patternLength+caret.iViewHalfbyte;
+		if (!matrix.cols.Contains(pos.x-addrLength-1)) // invisible Column?
+			return;
+		pos.x-=matrix.cols.a; // horz scroll pos
+		pos.x*=font.GetCharAvgWidth();
 		#define CARET_DISABLED_HEIGHT 2
+		pos.y+=!editable*(font.GetCharHeight()-CARET_DISABLED_HEIGHT);
 		::CreateCaret(
 			hWnd, nullptr, font.GetCharAvgWidth(),
 			!editable*CARET_DISABLED_HEIGHT + editable*font.GetCharHeight() // either N (if not Editable) or CharHeight (if Editable)
 		);
-		TPosition currRecordStart, currRecordLength=1;
-		pStreamAdvisor->GetRecordInfo( caret.streamPosition, &currRecordStart, &currRecordLength, nullptr );
-		if (currRecordLength<1)
-			currRecordLength=1;
-		const auto d=div( caret.streamPosition-currRecordStart, currRecordLength );
-		const auto iScrollY=GetVertScrollPos();
-		//if (d.quot>=iScrollY){ // commented out as always guaranteed
-			// Caret "under" the header
-			POINT pos={
-				d.rem % GetStreamBytesCountPerRow(), // translated below to a particular pixel position
-				(HEADER_LINES_COUNT + __logicalPositionToRow__(caret.streamPosition) - iScrollY)*font.GetCharHeight() // already a particular Y pixel position
-			};
-			if (caret.IsInStream()) // Caret in the Stream ("Ascii") area
-				pos.x+=GetCharLayout().stream.a;
-			else // Caret in the View area
-				pos.x=GetCharLayout().view.a+pos.x/item.nStreamBytes*item.patternLength+caret.iViewHalfbyte;
-			pos.x-=GetHorzScrollPos();
-			pos.x*=font.GetCharAvgWidth();
-			pos.y+=!editable*(font.GetCharHeight()-CARET_DISABLED_HEIGHT);
-			::SetCaretPos( pos.x, pos.y );
-		/*}else{ // commented out as it never occurs
-			// Caret "above" the header
-			static constexpr POINT Pos={ -100, -100 };
-			SetCaretPos(Pos);
-		}*/
+		::SetCaretPos( pos.x, pos.y );
+		ShowCaret();
 	}
 
 	TPosition CInstance::__logicalPositionFromPoint__(const POINT &pt,PCHAR piPlaceholder) const{
