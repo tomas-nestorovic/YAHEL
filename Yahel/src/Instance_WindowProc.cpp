@@ -64,7 +64,7 @@ caretCorrectlyMoveTo:	// . adjusting the Caret's Position (aligning towards the 
 							if (caret.streamPosition!=caretStreamPos0) // did the Caret actually move?
 								RepaintData();
 						}else{
-							if (caret.streamSelectionA!=caretStreamPos0) // if there has been a Selection before ...
+							if (caret.SelectionExists()) // if there has been a Selection before ...
 								RepaintData(); // ... invalidating the content as the Selection is about to be cancelled
 							caret.CancelSelection(); // cancelling any Selection
 						}
@@ -205,20 +205,21 @@ moveCaretDown:			const auto iRow=__logicalPositionToRow__(caret.streamPosition);
 					case VK_BACK:
 						// deleting the Byte before Caret, or deleting the Selection
 						if (!editable) return true; // can't edit content of a disabled window
+						if (!f) return true; // there's nothing to do without an underlying Content
 						// . if Selection not set, setting it as the Byte immediately before Caret
 						if (!caret.SelectionExists())
-							if (caret.IsInStream()){ // in Stream column
-								if (caret.streamPosition<=0) return true; // can actually delete anything before the Caret?
-								caret.streamSelectionA=caret.streamPosition-1;
-							}else{ // in View column - nothing actually deleted yet, merely created a Selection to delete with another press of Backspace
-								const Utils::CVarTempReset<bool> md0( mouseDragged, true ); // adjust Selection by pretending mouse button being pressed
-								caret.iViewHalfbyte=item.iFirstPlaceholder;
-								SendMessage( WM_KEYDOWN, VK_LEFT ); // select current Item
-								std::swap( caret.streamPosition, caret.streamSelectionA );
-								goto caretRefresh;
-							}
-						// . moving the content "after" Selection "to" the position of the Selection
-						//fallthrough
+							if (caret.IsInStream()) // in Stream column
+								caret.streamSelection=TPosInterval( caret.streamPosition-1 );
+							else // in View column - nothing actually deleted yet, merely created a Selection to delete with another press of Backspace
+								return ProcessMessage( msg, VK_DELETE, 0, outResult ); // select current Item
+						// . delete
+						ProcessMessage( msg, VK_DELETE, 0, outResult );
+						if (caret.SelectionExists()) // not yet deleted? (e.g. just a message-box shown?)
+							return true;
+						// . move caret before Selection
+						if (!caret.IsInStream()) // in View column
+							caret.streamPosition--;
+						goto caretCorrectlyMoveTo;
 					case VK_DELETE:{
 						// deleting the Byte after Caret, or deleting the Selection
 editDelete:				if (!editable) return true; // can't edit content of a disabled window
@@ -226,17 +227,22 @@ editDelete:				if (!editable) return true; // can't edit content of a disabled w
 						// . if Selection not set, setting it as the Byte immediately after Caret
 						const auto caret0=caret;
 						if (!caret.SelectionExists())
-							if (caret.IsInStream()){ // in Stream column
-								if (caret.streamPosition>=f.GetLength()) return true; // can actually delete anything after the Caret?
-								caret.streamSelectionA=caret.streamPosition++;
-							}else{ // in View column - nothing actually deleted yet, merely created a Selection to delete with another press of Backspace
-								const Utils::CVarTempReset<bool> md0( mouseDragged, true ); // adjust Selection by pretending mouse button being pressed
-								caret.iViewHalfbyte=item.iLastPlaceholder;
-								SendMessage( WM_KEYDOWN, VK_RIGHT ); // select current Item
+							if (caret.streamPosition>=f.GetLength()) // can actually delete anything after the Caret?
+								return true;
+							else if (caret.IsInStream()) // in Stream column
+								caret.streamSelection=TPosInterval( caret.streamPosition );
+							else{ // in View column - nothing actually deleted yet, merely created a Selection to delete with another press of Backspace
+								const auto iRow=__logicalPositionToRow__(caret.streamPosition);
+								const auto nextRowStart=__firstByteInRowToLogicalPosition__(iRow+1);
+								caret.streamSelection=TPosInterval(
+									caret.streamPosition,
+									caret.streamPosition+std::min<TPosition>( item.nStreamBytes, nextRowStart-caret.streamPosition )
+								);
+								RepaintData();
 								goto caretRefresh;
 							}
 						// . checking if there are any Bookmarks selected
-						const auto selection=caret.GetSelectionAsc();
+						const auto selection=caret.streamSelection;
 						auto posSrc=selection.z, posDst=selection.a;
 						auto itBm=bookmarks.lower_bound(posDst);
 						if (itBm!=bookmarks.end() && *itBm<posSrc){
@@ -251,7 +257,7 @@ editDelete:				if (!editable) return true; // can't edit content of a disabled w
 						// . removing/trimming Emphases in Selection
 						AddHighlight( selection, CLR_DEFAULT );
 						// . moving the content "after" Selection "to" the position of the Selection
-						caret.streamSelectionA = caret.streamPosition = posDst; // moving the Caret and cancelling any Selection
+						caret.CancelSelection(), caret.streamPosition=posDst; // moving the Caret and cancelling any Selection
 						auto nBytesToMove=f.GetLength()-posSrc;
 						itBm=bookmarks.lower_bound(posSrc);
 						auto itEmp=emphases.lower_bound( TEmphasis(posSrc,0) );
@@ -412,7 +418,7 @@ finishWriting:				SendEditNotification( EN_CHANGE );
 						// navigating the Caret to the previous Bookmark
 						auto it=bookmarks.lower_bound(caret.streamPosition);
 						if (it!=bookmarks.begin()){ // just to be sure
-							caret.streamSelectionA = caret.streamPosition = *--it; // moving the Caret and cancelling any Selection
+							caret.CancelSelection(), caret.streamPosition=*--it; // moving the Caret and cancelling any Selection
 							RepaintData();
 							goto caretCorrectlyMoveTo;
 						}else
@@ -426,7 +432,7 @@ finishWriting:				SendEditNotification( EN_CHANGE );
 							( caret.IsInStream() ? 1 : item.nStreamBytes )
 						);
 						if (it!=bookmarks.end()){ // just to be sure
-							caret.streamSelectionA = caret.streamPosition = *it; // moving the Caret and cancelling any Selection
+							caret.CancelSelection(), caret.streamPosition=*it; // moving the Caret and cancelling any Selection
 							RepaintData();
 							goto caretCorrectlyMoveTo;
 						}else
@@ -442,7 +448,7 @@ finishWriting:				SendEditNotification( EN_CHANGE );
 							break;
 					case ID_YAHEL_SELECT_ALL:{
 						// Selecting everything
-						caret.streamSelectionA=0, caret.streamPosition=f.GetLength();
+						caret.streamSelection=TPosInterval( 0, f.GetLength() );
 						RepaintData();
 						const Utils::CVarTempReset<bool> md0( mouseDragged, true ); // don't change Selection (if any) by pretending mouse button being pressed
 						SendMessage( WM_KEYDOWN, VK_JUNJA ); // caretCorrectlyMoveTo
@@ -456,8 +462,8 @@ finishWriting:				SendEditNotification( EN_CHANGE );
 					case ID_YAHEL_SELECT_CURRENT:{
 						// selecting the whole Record under the Caret
 						TPosition recordLength=0;
-						pStreamAdvisor->GetRecordInfo( caret.streamPosition, &caret.streamSelectionA, &recordLength, nullptr );
-						caret.streamPosition=caret.streamSelectionA+recordLength;
+						pStreamAdvisor->GetRecordInfo( caret.streamPosition, &caret.streamSelection.a, &recordLength, nullptr );
+						caret.streamPosition = caret.streamSelection.z = caret.streamSelection.a+recordLength;
 						caret.iViewHalfbyte=item.iFirstPlaceholder;
 						RepaintData();
 						const Utils::CVarTempReset<bool> md0( mouseDragged, true ); // adjust Selection by pretending mouse button being pressed
@@ -470,7 +476,7 @@ finishWriting:				SendEditNotification( EN_CHANGE );
 						if (pOwner->ShowSaveFileDialog( nullptr, 0, ::lstrcpyW(fileName,L"selection.bin"), ARRAYSIZE(fileName) )){
 							const HANDLE hDest=::CreateFileW( fileName, GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0 );
 							if (hDest!=INVALID_HANDLE_VALUE){
-								const auto selection=caret.GetSelectionAsc();
+								const auto selection=caret.streamSelection;
 								for( TPosition nBytesToSave=selection.z-f.Seek(selection.a),n; nBytesToSave; nBytesToSave-=n ){
 									BYTE buf[65536];
 									n=f.Read(  buf,  std::min<TPosition>( nBytesToSave, sizeof(buf) ),  IgnoreIoResult  );
@@ -507,7 +513,7 @@ finishWriting:				SendEditNotification( EN_CHANGE );
 resetSelectionWithValue:BYTE buf[65535];
 						if (i>=0) // some constant value
 							::memset( buf, i, sizeof(buf) );
-						const auto selection=caret.GetSelectionAsc();
+						const auto selection=caret.streamSelection;
 						for( TPosition nBytesToReset=selection.z-f.Seek(selection.a),n; nBytesToReset; nBytesToReset-=n ){
 							n=std::min<TPosition>( nBytesToReset, sizeof(buf) );
 							if (i<0) // Gaussian noise
@@ -541,7 +547,7 @@ resetSelectionWithValue:BYTE buf[65535];
 						// copying the Selection into clipboard
 						if (!caret.SelectionExists())
 							return true;
-						if (const LPDATAOBJECT pdo=Stream::CreateDataObject( f, caret.GetSelectionAsc() )){
+						if (const LPDATAOBJECT pdo=Stream::CreateDataObject( f, caret.streamSelection )){
 							::OleSetClipboard(pdo);
 							if (editable) // if content Editable ...
 								::OleFlushClipboard(); // ... render data immediately
@@ -638,7 +644,7 @@ resetSelectionWithValue:BYTE buf[65535];
 						// . requesting the Owner to begin/continue with a Search session
 						if (LOWORD(wParam)==ID_YAHEL_FIND){
 							TSearchParams tmp;
-							if (const auto sel=caret.GetSelectionAsc()){
+							if (const auto sel=caret.streamSelection){
 								f.Seek( sel.a );
 								if (tmp.patternLength=f.Read( tmp.pattern.bytes, std::min<TPosition>(sizeof(tmp.pattern.bytes),sel.GetLength()), IgnoreIoResult )){
 									tmp.type=TSearchParams::ASCII_ANY_CASE; // should be set by the ctor above, but just to be sure
@@ -657,7 +663,8 @@ resetSelectionWithValue:BYTE buf[65535];
 						const auto posFound=pOwner->ContinueSearching(searchParams);
 						if (posFound!=Stream::GetErrorPosition()){ // found a match?
 							SetFocus();
-							caret.streamPosition=( caret.streamSelectionA=posFound )+searchParams.patternLength;
+							caret.streamSelection=TPosInterval( posFound, posFound+searchParams.patternLength );
+							caret.streamPosition=caret.streamSelection.z;
 							if (!caret.IsInStream()) // in View column
 								caret.iViewHalfbyte-=item.patternLength; // switch to Stream column
 							RepaintData();
@@ -697,7 +704,7 @@ resetSelectionWithValue:BYTE buf[65535];
 						// . requesting the Owner for Checksum computation parameters
 						TChecksumParams cp;
 						cp.type=(decltype(cp.type))(wParam-ID_YAHEL_CHECKSUM_ADD);
-						cp.range=caret.GetSelectionAsc();
+						cp.range=caret.streamSelection;
 						if (pOwner->QueryChecksumParams(cp) && cp.IsValid()){
 							const auto checksum=pOwner->ComputeChecksum(cp);
 							if (checksum!=cp.GetErrorChecksumValue()){
@@ -734,10 +741,9 @@ resetSelectionWithValue:BYTE buf[65535];
 			case WM_RBUTTONDOWN:{
 				// right mouse button pressed
 				mouseDragged=false;
-				const auto logPos=__logicalPositionFromPoint__( Utils::MakePoint(lParam), nullptr );
-				if (logPos>=0){
+				if (const auto pointedCaretPos=CaretPositionFromPoint( Utils::MakePoint(lParam) )){
 					// in either View or Stream column
-					if (caret.GetSelectionAsc().Contains(logPos))
+					if (caret.streamSelection.Contains(pointedCaretPos.streamPosition))
 						// right-clicked on the Selection
 						break; // showing context menu at the place of Caret
 					else
@@ -757,10 +763,9 @@ resetSelectionWithValue:BYTE buf[65535];
 				if (cursorPos0==lParam) return true; // actually no Cursor movement occured
 leftMouseDragged:
 				cursorPos0=lParam;
-				const auto logPos=__logicalPositionFromPoint__( Utils::MakePoint(lParam), &caret.iViewHalfbyte );
-				if (logPos>=0)
+				if (const auto pointedCaretPos=CaretPositionFromPoint( Utils::MakePoint(lParam) ))
 					// in either View or Stream column
-					caret.streamPosition=logPos;
+					static_cast<TCaretPosition &>(caret)=pointedCaretPos;
 				else{
 					// outside any interactive column
 					if (!mouseDragged){ // if right now mouse button pressed ...
@@ -775,10 +780,9 @@ leftMouseDragged:
 			}
 			case WM_LBUTTONDBLCLK:{
 				// left mouse button double-clicked
-				const auto logPos=__logicalPositionFromPoint__( Utils::MakePoint(lParam), &caret.iViewHalfbyte );
-				if (logPos>=0){
+				if (const auto pointedCaretPos=CaretPositionFromPoint( Utils::MakePoint(lParam) )){
 					// in either View or Stream columns
-					caret.streamPosition=logPos;
+					static_cast<TCaretPosition &>(caret)=pointedCaretPos;
 					outResult=SendMessage( WM_COMMAND, ID_YAHEL_SELECT_CURRENT );
 					return true;
 				}
@@ -1110,7 +1114,7 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 				if (IsColumnShown(TColumn::VIEW) || IsColumnShown(TColumn::STREAM)){
 					dc.SetPrintRect(rcContent);
 					auto address=__firstByteInRowToLogicalPosition__(iVertScroll+iRowsPaint.a);
-					const auto &&selection=caret.GetSelectionAsc();
+					const auto selection=caret.streamSelection;
 					auto itEmp=emphases.lower_bound( TEmphasis(address,0) );
 					if (itEmp!=emphases.begin() && address<itEmp->a) // potentially skipped a relevant Emphasis? (e.g. at Address 48 we have skipped the Emphasis <42;70> by discovering the next Emphasis <72;80>)
 						itEmp--;

@@ -326,7 +326,8 @@ namespace Yahel{
 		// changes the LogicalSize of File content (originally set when Resetting the HexaEditor)
 		logicalSize=std::max( 0L, logicalSize ); // mustn't be negative
 		EXCLUSIVELY_LOCK_THIS_OBJECT();
-		caret.streamSelectionA=std::min( caret.streamSelectionA, logicalSize );
+		caret.streamSelection.a=std::min( caret.streamSelection.a, logicalSize );
+		caret.streamSelection.z=std::min( caret.streamSelection.z, logicalSize );
 		caret.streamPosition=std::min( caret.streamPosition, logicalSize );
 		//caret.iViewHalfbyte=std::min<char>( caret.iViewHalfbyte, 0 ); // don't change the column (View vs Stream)
 		if (mouseInNcArea)
@@ -345,16 +346,17 @@ namespace Yahel{
 	}
 
 	TPosInterval CInstance::GetSelectionAsc() const{
-		return caret.GetSelectionAsc();
+		return caret.streamSelection;
 	}
 
 	void CInstance::SetSelection(TPosition selA,TPosition selZ){
 		// sets current Selection, moving Caret to the end of the Selection
 		if (selA>selZ)
 			std::swap( selA, selZ );
-		caret.streamSelectionA=std::max( 0L, selA );
-		caret.streamPosition=std::min( selZ, logicalSizeLimits.z );
-		caret.iViewHalfbyte=item.iFirstPlaceholder;
+		caret.streamSelection.a=std::max( 0L, selA );
+		caret.streamSelection.z = caret.streamPosition = std::min( selZ, logicalSizeLimits.z );
+		if (!caret.IsInStream()) // in View column
+			caret.iViewHalfbyte=item.iFirstPlaceholder;
 		RepaintData();
 		ScrollToCaretAsync();
 	}
@@ -382,7 +384,7 @@ namespace Yahel{
 	void CInstance::ScrollTo(TPosition logicalPos,bool moveAlsoCaret){
 		// independently from Caret, displays specified LogicalPosition
 		if (moveAlsoCaret)
-			caret.streamSelectionA = caret.streamPosition = logicalPos;
+			caret.CancelSelection(), caret.streamPosition=logicalPos;
 		RefreshScrollInfo();
 		__scrollToRow__( __logicalPositionToRow__(logicalPos) );
 	}
@@ -571,22 +573,24 @@ namespace Yahel{
 		return ::GetAsyncKeyState(VK_SHIFT)<0;
 	}
 
+	const CInstance::TCaretPosition CInstance::TCaretPosition::Invalid( -1, -1 );
+
+	bool CInstance::TCaretPosition::operator<(const TCaretPosition &r) const{
+		assert(!( IsInStream() ^ r.IsInStream() )); // can compare only positions within the same Column
+		return	streamPosition<r.streamPosition
+				||
+				streamPosition==r.streamPosition && iViewHalfbyte<r.iViewHalfbyte;
+	}
+
 	CInstance::TCaret::TCaret(TPosition position)
 		// ctor
-		: iViewHalfbyte(0) // in View column
-		, streamSelectionA(position) , streamSelectionZ(position) { // nothing selected
+		: streamSelection(0,0) {
+		streamPosition=position; // nothing selected
 	}
 
-	CInstance::TCaret &CInstance::TCaret::operator=(const TCaret &r){
-		// copy assignment operator
-		return *(TCaret *)(  ::memcpy( this, &r, sizeof(*this) )  );
-	}
-
-	TPosInterval CInstance::TCaret::GetSelectionAsc() const{
-		return	TPosInterval(
-					std::min( streamSelectionA, streamSelectionZ ),
-					std::max( streamSelectionA, streamSelectionZ )
-				);
+	void CInstance::TCaret::CancelSelection(){
+		streamSelection.a=streamSelection.z;
+		selectionInit=*this;
 	}
 
 
@@ -749,7 +753,7 @@ namespace Yahel{
 		ShowCaret();
 	}
 
-	TPosition CInstance::__logicalPositionFromPoint__(const POINT &pt,PCHAR piPlaceholder) const{
+	CInstance::TCaretPosition CInstance::CaretPositionFromPoint(const POINT &pt) const{
 		// determines and returns the LogicalPosition pointed to by the input Point (or -1 if not pointing at a particular Byte in both the View and Stream columns)
 		int x=pt.x/font.GetCharAvgWidth()-(addrLength+ADDRESS_SPACE_LENGTH)+GetHorzScrollPos();
 		const TRow r=pt.y/font.GetCharHeight()-HEADER_LINES_COUNT+GetVertScrollPos();
@@ -760,29 +764,26 @@ namespace Yahel{
 			if (0<=x && x<nViewChars){
 				// View area
 				const auto d=div( x, item.patternLength );
-				if (piPlaceholder)
-					if (d.quot>=nCurrLineBytes/item.nStreamBytes)
-						*piPlaceholder=item.iLastPlaceholder;
-					else
-						for( char i=0; i<item.patternLength; i++ ) // find closest Placeholder
-							if (d.rem-i>=0 && item.IsPlaceholder(d.rem-i)){
-								*piPlaceholder=d.rem-i;
-								break;
-							}else if (d.rem+i<item.patternLength && item.IsPlaceholder(d.rem+i)){
-								*piPlaceholder=d.rem+i;
-								break;
-							}
-				return currLineStart+std::min( d.quot*item.nStreamBytes, currLineLastByte );
+				const auto streamPosition=currLineStart+std::min( d.quot*item.nStreamBytes, currLineLastByte );
+				if (d.quot>=nCurrLineBytes/item.nStreamBytes)
+					return TCaretPosition( streamPosition, item.iLastPlaceholder );
+				else
+					for( char i=0; i<item.patternLength; i++ ) // find closest Placeholder
+						if (d.rem-i>=0 && item.IsPlaceholder(d.rem-i))
+							return TCaretPosition( streamPosition, d.rem-i );
+						else if (d.rem+i<item.patternLength && item.IsPlaceholder(d.rem+i))
+							return TCaretPosition( streamPosition, d.rem+i );
 			}
 			x-=nViewChars+VIEW_SPACE_LENGTH;
 		}
 		if (IsColumnShown(TColumn::STREAM))
-			if (0<=x && x<GetStreamBytesCountPerRow()){
+			if (0<=x && x<GetStreamBytesCountPerRow())
 				// Stream area
-				if (piPlaceholder) *piPlaceholder=-item.patternLength;
-				return currLineStart+std::min( x, currLineLastByte );
-			}
-		return -1; // outside any area
+				return TCaretPosition(
+					currLineStart+std::min( x, currLineLastByte ),
+					-item.patternLength
+				);
+		return TCaretPosition::Invalid; // outside any area
 	}
 
 	void CInstance::ShowMessage(TMsg id) const{

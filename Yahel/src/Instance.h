@@ -49,6 +49,22 @@ namespace Yahel{
 	typedef class CInstance:public IInstance, public IOwner, TState{
 		static LRESULT WINAPI WndProc(HWND hYahel,UINT msg,WPARAM wParam,LPARAM lParam);
 	protected:
+		struct TCaretPosition{
+			static const TCaretPosition Invalid;
+
+			TPosition streamPosition;
+			char iViewHalfbyte; // negative <=> Caret in Stream column, otherwise positive or zero
+
+			inline TCaretPosition(TPosition streamPosition=0,char iViewHalfbyte=0) // by default in View column
+				: streamPosition(streamPosition)
+				, iViewHalfbyte(iViewHalfbyte) {
+			}
+
+			bool operator<(const TCaretPosition &r) const;
+			inline operator bool() const{ return streamPosition>=0; }
+			inline bool IsInStream() const{ return iViewHalfbyte<0; }
+		};
+
 		static bool ShiftPressedAsync();
 
 		volatile ULONG nReferences;
@@ -65,20 +81,13 @@ namespace Yahel{
 		TRow nRowsOnPage;
 		TPosition logPosScrolledTo; // Position in the upper left corner of the hexa-editor
 		HWND hPreviouslyFocusedWnd;
-		struct TCaret sealed{
-			TPosition streamSelectionA; // beginning (including)
-			union{
-				TPosition streamPosition; // current logical position in underlying File
-				const TPosition streamSelectionZ; // Selection end (excluding)
-			};
-			char iViewHalfbyte; // negative <=> Caret in Stream column, otherwise positive or zero
+		struct TCaret sealed:public TCaretPosition{
+			TCaretPosition selectionInit;
+			TPosInterval streamSelection;
 			
 			TCaret(TPosition position); // ctor
-			TCaret &operator=(const TCaret &r);
-			inline bool IsInStream() const{ return iViewHalfbyte<0; }
-			inline bool SelectionExists() const{ return streamSelectionA!=streamSelectionZ; }
-			TPosInterval GetSelectionAsc() const;
-			inline void CancelSelection(){ streamSelectionA=streamPosition; }
+			inline bool SelectionExists() const{ return streamSelection.IsValidNonempty(); }
+			void CancelSelection();
 		} caret;
 
 		std::set<TPosition> bookmarks;
@@ -137,7 +146,7 @@ namespace Yahel{
 
 		TPosition __firstByteInRowToLogicalPosition__(TRow row) const;
 		TRow __logicalPositionToRow__(TPosition logPos) const;
-		TPosition __logicalPositionFromPoint__(const POINT &pt,PCHAR piHalfByte=nullptr) const;
+		TCaretPosition CaretPositionFromPoint(const POINT &pt) const;
 		TRow __scrollToRow__(TRow row);
 		void ScrollToCaretAsync();
 		void RefreshScrollInfo();
