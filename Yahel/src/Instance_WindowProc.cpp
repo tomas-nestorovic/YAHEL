@@ -48,12 +48,13 @@ caretCorrectlyMoveTo:	// . adjusting the Caret's Position (aligning towards the 
 						const auto currRowStart=__firstByteInRowToLogicalPosition__(iRow);
 						const auto nextRowStart=__firstByteInRowToLogicalPosition__(iRow+1);
 						const auto itemPosition=currRowStart+(caret.streamPosition-currRowStart)/item.nStreamBytes*item.nStreamBytes; // align to the beginning of current Item
+						const auto nRemainingBytesInRow=std::min(nextRowStart,f.GetLength())-itemPosition;
 						if (caret.IsInStream()){ // in Stream column
 							if (std::min(nextRowStart,f.GetLength())-itemPosition<item.nStreamBytes) // Item under Caret incomplete?
 								caret.iViewHalfbyte=-item.patternLength;
 						}else{ // in View column
 							caret.streamPosition = itemPosition;
-							if (std::min(nextRowStart,f.GetLength())-itemPosition<item.nStreamBytes) // Item under Caret incomplete?
+							if (nRemainingBytesInRow<item.nStreamBytes) // Item under Caret incomplete?
 								/*if (caret.streamPosition>currRowStart) // can go to previous Item in the same line?
 									caret.streamPosition-=item.nStreamBytes, caret.iViewHalfbyte=item.iLastPlaceholder;
 								else*/
@@ -61,8 +62,31 @@ caretCorrectlyMoveTo:	// . adjusting the Caret's Position (aligning towards the 
 						}
 						// . adjusting an existing Selection if Shift pressed
 						if (mouseDragged || ShiftPressedAsync()){ // wanted to adjust Selection? (by dragging the mouse or having the Shift key pressed)
-							if (caret.streamPosition!=caretStreamPos0) // did the Caret actually move?
+							if (caret.streamPosition!=caretStreamPos0){ // did the Caret actually move?
+								if (caret.IsInStream()){ // in Stream column
+									if (caret.selectionInit<caret) // selecting towards the end of Stream?
+										caret.streamSelection=TPosInterval(
+											caret.selectionInit.streamPosition,
+											caret.streamPosition
+										);
+									else
+										caret.streamSelection=TPosInterval(
+											caret.streamPosition,
+											caret.selectionInit.streamPosition
+										);
+								}else // in View column
+									if (caret.selectionInit<caret) // selecting towards the end of Stream?
+										caret.streamSelection=TPosInterval( // fully select current Item, even if incomplete
+											caret.selectionInit.streamPosition,
+											caret.streamPosition + std::min<TPosition>( nRemainingBytesInRow, item.nStreamBytes )
+										);
+									else // selecting towards the beginning of Stream
+										caret.streamSelection=TPosInterval(
+											caret.streamPosition,
+											caret.selectionInit.streamPosition + item.nStreamBytes
+										);
 								RepaintData();
+							}
 						}else{
 							if (caret.SelectionExists()) // if there has been a Selection before ...
 								RepaintData(); // ... invalidating the content as the Selection is about to be cancelled
