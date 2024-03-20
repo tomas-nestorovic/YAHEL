@@ -786,6 +786,34 @@ namespace Yahel{
 		return TCaretPosition::Invalid; // outside any area
 	}
 
+	TPosInterval CInstance::GetItemAt(const TCaretPosition &caretPos) const{
+		// determines and returns the Item that contains the specified input position
+		// - if invalid input position or beyond Stream, returning invalid Item
+		const auto fLength=f.GetLength();
+		if (caretPos.streamPosition>=fLength){
+			static const struct TInvalidPosInterval:public TPosInterval{
+				TInvalidPosInterval()
+					: TPosInterval(0) {
+					std::swap( a, z );
+				}
+			} InvalidPosInterval;
+			return InvalidPosInterval;
+		}
+		// - if in Stream column, returning a single Byte
+		if (caretPos.IsInStream())
+			return caretPos.streamPosition;
+		// - if in View column, returning the Item that contains the input position (eventually an incomplete Item)
+		const auto iRow=__logicalPositionToRow__(caretPos);
+		const auto currRowStart=__firstByteInRowToLogicalPosition__(iRow);
+		const auto itemPosition=currRowStart+(caretPos.streamPosition-currRowStart)/item.nStreamBytes*item.nStreamBytes; // align to the beginning of current Item
+		const auto nextRowStart=__firstByteInRowToLogicalPosition__(iRow+1);
+		const auto nRemainingBytesInRow=std::min(nextRowStart,fLength)-itemPosition;
+		return TPosInterval(
+			itemPosition,
+			itemPosition + std::min<TPosition>( item.nStreamBytes, nRemainingBytesInRow )
+		);
+	}
+
 	void CInstance::ShowMessage(TMsg id) const{
 		// shows Message and passes focus back to the HexaEditor
 		pOwner->ShowInformation(id);

@@ -62,6 +62,7 @@ namespace Yahel{
 
 			bool operator<(const TCaretPosition &r) const;
 			inline operator bool() const{ return streamPosition>=0; }
+			inline operator TPosition() const{ return streamPosition; }
 			inline bool IsInStream() const{ return iViewHalfbyte<0; }
 		};
 
@@ -86,6 +87,7 @@ namespace Yahel{
 			TPosInterval streamSelection;
 			
 			TCaret(TPosition position); // ctor
+
 			inline bool SelectionExists() const{ return streamSelection.IsValidNonempty(); }
 			void CancelSelection();
 		} caret;
@@ -147,6 +149,7 @@ namespace Yahel{
 		TPosition __firstByteInRowToLogicalPosition__(TRow row) const;
 		TRow __logicalPositionToRow__(TPosition logPos) const;
 		TCaretPosition CaretPositionFromPoint(const POINT &pt) const;
+		TPosInterval GetItemAt(const TCaretPosition &caretPos) const;
 		TRow __scrollToRow__(TRow row);
 		void ScrollToCaretAsync();
 		void RefreshScrollInfo();

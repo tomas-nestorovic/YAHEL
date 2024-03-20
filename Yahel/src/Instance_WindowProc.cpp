@@ -44,17 +44,13 @@ caretCorrectlyMoveTo:	// . adjusting the Caret's Position (aligning towards the 
 								caret.iViewHalfbyte=item.iFirstPlaceholder;
 						}else if (caret.streamPosition>f.GetLength())
 							caret.streamPosition=f.GetLength();
-						const auto iRow=__logicalPositionToRow__(caret.streamPosition);
-						const auto currRowStart=__firstByteInRowToLogicalPosition__(iRow);
-						const auto nextRowStart=__firstByteInRowToLogicalPosition__(iRow+1);
-						const auto itemPosition=currRowStart+(caret.streamPosition-currRowStart)/item.nStreamBytes*item.nStreamBytes; // align to the beginning of current Item
-						const auto nRemainingBytesInRow=std::min(nextRowStart,f.GetLength())-itemPosition;
+						const auto &&itemUnderCaret=GetItemAt(caret);
 						if (caret.IsInStream()){ // in Stream column
-							if (std::min(nextRowStart,f.GetLength())-itemPosition<item.nStreamBytes) // Item under Caret incomplete?
+							if (itemUnderCaret.GetLength()<item.nStreamBytes) // Item under Caret incomplete?
 								caret.iViewHalfbyte=-item.patternLength;
 						}else{ // in View column
-							caret.streamPosition = itemPosition;
-							if (nRemainingBytesInRow<item.nStreamBytes) // Item under Caret incomplete?
+							caret.streamPosition = itemUnderCaret.a;
+							if (itemUnderCaret.GetLength()<item.nStreamBytes) // Item under Caret incomplete?
 								/*if (caret.streamPosition>currRowStart) // can go to previous Item in the same line?
 									caret.streamPosition-=item.nStreamBytes, caret.iViewHalfbyte=item.iLastPlaceholder;
 								else*/
@@ -78,11 +74,11 @@ caretCorrectlyMoveTo:	// . adjusting the Caret's Position (aligning towards the 
 									if (caret.selectionInit<caret) // selecting towards the end of Stream?
 										caret.streamSelection=TPosInterval( // fully select current Item, even if incomplete
 											caret.selectionInit.streamPosition,
-											caret.streamPosition + std::min<TPosition>( nRemainingBytesInRow, item.nStreamBytes )
+											itemUnderCaret.z
 										);
 									else // selecting towards the beginning of Stream
 										caret.streamSelection=TPosInterval(
-											caret.streamPosition,
+											itemUnderCaret.a,
 											caret.selectionInit.streamPosition + item.nStreamBytes
 										);
 								RepaintData();
@@ -256,12 +252,7 @@ editDelete:				if (!editable) return true; // can't edit content of a disabled w
 							else if (caret.IsInStream()) // in Stream column
 								caret.streamSelection=TPosInterval( caret.streamPosition );
 							else{ // in View column - nothing actually deleted yet, merely created a Selection to delete with another press of Backspace
-								const auto iRow=__logicalPositionToRow__(caret.streamPosition);
-								const auto nextRowStart=__firstByteInRowToLogicalPosition__(iRow+1);
-								caret.streamSelection=TPosInterval(
-									caret.streamPosition,
-									caret.streamPosition+std::min<TPosition>( item.nStreamBytes, nextRowStart-caret.streamPosition )
-								);
+								caret.streamSelection=GetItemAt(caret);
 								RepaintData();
 								goto caretRefresh;
 							}
@@ -363,8 +354,7 @@ editDelete:				if (!editable) return true; // can't edit content of a disabled w
 							else
 								break;
 							const auto iRow=__logicalPositionToRow__(caret.streamPosition);
-							const auto nextRowStart=__firstByteInRowToLogicalPosition__(iRow+1);
-							if (std::min(nextRowStart,f.GetLength())-caret.streamPosition<item.nStreamBytes) // Item under Caret incomplete?
+							if (GetItemAt(caret).GetLength()<item.nStreamBytes) // Item under Caret incomplete?
 								if (iRow<nLogicalRows) // incomplete Item in the middle of the File?
 									break;
 								else if (caret.streamPosition+item.nStreamBytes<logicalSizeLimits.z){ // can append new Item to the end of File?
