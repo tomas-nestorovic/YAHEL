@@ -150,6 +150,7 @@ namespace Yahel{
 		TRow __logicalPositionToRow__(TPosition logPos) const;
 		TCaretPosition CaretPositionFromPoint(const POINT &pt) const;
 		TPosInterval GetItemAt(const TCaretPosition &caretPos) const;
+		void SelectToCaretExclusive();
 		TRow __scrollToRow__(TRow row);
 		void ScrollToCaretAsync();
 		void RefreshScrollInfo();

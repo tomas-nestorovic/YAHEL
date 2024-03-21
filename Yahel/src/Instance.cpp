@@ -807,6 +807,15 @@ namespace Yahel{
 		);
 	}
 
+	void CInstance::SelectToCaretExclusive(){
+		// selects everything from Caret's original position to its current position, excluding this current position
+		const Utils::CVarTempReset<bool> md0( mouseDragged, true ); // pretend the following has been done by mouse
+		SendMessage( WM_KEYDOWN, VK_JUNJA ); // caretCorrectlyMoveTo; also Item at Caret's current position might have been selected ...
+		if (caret.selectionInit<caret)
+			caret.streamSelection.z=caret; // ... so making sure it's not the case
+		RepaintData();
+	}
+
 	void CInstance::ShowMessage(TMsg id) const{
 		// shows Message and passes focus back to the HexaEditor
 		pOwner->ShowInformation(id);

@@ -135,10 +135,20 @@ caretRefresh:			// refresh of Caret display
 					case VK_UP:{
 						i=1; // move Caret one row up
 moveCaretUp:			const auto iRow=__logicalPositionToRow__(caret.streamPosition);
-						if (ctrl){
-							const auto iScrollY=__scrollToRow__(GetVertScrollPos()-i);
-							if (iRow<iScrollY+nRowsOnPage) goto caretRefresh;
-						}
+						if (ctrl)
+							if (ShiftPressedAsync()){ // want select from Caret everything towards the beginning of Record?
+								TPosition recordStart;
+								pStreamAdvisor->GetRecordInfo( caret, &recordStart, nullptr, nullptr );
+								if (recordStart<caret.streamPosition)
+									caret.streamPosition=recordStart;
+								else // already at the beginning of a Record?
+									pStreamAdvisor->GetRecordInfo( caret.streamPosition-1, &caret.streamPosition, nullptr, nullptr ); // go to the beginning of the PREVIOUS Record
+								SelectToCaretExclusive();
+								return true;
+							}else{ // want scroll up using keys
+								const auto iScrollY=__scrollToRow__(GetVertScrollPos()-i);
+								if (iRow<iScrollY+nRowsOnPage) goto caretRefresh;
+							}
 						const auto currRowStart=__firstByteInRowToLogicalPosition__(iRow);
 						const auto targetRowStart=__firstByteInRowToLogicalPosition__(iRow-i);
 						const auto caseA=caret.streamPosition-__firstByteInRowToLogicalPosition__(iRow-i+1)+1;
@@ -162,10 +172,17 @@ moveCaretUp:			const auto iRow=__logicalPositionToRow__(caret.streamPosition);
 					case VK_DOWN:{
 						i=1; // move Caret one row down
 moveCaretDown:			const auto iRow=__logicalPositionToRow__(caret.streamPosition);
-						if (ctrl){
-							const auto iScrollY=__scrollToRow__(GetVertScrollPos()+i);
-							if (iRow>=iScrollY) goto caretRefresh;
-						}
+						if (ctrl)
+							if (ShiftPressedAsync()){ // want select from Caret everything towards the end of Record?
+								TPosition recordLength;
+								pStreamAdvisor->GetRecordInfo( caret, &caret.streamPosition, &recordLength, nullptr );
+								caret.streamPosition+=recordLength;
+								SelectToCaretExclusive();
+								return true;
+							}else{ // want scroll down using keys
+								const auto iScrollY=__scrollToRow__(GetVertScrollPos()+i);
+								if (iRow>=iScrollY) goto caretRefresh;
+							}
 						const auto currRowStart=__firstByteInRowToLogicalPosition__(iRow);
 						const auto targetRowStart=__firstByteInRowToLogicalPosition__(iRow+i);
 						const auto caseA=__firstByteInRowToLogicalPosition__(iRow+i+1)-caret.streamPosition-1;
