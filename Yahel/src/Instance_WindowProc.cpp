@@ -24,6 +24,8 @@ namespace Yahel{
 						if (caret.IsInStream()) // in Stream column
 							caret.streamPosition--;
 						else{ // in View column
+							if (ctrl)
+								caret.iViewHalfbyte=item.iFirstPlaceholder;
 							const auto iRow=__logicalPositionToRow__(caret.streamPosition);
 							const auto currRowStart=__firstByteInRowToLogicalPosition__(iRow);
 							if (caret.streamPosition==currRowStart && caret.iViewHalfbyte==item.iFirstPlaceholder) // about to move Caret "before" current line?
@@ -121,6 +123,8 @@ caretRefresh:			// refresh of Caret display
 						if (caret.IsInStream()) // in Stream column
 							caret.streamPosition++;
 						else{ // in View column
+							if (ctrl)
+								caret.iViewHalfbyte=item.iLastPlaceholder;
 							const auto iRow=__logicalPositionToRow__(caret.streamPosition);
 							const auto nextRowStart=__firstByteInRowToLogicalPosition__(iRow+1);
 							if (nextRowStart-caret.streamPosition<item.nStreamBytes) // Item under Caret incomplete?
