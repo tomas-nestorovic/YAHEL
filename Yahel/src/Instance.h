@@ -60,7 +60,7 @@ namespace Yahel{
 				, iViewHalfbyte(iViewHalfbyte) {
 			}
 
-			bool operator<(const TCaretPosition &r) const;
+			inline bool operator<(const TCaretPosition &r) const{ return streamPosition<r.streamPosition; }
 			inline operator bool() const{ return streamPosition>=0; }
 			inline operator TPosition() const{ return streamPosition; }
 			inline bool IsInStream() const{ return iViewHalfbyte<0; }

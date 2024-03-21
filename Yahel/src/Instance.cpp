@@ -575,13 +575,6 @@ namespace Yahel{
 
 	const CInstance::TCaretPosition CInstance::TCaretPosition::Invalid( -1, -1 );
 
-	bool CInstance::TCaretPosition::operator<(const TCaretPosition &r) const{
-		assert(!( IsInStream() ^ r.IsInStream() )); // can compare only positions within the same Column
-		return	streamPosition<r.streamPosition
-				||
-				streamPosition==r.streamPosition && iViewHalfbyte<r.iViewHalfbyte;
-	}
-
 	CInstance::TCaret::TCaret(TPosition position)
 		// ctor
 		: streamSelection(0,0) {

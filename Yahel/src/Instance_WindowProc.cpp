@@ -7,7 +7,8 @@ namespace Yahel{
 		// True <=> message fully processed and no need for the caller to process it further, otherwise False
 		static LPARAM cursorPos0;
 		int i;
-		const auto caretStreamPos0=caret.streamPosition;
+		static TPosition caretStreamPos0;
+		caretStreamPos0=caret.streamPosition;
 		outResult=0;
 		switch (msg){
 			case WM_MOUSEACTIVATE:
@@ -47,10 +48,7 @@ caretCorrectlyMoveTo:	// . adjusting the Caret's Position (aligning towards the 
 						}else if (caret.streamPosition>f.GetLength())
 							caret.streamPosition=f.GetLength();
 						const auto &&itemUnderCaret=GetItemAt(caret);
-						if (caret.IsInStream()){ // in Stream column
-							if (itemUnderCaret.GetLength()<item.nStreamBytes) // Item under Caret incomplete?
-								caret.iViewHalfbyte=-item.patternLength;
-						}else{ // in View column
+						if (!caret.IsInStream()){ // in View column
 							caret.streamPosition = itemUnderCaret.a;
 							if (itemUnderCaret.GetLength()<item.nStreamBytes) // Item under Caret incomplete?
 								/*if (caret.streamPosition>currRowStart) // can go to previous Item in the same line?
@@ -60,31 +58,30 @@ caretCorrectlyMoveTo:	// . adjusting the Caret's Position (aligning towards the 
 						}
 						// . adjusting an existing Selection if Shift pressed
 						if (mouseDragged || ShiftPressedAsync()){ // wanted to adjust Selection? (by dragging the mouse or having the Shift key pressed)
-							if (caret.streamPosition!=caretStreamPos0){ // did the Caret actually move?
-								if (caret.IsInStream()){ // in Stream column
-									if (caret.selectionInit<caret) // selecting towards the end of Stream?
-										caret.streamSelection=TPosInterval(
-											caret.selectionInit.streamPosition,
-											caret.streamPosition
-										);
-									else
-										caret.streamSelection=TPosInterval(
-											caret.streamPosition,
-											caret.selectionInit.streamPosition
-										);
-								}else // in View column
-									if (caret.selectionInit<caret) // selecting towards the end of Stream?
-										caret.streamSelection=TPosInterval( // fully select current Item, even if incomplete
-											caret.selectionInit.streamPosition,
-											itemUnderCaret.z
-										);
-									else // selecting towards the beginning of Stream
-										caret.streamSelection=TPosInterval(
-											itemUnderCaret.a,
-											caret.selectionInit.streamPosition + item.nStreamBytes
-										);
+							if (caret.IsInStream()){ // in Stream column
+								if (caret.selectionInit<caret) // selecting towards the end of Stream?
+									caret.streamSelection=TPosInterval(
+										caret.selectionInit.streamPosition,
+										caret.streamPosition
+									);
+								else
+									caret.streamSelection=TPosInterval(
+										caret.streamPosition,
+										caret.selectionInit.streamPosition
+									);
+							}else // in View column
+								if (caret.selectionInit<caret) // selecting towards the end of Stream?
+									caret.streamSelection=TPosInterval( // fully select current Item, even if incomplete
+										caret.selectionInit.streamPosition,
+										itemUnderCaret.z
+									);
+								else // selecting towards the beginning of Stream
+									caret.streamSelection=TPosInterval(
+										itemUnderCaret.a,
+										caret.selectionInit.streamPosition + item.nStreamBytes
+									);
+							if (caret.streamPosition!=caretStreamPos0) // did the Caret actually move?
 								RepaintData();
-							}
 						}else{
 							if (caret.SelectionExists()) // if there has been a Selection before ...
 								RepaintData(); // ... invalidating the content as the Selection is about to be cancelled
