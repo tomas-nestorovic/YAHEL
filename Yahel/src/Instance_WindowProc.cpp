@@ -752,6 +752,16 @@ resetSelectionWithValue:BYTE buf[65535];
 			case WM_LBUTTONDOWN:
 				// left mouse button pressed
 				mouseDragged=false;
+				if (const bool ctrl=::GetKeyState(VK_CONTROL)<0) // want select current Item?
+					if (!ShiftPressedAsync()) // want to reset the Selection?
+						if (const auto pointedCaretPos=CaretPositionFromPoint( Utils::MakePoint(lParam) )){
+							// in either View or Stream column
+							caret.streamSelection=GetItemAt(
+								static_cast<TCaretPosition &>(caret) = caret.selectionInit = pointedCaretPos
+							);
+							RepaintData();
+							break;
+						}
 				goto leftMouseDragged; // "as if it's already been Dragged"
 			case WM_RBUTTONDOWN:{
 				// right mouse button pressed
