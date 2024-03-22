@@ -784,13 +784,9 @@ namespace Yahel{
 		// - if invalid input position or beyond Stream, returning invalid Item
 		const auto fLength=f.GetLength();
 		if (caretPos.streamPosition>=fLength){
-			static const struct TInvalidPosInterval:public TPosInterval{
-				TInvalidPosInterval()
-					: TPosInterval(0) {
-					std::swap( a, z );
-				}
-			} InvalidPosInterval;
-			return InvalidPosInterval;
+			TPosInterval invalid;
+				invalid.a = invalid.z = fLength;
+			return invalid;
 		}
 		// - if in Stream column, returning a single Byte
 		if (caretPos.IsInStream())

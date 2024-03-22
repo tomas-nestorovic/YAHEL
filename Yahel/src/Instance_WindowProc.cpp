@@ -25,8 +25,15 @@ namespace Yahel{
 						if (caret.IsInStream()) // in Stream column
 							caret.streamPosition--;
 						else{ // in View column
-							if (ctrl)
-								caret.iViewHalfbyte=item.iFirstPlaceholder;
+							if (ctrl){ // want move to the previous Item?
+								if (caret.streamPosition>0){ // is there actually any previous Item?
+									caret.streamPosition--;
+									if (ShiftPressedAsync()) // want adjust Selection?
+										caret.iViewHalfbyte=0;
+									goto caretCorrectlyMoveTo;
+								}
+								return true;
+							}
 							const auto iRow=__logicalPositionToRow__(caret.streamPosition);
 							const auto currRowStart=__firstByteInRowToLogicalPosition__(iRow);
 							if (caret.streamPosition==currRowStart && caret.iViewHalfbyte==item.iFirstPlaceholder) // about to move Caret "before" current line?
@@ -120,8 +127,17 @@ caretRefresh:			// refresh of Caret display
 						if (caret.IsInStream()) // in Stream column
 							caret.streamPosition++;
 						else{ // in View column
-							if (ctrl)
-								caret.iViewHalfbyte=item.iLastPlaceholder;
+							if (ctrl){ // want move to the next Item?
+								if (const auto currItem=GetItemAt(caret)){ // is there actually any next Item?
+									caret.streamPosition=currItem.z;
+									if (ShiftPressedAsync()){ // want adjust Selection?
+										caret.iViewHalfbyte=0;
+										SelectToCaretExclusive();
+									}else
+										goto caretCorrectlyMoveTo;
+								}
+								return true;
+							}
 							const auto iRow=__logicalPositionToRow__(caret.streamPosition);
 							const auto nextRowStart=__firstByteInRowToLogicalPosition__(iRow+1);
 							if (nextRowStart-caret.streamPosition<item.nStreamBytes) // Item under Caret incomplete?
