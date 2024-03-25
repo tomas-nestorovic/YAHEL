@@ -287,14 +287,14 @@ namespace Utils{
 		return enabled;
 	}
 
-	void CYahelDialog::InitDlgItemTextW(WORD id,...) const{
+	void CYahelDialog::InitDlgItemText(WORD id,...) const{
 		//
 		va_list argList;
 		va_start( argList, id );
 			WCHAR buf[80];
-			GetDlgItemTextW( id, buf, ARRAYSIZE(buf) );
-				::wvsprintfW( buf, buf, argList );
-			SetDlgItemTextW( id, buf );
+			GetDlgItemText( id, buf, ARRAYSIZE(buf) );
+				::wvsprintf( buf, buf, argList );
+			SetDlgItemText( id, buf );
 		va_end(argList);
 	}
 
@@ -351,7 +351,7 @@ namespace Utils{
 			::SetWindowLong( hValue, GWL_STYLE, ::GetWindowLong(hValue,GWL_STYLE)&~ES_NUMBER );
 			WCHAR buf[32];
 			::wsprintfW( buf, L"0x%X", Value );
-			SetDlgItemTextW( IDC_NUMBER, buf );
+			SetDlgItemText( IDC_NUMBER, buf );
 		}else{
 			::SetWindowLong( hValue, GWL_STYLE, ::GetWindowLong(hValue,GWL_STYLE)|ES_NUMBER );
 			SetDlgItemInt( IDC_NUMBER, Value );

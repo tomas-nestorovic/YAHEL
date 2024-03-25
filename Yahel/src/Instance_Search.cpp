@@ -36,7 +36,7 @@ namespace Yahel{
 				hexaEditor.SubclassAndAttach( GetDlgItemHwnd(IDC_FILE) );
 				const Utils::CVarTempReset<bool> an0( acceptNotification, false );
 					char patternText[sizeof(params.pattern.chars)+1];
-					SetDlgItemText( ID_YAHEL_TEXT, ::lstrcpynA(patternText,params.pattern.chars,params.patternLength+1) );
+					::SetDlgItemTextA( hDlg, ID_YAHEL_TEXT, ::lstrcpynA(patternText,params.pattern.chars,params.patternLength+1) );
 				static constexpr WORD EditControls[]={ ID_YAHEL_TEXT, IDC_FILE, ID_YAHEL_NUMBER };
 				const HWND hEdit=GetDlgItemHwnd( EditControls[params.type] );
 				::SetFocus(hEdit);
