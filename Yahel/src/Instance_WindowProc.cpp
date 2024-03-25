@@ -1,6 +1,16 @@
 #include "stdafx.h"
 #include "Instance.h"
 
+static const struct TAddressBarCursor sealed{
+	HCURSOR handle;
+
+	TAddressBarCursor(){
+		handle=::LoadCursor( 0, IDC_SIZEWE );
+	}
+
+	inline operator HCURSOR() const{ return handle; }
+} AddressBarCursor;
+
 namespace Yahel{
 
 	bool CInstance::ProcessMessage(UINT msg,WPARAM wParam,LPARAM lParam,LRESULT &outResult){
@@ -777,12 +787,20 @@ resetSelectionWithValue:BYTE buf[65535];
 					}
 				}
 				break;
-			case WM_LBUTTONDOWN:
+			case WM_LBUTTONDOWN:{
 				// left mouse button pressed
 				mouseDragged=false;
-				if (const bool ctrl=::GetKeyState(VK_CONTROL)<0) // want select current Item?
+				::SetCapture(hWnd);
+				TRow addressBarRow;
+				const auto pointedCaretPos=CaretPositionFromPoint( Utils::MakePoint(lParam), addressBarRow );
+				if (addressBarRow>=0){ // in Address column?
+					if (!ShiftPressedAsync()){ // want to reset the Selection?
+						caret.CancelSelection();
+						caret.selectionInit.streamPosition=GetRowAt(addressBarRow).a;
+					}
+				}else if (CtrlPressedAsync()) // want select current Item?
 					if (!ShiftPressedAsync()) // want to reset the Selection?
-						if (const auto pointedCaretPos=CaretPositionFromPoint( Utils::MakePoint(lParam) )){
+						if (pointedCaretPos){
 							// in either View or Stream column
 							caret.streamSelection=GetItemAt(
 								static_cast<TCaretPosition &>(caret) = caret.selectionInit = pointedCaretPos
@@ -791,6 +809,7 @@ resetSelectionWithValue:BYTE buf[65535];
 							break;
 						}
 				goto leftMouseDragged; // "as if it's already been Dragged"
+			}
 			case WM_RBUTTONDOWN:{
 				// right mouse button pressed
 				mouseDragged=false;
@@ -808,18 +827,47 @@ resetSelectionWithValue:BYTE buf[65535];
 			}
 			case WM_LBUTTONUP:
 				// left mouse button released
+				::ReleaseCapture();
 				mouseDragged=false;
 				break;
+			case WM_SETCURSOR:{
+				// sets cursor by its position in client
+				POINT ptCursor;
+				::GetCursorPos(&ptCursor);
+				::ScreenToClient( hWnd, &ptCursor );
+				if (AddressBarFromPoint( ptCursor )>=0){
+					::SetCursor( AddressBarCursor );
+					return TRUE;
+				}
+				break;
+			}
 			case WM_MOUSEMOVE:{
 				// mouse moved
 				if (!( mouseDragged=::GetKeyState(VK_LBUTTON)<0 )) return true; // if mouse button not pressed, current Selection cannot be modified
 				if (cursorPos0==lParam) return true; // actually no Cursor movement occured
 leftMouseDragged:
 				cursorPos0=lParam;
-				if (const auto pointedCaretPos=CaretPositionFromPoint( Utils::MakePoint(lParam) ))
-					// in either View or Stream column
+				TRow addressBarRow;
+				const auto pointedCaretPos=CaretPositionFromPoint( Utils::MakePoint(lParam), addressBarRow );
+				if (pointedCaretPos && ::GetCursor()!=AddressBarCursor)
+					// in either View or Stream column (and the interaction originally started there)
 					static_cast<TCaretPosition &>(caret)=pointedCaretPos;
-				else{
+				else if (addressBarRow>=0 && ::GetCursor()==AddressBarCursor){
+					// in Address column (and the interaction originally started there)
+					const auto row=GetRowAt(addressBarRow);
+					if (row.a<caret.selectionInit.streamPosition)
+						caret.streamSelection=TPosInterval(
+							caret.streamPosition = row.a,
+							GetRowAt(caret.selectionInit).z
+						);
+					else
+						caret.streamSelection=TPosInterval(
+							GetRowAt(caret.selectionInit).a,
+							caret.streamPosition = row.z
+						);
+					RepaintData();
+					goto caretRefresh;
+				}else{
 					// outside any interactive column
 					if (!mouseDragged){ // if right now mouse button pressed ...
 						caret.CancelSelection(); // ... cancelling any Selection ...

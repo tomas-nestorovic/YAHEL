@@ -149,6 +149,8 @@ namespace Yahel{
 		TPosition __firstByteInRowToLogicalPosition__(TRow row) const;
 		TRow __logicalPositionToRow__(TPosition logPos) const;
 		TCaretPosition CaretPositionFromPoint(const POINT &pt) const;
+		TCaretPosition CaretPositionFromPoint(const POINT &pt,TRow &outAddressBarRow) const;
+		TRow AddressBarFromPoint(const POINT &pt) const;
 		TPosInterval GetRowAt(TPosition logPos) const;
 		TPosInterval GetRowAt(TRow iRow) const;
 		TPosInterval GetItemAt(const TCaretPosition &caretPos) const;

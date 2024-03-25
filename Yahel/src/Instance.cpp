@@ -778,6 +778,19 @@ namespace Yahel{
 		return TCaretPosition::Invalid; // outside any area
 	}
 
+	CInstance::TCaretPosition CInstance::CaretPositionFromPoint(const POINT &pt,TRow &outAddressBarRow) const{
+		outAddressBarRow=AddressBarFromPoint(pt);
+		return CaretPositionFromPoint(pt);
+	}
+
+	TRow CInstance::AddressBarFromPoint(const POINT &pt) const{
+		// if in Address column, returns Row pointed to by the specified client Point; returns -1 if Point not in the Address column
+		const int x=pt.x/font.GetCharAvgWidth(), y=pt.y/font.GetCharHeight();
+		return	x<addrLength+ADDRESS_SPACE_LENGTH && HEADER_LINES_COUNT<=y // in Address column?
+				? y-HEADER_LINES_COUNT+GetVertScrollPos()
+				: -1;
+	}
+
 	TPosInterval CInstance::GetRowAt(TPosition logPos) const{
 		//
 		return GetRowAt( __logicalPositionToRow__(logPos) );
