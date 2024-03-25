@@ -34,8 +34,7 @@ namespace Yahel{
 								}
 								return true;
 							}
-							const auto iRow=__logicalPositionToRow__(caret.streamPosition);
-							const auto currRowStart=__firstByteInRowToLogicalPosition__(iRow);
+							const auto currRowStart=GetRowAt(caret).a;
 							if (caret.streamPosition==currRowStart && caret.iViewHalfbyte==item.iFirstPlaceholder) // about to move Caret "before" current line?
 								caret.streamPosition=currRowStart-1, caret.iViewHalfbyte=item.patternLength; // move Caret to previous line
 							do{
@@ -106,7 +105,7 @@ caretRefresh:			// refresh of Caret display
 						else if (iRow>=iScrollY+nRowsOnPage) __scrollToRow__(iRow-nRowsOnPage+1);
 						// . scrolling horizontally if Caret has been moved to an invisible part of the File content
 						const auto &&charLayout=GetCharLayout();
-						const auto currRowStart=__firstByteInRowToLogicalPosition__(iRow);
+						const auto currRowStart=GetRowAt(iRow).a;
 						TCol iCol;
 						if (caret.IsInStream()) // in Stream column
 							iCol=charLayout.stream.a+caret.streamPosition-currRowStart;
@@ -138,8 +137,7 @@ caretRefresh:			// refresh of Caret display
 								}
 								return true;
 							}
-							const auto iRow=__logicalPositionToRow__(caret.streamPosition);
-							const auto nextRowStart=__firstByteInRowToLogicalPosition__(iRow+1);
+							const auto nextRowStart=GetRowAt(caret).z;
 							if (nextRowStart-caret.streamPosition<item.nStreamBytes) // Item under Caret incomplete?
 								caret.streamPosition=nextRowStart, caret.iViewHalfbyte=-1; // move Caret to next line
 							do{
@@ -166,14 +164,14 @@ moveCaretUp:			const auto iRow=__logicalPositionToRow__(caret.streamPosition);
 								if (iRow<iScrollY+nRowsOnPage) goto caretRefresh;
 							}
 						const auto currRowStart=__firstByteInRowToLogicalPosition__(iRow);
-						const auto targetRowStart=__firstByteInRowToLogicalPosition__(iRow-i);
-						const auto caseA=caret.streamPosition-__firstByteInRowToLogicalPosition__(iRow-i+1)+1;
+						const auto targetRow=GetRowAt(iRow-i);
+						const auto caseA=caret.streamPosition-targetRow.z+1;
 							// Case A example:
 							// ..........			Target row
 							// .................
 							// ..........
 							// .............C...	Current row with Caret
-						const auto caseB=currRowStart-targetRowStart;
+						const auto caseB=currRowStart-targetRow.a;
 							// Case B example:
 							// .................	..........			Target row
 							// ..........			................
@@ -200,14 +198,14 @@ moveCaretDown:			const auto iRow=__logicalPositionToRow__(caret.streamPosition);
 								if (iRow>=iScrollY) goto caretRefresh;
 							}
 						const auto currRowStart=__firstByteInRowToLogicalPosition__(iRow);
-						const auto targetRowStart=__firstByteInRowToLogicalPosition__(iRow+i);
-						const auto caseA=__firstByteInRowToLogicalPosition__(iRow+i+1)-caret.streamPosition-1;
+						const auto targetRow=GetRowAt(iRow+i);
+						const auto caseA=targetRow.z-caret.streamPosition-1;
 							// Case A example:
 							// .............C...	Current row with Caret
 							// ..........
 							// .................
 							// ..........			Target row
-						const auto caseB=targetRowStart-currRowStart;
+						const auto caseB=targetRow.a-currRowStart;
 							// Case B example:
 							// .......C..			.......C........	Current row with Caret
 							// .................	..........
@@ -227,12 +225,12 @@ moveCaretDown:			const auto iRow=__logicalPositionToRow__(caret.streamPosition);
 						i=nRowsOnPage-ctrl; // move Caret N rows down
 						goto moveCaretDown;
 					case VK_HOME:
-						caret.streamPosition=( ctrl ? 0 : __firstByteInRowToLogicalPosition__(__logicalPositionToRow__(caret.streamPosition)) );
+						caret.streamPosition=( ctrl ? 0 : GetRowAt(caret).a );
 						if (!caret.IsInStream()) // in View column
 							caret.iViewHalfbyte=item.iFirstPlaceholder;
 						goto caretCorrectlyMoveTo;
 					case VK_END:
-						caret.streamPosition=( ctrl ? f.GetLength() : __firstByteInRowToLogicalPosition__(__logicalPositionToRow__(caret.streamPosition)+1)-1 );
+						caret.streamPosition=( ctrl ? f.GetLength() : GetRowAt(caret).z-1 );
 						if (!caret.IsInStream()) // in View column
 							caret.iViewHalfbyte=item.iLastPlaceholder;
 						goto caretCorrectlyMoveTo;
@@ -249,8 +247,7 @@ moveCaretDown:			const auto iRow=__logicalPositionToRow__(caret.streamPosition);
 							else // in View column
 								caret.iViewHalfbyte-=item.patternLength; // remember Halfbyte in View column
 							const bool selected=caret.SelectionExists();
-							const Utils::CVarTempReset<bool> md0( mouseDragged, true ); // don't change Selection (if any) by pretending mouse button being pressed
-							SendMessage( WM_KEYDOWN, VK_JUNJA ); // caretCorrectlyMoveTo
+							CorrectCaretPosition(true); // don't change Selection (if any) by pretending mouse button being pressed
 							if (!selected) // nothing selected before we switched columns
 								caret.CancelSelection(); // a Selection may be created while holding the Shift key pressed during this command (Shift+Tab)
 							return true;
@@ -498,8 +495,7 @@ finishWriting:				SendEditNotification( EN_CHANGE );
 						// Selecting everything
 						caret.streamSelection=TPosInterval( 0, f.GetLength() );
 						RepaintData();
-						const Utils::CVarTempReset<bool> md0( mouseDragged, true ); // don't change Selection (if any) by pretending mouse button being pressed
-						SendMessage( WM_KEYDOWN, VK_JUNJA ); // caretCorrectlyMoveTo
+						CorrectCaretPosition(true); // don't change Selection (if any) by pretending mouse button being pressed
 						return true;
 					}
 					case ID_YAHEL_SELECT_NONE:
@@ -514,8 +510,7 @@ finishWriting:				SendEditNotification( EN_CHANGE );
 						caret.streamPosition = caret.streamSelection.z = caret.streamSelection.a+recordLength;
 						caret.iViewHalfbyte=item.iFirstPlaceholder;
 						RepaintData();
-						const Utils::CVarTempReset<bool> md0( mouseDragged, true ); // adjust Selection by pretending mouse button being pressed
-						outResult=SendMessage( WM_KEYDOWN, VK_JUNJA ); // caretCorrectlyMoveTo
+						CorrectCaretPosition(true); // adjust Selection by pretending mouse button being pressed
 						return true;
 					}
 					case ID_YAHEL_FILE_SAVE_COPY_AS:{

@@ -750,15 +750,14 @@ namespace Yahel{
 		// determines and returns the LogicalPosition pointed to by the input Point (or -1 if not pointing at a particular Byte in both the View and Stream columns)
 		int x=pt.x/font.GetCharAvgWidth()-(addrLength+ADDRESS_SPACE_LENGTH)+GetHorzScrollPos();
 		const TRow r=pt.y/font.GetCharHeight()-HEADER_LINES_COUNT+GetVertScrollPos();
-		const TPosition currLineStart=__firstByteInRowToLogicalPosition__(r);
-		const int nCurrLineBytes=__firstByteInRowToLogicalPosition__(r+1)-currLineStart, currLineLastByte=nCurrLineBytes-1;
+		const auto currRow=GetRowAt(r);
 		if (IsColumnShown(TColumn::VIEW)){
 			const int nViewChars=item.nInRow*item.patternLength;
 			if (0<=x && x<nViewChars){
 				// View area
 				const auto d=div( x, item.patternLength );
-				const auto streamPosition=currLineStart+std::min( d.quot*item.nStreamBytes, currLineLastByte );
-				if (d.quot>=nCurrLineBytes/item.nStreamBytes)
+				const auto streamPosition=std::min( currRow.a+d.quot*item.nStreamBytes, currRow.z-1 );
+				if (d.quot>=currRow.GetLength()/item.nStreamBytes)
 					return TCaretPosition( streamPosition, item.iLastPlaceholder );
 				else
 					for( char i=0; i<item.patternLength; i++ ) // find closest Placeholder
@@ -773,10 +772,23 @@ namespace Yahel{
 			if (0<=x && x<GetStreamBytesCountPerRow())
 				// Stream area
 				return TCaretPosition(
-					currLineStart+std::min( x, currLineLastByte ),
+					std::min( currRow.a+x, currRow.z-1 ),
 					-item.patternLength
 				);
 		return TCaretPosition::Invalid; // outside any area
+	}
+
+	TPosInterval CInstance::GetRowAt(TPosition logPos) const{
+		//
+		return GetRowAt( __logicalPositionToRow__(logPos) );
+	}
+
+	TPosInterval CInstance::GetRowAt(TRow iRow) const{
+		//
+		return TPosInterval(
+			__firstByteInRowToLogicalPosition__(iRow),
+			__firstByteInRowToLogicalPosition__(iRow+1)
+		);
 	}
 
 	TPosInterval CInstance::GetItemAt(const TCaretPosition &caretPos) const{
@@ -792,21 +804,24 @@ namespace Yahel{
 		if (caretPos.IsInStream())
 			return caretPos.streamPosition;
 		// - if in View column, returning the Item that contains the input position (eventually an incomplete Item)
-		const auto iRow=__logicalPositionToRow__(caretPos);
-		const auto currRowStart=__firstByteInRowToLogicalPosition__(iRow);
-		const auto itemPosition=currRowStart+(caretPos.streamPosition-currRowStart)/item.nStreamBytes*item.nStreamBytes; // align to the beginning of current Item
-		const auto nextRowStart=__firstByteInRowToLogicalPosition__(iRow+1);
-		const auto nRemainingBytesInRow=std::min(nextRowStart,fLength)-itemPosition;
+		const auto row=GetRowAt(caretPos);
+		const auto itemPosition=row.a+(caretPos.streamPosition-row.a)/item.nStreamBytes*item.nStreamBytes; // align to the beginning of current Item
+		const auto nRemainingBytesInRow=std::min(row.z,fLength)-itemPosition;
 		return TPosInterval(
 			itemPosition,
 			itemPosition + std::min<TPosition>( item.nStreamBytes, nRemainingBytesInRow )
 		);
 	}
 
+	void CInstance::CorrectCaretPosition(bool preserveSelection) const{
+		//
+		const Utils::CVarTempReset<bool> md0( mouseDragged, preserveSelection ); // pretend mouse button not/pressed
+		SendMessage( WM_KEYDOWN, VK_JUNJA ); // caretCorrectlyMoveTo
+	}
+
 	void CInstance::SelectToCaretExclusive(){
 		// selects everything from Caret's original position to its current position, excluding this current position
-		const Utils::CVarTempReset<bool> md0( mouseDragged, true ); // pretend the following has been done by mouse
-		SendMessage( WM_KEYDOWN, VK_JUNJA ); // caretCorrectlyMoveTo; also Item at Caret's current position might have been selected ...
+		CorrectCaretPosition(true); // pretend mouse button pressed
 		if (caret.selectionInit<caret)
 			caret.streamSelection.z=caret; // ... so making sure it's not the case
 		RepaintData();
@@ -863,8 +878,7 @@ namespace Yahel{
 			}
 			SendEditNotification( EN_CHANGE );
 			RepaintData();
-			const Utils::CVarTempReset<bool> md0( mouseDragged, true ); // don't change Selection (if any) by pretending mouse button being pressed
-			SendMessage( WM_KEYDOWN, VK_JUNJA ); // caretCorrectlyMoveTo
+			CorrectCaretPosition(true); // don't change Selection (if any) by pretending mouse button pressed
 			if (error.msg)
 				pOwner->ShowInformation( error.msg, error.code );
 		}else
