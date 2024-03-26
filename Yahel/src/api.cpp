@@ -449,7 +449,7 @@ namespace Stream
 				WCHAR buf[80];
 				::wsprintfW( buf, L"%s  [%s]", name, pattern );
 				const HWND hPresets=GetDlgItemHwnd(IDC_PRESETS);
-				ComboBox_SetItemData( hPresets, ::SendMessageW(hPresets,CB_ADDSTRING,0,(LPARAM)buf), pattern );
+				ComboBox_SetItemData( hPresets, ::SendMessage(hPresets,CB_ADDSTRING,0,(LPARAM)buf), pattern );
 			}
 			void UpdateStreamLength(){
 				if (IStream *const s=hexaEditor.GetCurrentStream()){
@@ -465,7 +465,7 @@ namespace Stream
 				SetDlgItemInt( IDC_NUMBER, item.nStreamBytes );
 				UpdateStreamLength();
 				WCHAR pattern[ARRAYSIZE(item.pattern)+1];
-				SetDlgItemTextW( IDC_PATTERN, item.GetDefinition(pattern) );
+				SetDlgItemText( IDC_PATTERN, item.GetDefinition(pattern) );
 			}
 			bool InitDialog() override{
 				// Dialog initialization
@@ -474,8 +474,8 @@ namespace Stream
 				AddPresetItem( L"Word", L"2;AaBb " );
 				AddPresetItem( L"Custom", nullptr );
 				// . labels
-				InitDlgItemTextW( IDC_INFO1, ITEM_STREAM_BYTES_MAX );
-				InitDlgItemTextW( IDC_INFO2, ITEM_PATTERN_LENGTH_MIN, patternLengthMax );
+				InitDlgItemText( IDC_INFO1, ITEM_STREAM_BYTES_MAX );
+				InitDlgItemText( IDC_INFO2, ITEM_PATTERN_LENGTH_MIN, patternLengthMax );
 				// . seeing if initial Item is one of Presets
 				ShowItem();
 				RecognizePresetItem();
@@ -487,7 +487,7 @@ namespace Stream
 			}
 			TError TrySaveDefinition(){
 				// attempts to redefine an Item from current inputs; returns a DWORD-encoded error
-				auto i=GetDlgItemTextW( IDC_NUMBER, definitionBuffer, bufferCapacity );
+				auto i=GetDlgItemText( IDC_NUMBER, definitionBuffer, bufferCapacity );
 				TError err=ERROR_KOSHER; // assumption
 				if (ITEM_STREAM_BYTES_MAX<i)
 					err=ERROR_ITEM_DEF_BYTE_COUNT;
@@ -495,13 +495,13 @@ namespace Stream
 					err=ERROR_ITEM_DEF_PATTERN_INSUFFICIENT_BUFFER;
 				else{
 					definitionBuffer[i++]=';';
-					GetDlgItemTextW( IDC_PATTERN, definitionBuffer+i, bufferCapacity-i-1 );
+					GetDlgItemText( IDC_PATTERN, definitionBuffer+i, bufferCapacity-i-1 );
 					err=item.Redefine(definitionBuffer);
 				}
 				if (EnableDlgItem( IDOK, !err ))
-					SetDlgItemTextW( IDC_ERROR, nullptr );
+					SetDlgItemText( IDC_ERROR, nullptr );
 				else
-					SetDlgItemTextW( IDC_ERROR, IOwner::GetDefaultEnglishMessage(err.code) );
+					SetDlgItemText( IDC_ERROR, IOwner::GetDefaultEnglishMessage(err.code) );
 				return err;
 			}
 			void RecognizePresetItem(){
