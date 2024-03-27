@@ -798,7 +798,7 @@ resetSelectionWithValue:BYTE buf[65535];
 						caret.CancelSelection();
 						caret.selectionInit.streamPosition=GetRowAt(addressBarRow).a;
 					}
-				}else if (CtrlPressedAsync()) // want select current Item?
+				}else if (const bool ctrl=::GetKeyState(VK_CONTROL)<0) // want select current Item?
 					if (!ShiftPressedAsync()) // want to reset the Selection?
 						if (pointedCaretPos){
 							// in either View or Stream column
