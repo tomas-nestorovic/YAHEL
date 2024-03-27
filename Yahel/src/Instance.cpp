@@ -157,6 +157,9 @@ namespace Yahel{
 		if (this->hWnd && this->hWnd!=hWnd) // has already a different window buddy?
 			return false;
 		this->hWnd=hWnd;
+		SendMessage( WM_SIZE, 0, GetClientRect().right ); // refresh horizontally
+		if (f!=nullptr)
+			ScrollTo( logPosScrolledTo ); // recovering the scroll position
 		return true;
 	}
 
@@ -261,11 +264,6 @@ namespace Yahel{
 		if (f){
 			SetStreamLogicalSize(this->f.GetLength());
 			f->AddRef();
-			if (::IsWindow(hWnd) && logPosScrolledTo!=Stream::GetErrorPosition()){
-				SendMessage( WM_SIZE, 0, GetClientRect().right ); // refresh horizontally
-				ScrollTo( logPosScrolledTo ); // recovering the scroll position
-				logPosScrolledTo=Stream::GetErrorPosition(); // previous scroll position consumed
-			}
 		}
 	}
 
@@ -287,12 +285,12 @@ namespace Yahel{
 	bool CInstance::Reset(IStream *f,Stream::IAdvisor *sa,const TPosInterval &fileLogicalSizeLimits){
 		// resets the HexaEditor and supplies it new File content
 		EXCLUSIVELY_LOCK_THIS_OBJECT();
-		logPosScrolledTo=0;
 		if (!Update( f, sa, fileLogicalSizeLimits ))
 			return false;
 		if (!f)
 			nLogicalRows = nRowsDisplayed = nRowsOnPage = 0;
 		caret=TCaret(0); // resetting the Caret and Selection
+		logPosScrolledTo=0;
 		return true;
 	}
 
