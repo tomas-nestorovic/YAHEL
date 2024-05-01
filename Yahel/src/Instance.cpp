@@ -351,7 +351,7 @@ namespace Yahel{
 		// sets current Selection, moving Caret to the end of the Selection
 		if (selA>selZ)
 			std::swap( selA, selZ );
-		caret.streamSelection.a=std::max( 0L, selA );
+		caret.streamSelection.a = caret.selectionInit = std::max( 0L, selA );
 		caret.streamSelection.z = caret.streamPosition = std::min( selZ, logicalSizeLimits.z );
 		if (!caret.IsInStream()) // in View column
 			caret.iViewHalfbyte=item.iFirstPlaceholder;
@@ -382,7 +382,7 @@ namespace Yahel{
 	void CInstance::ScrollTo(TPosition logicalPos,bool moveAlsoCaret){
 		// independently from Caret, displays specified LogicalPosition
 		if (moveAlsoCaret)
-			caret.CancelSelection(), caret.streamPosition=logicalPos;
+			caret.streamPosition=logicalPos, caret.CancelSelection();
 		RefreshScrollInfo();
 		__scrollToRow__( __logicalPositionToRow__(logicalPos) );
 	}

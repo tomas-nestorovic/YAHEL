@@ -313,7 +313,7 @@ editDelete:				if (!editable) return true; // can't edit content of a disabled w
 						// . removing/trimming Emphases in Selection
 						AddHighlight( selection, CLR_DEFAULT );
 						// . moving the content "after" Selection "to" the position of the Selection
-						caret.CancelSelection(), caret.streamPosition=posDst; // moving the Caret and cancelling any Selection
+						caret.streamPosition=posDst, caret.CancelSelection(); // moving the Caret and cancelling any Selection
 						auto nBytesToMove=f.GetLength()-posSrc;
 						itBm=bookmarks.lower_bound(posSrc);
 						auto itEmp=emphases.lower_bound( TEmphasis(posSrc,0) );
@@ -487,7 +487,7 @@ finishWriting:				SendEditNotification( EN_CHANGE );
 							( caret.IsInStream() ? 1 : item.nStreamBytes )
 						);
 						if (it!=bookmarks.end()){ // just to be sure
-							caret.CancelSelection(), caret.streamPosition=*it; // moving the Caret and cancelling any Selection
+							caret.streamPosition=*it, caret.CancelSelection(); // moving the Caret and cancelling any Selection
 							RepaintData();
 							goto caretCorrectlyMoveTo;
 						}else
@@ -503,9 +503,8 @@ finishWriting:				SendEditNotification( EN_CHANGE );
 							break;
 					case ID_YAHEL_SELECT_ALL:{
 						// Selecting everything
-						caret.streamSelection=TPosInterval( 0, f.GetLength() );
-						RepaintData();
-						CorrectCaretPosition(true); // don't change Selection (if any) by pretending mouse button being pressed
+						caret.selectionInit=0, caret.streamPosition=f.GetLength();
+						SelectToCaretExclusive();
 						return true;
 					}
 					case ID_YAHEL_SELECT_NONE:
@@ -516,11 +515,10 @@ finishWriting:				SendEditNotification( EN_CHANGE );
 					case ID_YAHEL_SELECT_CURRENT:{
 						// selecting the whole Record under the Caret
 						TPosition recordLength=0;
-						pStreamAdvisor->GetRecordInfo( caret.streamPosition, &caret.streamSelection.a, &recordLength, nullptr );
-						caret.streamPosition = caret.streamSelection.z = caret.streamSelection.a+recordLength;
+						pStreamAdvisor->GetRecordInfo( caret.streamPosition, &caret.selectionInit.streamPosition, &recordLength, nullptr );
+						caret.streamPosition=caret.selectionInit.streamPosition+recordLength;
 						caret.iViewHalfbyte=item.iFirstPlaceholder;
-						RepaintData();
-						CorrectCaretPosition(true); // adjust Selection by pretending mouse button being pressed
+						SelectToCaretExclusive();
 						return true;
 					}
 					case ID_YAHEL_FILE_SAVE_COPY_AS:{
