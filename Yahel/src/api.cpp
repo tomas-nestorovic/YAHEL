@@ -265,7 +265,7 @@ namespace Stream
 		}
 
 		HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid,PVOID *ppvObject) override{
-			static constexpr QITAB qit[]={
+			static const QITAB qit[]={
 				QITABENT( COleDataObject, IDataObject ),
 				{ 0 },
 			};
