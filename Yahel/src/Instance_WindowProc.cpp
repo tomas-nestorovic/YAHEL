@@ -1363,7 +1363,7 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 						// : filling the rest of the Row with background color (e.g. the last Row in a Record may not span up to the end)
 						dc.PrintBkSpace(0);
 						dc.FlushPrintBuffer();
-						// : drawing the Record label if the just drawn Row is the Record's first Row
+						// : drawing the Record label if the just-drawn Row is the Record's first Row
 						if (!isEof && IsColumnShown(TColumn::LABEL)){ // yes, a new Record can potentially start at the Row
 							RECT rc={ (charLayout.label.a-charLayout.view.a)*font.GetCharAvgWidth(), rcContent.top, USHRT_MAX, rcContent.top+font.GetCharHeight() };
 							::FillRect( dc, &rc, label.bgBrush );

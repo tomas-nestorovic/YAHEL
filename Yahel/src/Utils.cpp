@@ -75,6 +75,7 @@ namespace Utils{
 	CYahelBrush &CYahelBrush::operator=(CYahelBrush &&r){
 		// reset
 		::DeleteObject(handle);
+		*static_cast<LPLOGBRUSH>(this)=r;
 		handle=r.handle;
 		r.handle=nullptr;
 		return *this;

@@ -444,15 +444,15 @@ namespace Yahel{
 
 	TError CInstance::SetLabelColumnParams(char nLabelCharsMax,COLORREF bgColor){
 		// sets properties of the Label Column
-		if (nLabelCharsMax!=0){ // want the Label Column visible?
+		if (nLabelCharsMax!=0) // want the Label Column visible?
 			columns|=TColumn::LABEL;
-			label.nCharsMax=nLabelCharsMax;
-			label.bgBrush=Utils::CYahelBrush(
-				bgColor>=CLR_DEFAULT ? Utils::GetBlendedColor(::GetSysColor(COLOR_WINDOW),::GetSysColor(COLOR_BTNFACE),0.85f) : bgColor,
-				false
-			);
-		}else
+		else
 			columns&=~TColumn::LABEL;
+		label.nCharsMax=nLabelCharsMax;
+		label.bgBrush=Utils::CYahelBrush(
+			bgColor>=CLR_DEFAULT ? Utils::GetBlendedColor(::GetSysColor(COLOR_WINDOW),::GetSysColor(COLOR_BTNFACE),0.85f) : bgColor,
+			false
+		);
 		ShowColumns( columns );
 		return ERROR_KOSHER;
 	}
