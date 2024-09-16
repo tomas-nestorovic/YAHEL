@@ -1196,15 +1196,19 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 				const int itemWidth=patternLength*font.GetCharAvgWidth();
 				const auto &&charLayout=GetCharLayout();
 				if (HEADER_LINES_COUNT){
-					const Utils::CViewportOrg viewportOrg( dc, 0, addrLength-iHorzScroll, font );
 					::FillRect( dc, &singleRowRect, dc.BtnFaceBrush );
+					RECT rcHeader=singleRowRect;
 					if (IsColumnShown(TColumn::VIEW)){
 						WCHAR buf[16];
-						RECT rcHeader=singleRowRect;
+						rcHeader.left=charLayout.view.a*font.GetCharAvgWidth();
 						static_assert( ADDRESS_SPACE_LENGTH==1, "see wsprint-ed count of spaces below" );
 						static_assert( ITEM_PATTERN_LENGTH_MIN>=3, "see wsprint-ed pattern length below" );
 						for( WORD n=0; n<item.nInRow; rcHeader.left+=itemWidth )
-							::DrawTextW( dc, buf, ::wsprintfW(buf,L" %02X",n++*item.nStreamBytes), &rcHeader, DT_LEFT|DT_TOP );
+							::DrawTextW( dc, buf, ::wsprintfW(buf,L"%02X ",n++*item.nStreamBytes), &rcHeader, DT_LEFT|DT_TOP );
+					}
+					if (IsColumnShown(TColumn::STREAM)){
+						rcHeader.left=charLayout.stream.a*font.GetCharAvgWidth();
+						::DrawTextW( dc, L"Stream",-1, &rcHeader, DT_LEFT|DT_TOP );
 					}
 				}
 				// . drawing View and Stream columns
