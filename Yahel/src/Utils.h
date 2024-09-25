@@ -104,7 +104,6 @@ namespace Utils{
 		inline bool IsDlgButtonChecked(WORD id) const{ return ::IsDlgButtonChecked(hDlg,id)!=BST_UNCHECKED; }
 		inline void CheckDlgButton(WORD id,bool checked) const{ ::CheckDlgButton(hDlg,id,checked*BST_CHECKED); }
 		void InitDlgItemText(WORD id,...) const;
-		inline int GetDlgItemText(WORD id,PTCHAR buf,UINT bufLength) const{ return ::GetDlgItemText( hDlg, id, buf, bufLength ); }
 		int GetDlgItemTextLength(WORD id) const;
 		inline int SetDlgItemText(WORD id,LPCTSTR text) const{ return ::SetDlgItemText( hDlg, id, text ); }
 		inline int GetDlgItemInt(WORD id) const{ return ::GetDlgItemInt( hDlg, id, nullptr, TRUE ); }
@@ -117,6 +116,11 @@ namespace Utils{
 		virtual bool OnCommand(WPARAM wParam,LPARAM lParam)=0;
 
 		CYahelDialog();
+
+		template <size_t N>
+		int GetDlgItemText(WORD id,TCHAR (&buffer)[N]) const{
+			return ::GetDlgItemText( hDlg, id, buffer, N );
+		}
 	public:
 		UINT_PTR DoModal(UINT nIDTemplate,HWND hParent=0);
 	};

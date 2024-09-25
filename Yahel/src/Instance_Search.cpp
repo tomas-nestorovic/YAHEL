@@ -87,7 +87,7 @@ namespace Yahel{
 						if (acceptNotification){
 							acceptNotification=false; // preventing from recurrent processing
 								hexaEditor.SetStreamLogicalSize(
-									params.patternLength=std::min<int>( GetDlgItemTextLength(ID_YAHEL_TEXT), sizeof(params.pattern.chars)-1 )
+									params.patternLength=std::min( GetDlgItemTextLength(ID_YAHEL_TEXT), (int)sizeof(params.pattern.chars)-1 )
 								);
 								hexaEditor.f.SetLength( params.patternLength ); // zeros new space
 								::GetDlgItemTextA( hDlg, ID_YAHEL_TEXT, params.pattern.chars, sizeof(params.pattern.chars) );

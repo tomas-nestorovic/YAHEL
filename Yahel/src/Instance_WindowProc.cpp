@@ -317,15 +317,15 @@ editDelete:				if (!editable) return true; // can't edit content of a disabled w
 						auto nBytesToMove=f.GetLength()-posSrc;
 						itBm=bookmarks.lower_bound(posSrc);
 						auto itEmp=emphases.lower_bound( TEmphasis(posSrc,0) );
-						for( BYTE buf[65536]; const auto nBytesRequested=std::min<TPosition>(nBytesToMove,sizeof(buf)); ){
+						for( BYTE buf[65536]; const auto nBytesRequested=std::min(nBytesToMove,(TPosition)sizeof(buf)); ){
 							// : move Bytes
 							f.Seek( posSrc );
-							UINT nBytesBuffered=0;
+							TPosition nBytesBuffered=0;
 							while (const auto nBytesRead=f.Read( buf+nBytesBuffered, nBytesRequested-nBytesBuffered, IgnoreIoResult ))
 								nBytesBuffered+=nBytesRead;
 							f.Seek( posDst );
 							const auto nBytesWritten=f.Write( buf, nBytesBuffered, IgnoreIoResult );
-							const auto nBytesSuccessfullyMoved=std::min( std::min<TPosition>(nBytesRequested,nBytesBuffered), nBytesWritten );
+							const auto nBytesSuccessfullyMoved=std::min( std::min(nBytesRequested,nBytesBuffered), nBytesWritten );
 							// : move Bookmarks (WARNING: there may be Bookmarks in areas with no data, hence we BREAK below)
 							const auto posDelta=posSrc-posDst;
 							const TPosInterval movedRegion( posSrc, posSrc+nBytesSuccessfullyMoved );
@@ -530,7 +530,7 @@ finishWriting:				SendEditNotification( EN_CHANGE );
 								const auto selection=caret.streamSelection;
 								for( TPosition nBytesToSave=selection.z-f.Seek(selection.a),n; nBytesToSave; nBytesToSave-=n ){
 									BYTE buf[65536];
-									n=f.Read(  buf,  std::min<TPosition>( nBytesToSave, sizeof(buf) ),  IgnoreIoResult  );
+									n=f.Read(  buf,  std::min( nBytesToSave, (TPosition)sizeof(buf) ),  IgnoreIoResult  );
 									if (n==Stream::GetErrorPosition()){
 										pOwner->ShowInformation( MSG_SELECTION_SAVED_PARTIALLY, ERROR_READ_FAULT );
 										break;
@@ -566,7 +566,7 @@ resetSelectionWithValue:BYTE buf[65535];
 							::memset( buf, i, sizeof(buf) );
 						const auto selection=caret.streamSelection;
 						for( TPosition nBytesToReset=selection.z-f.Seek(selection.a),n; nBytesToReset; nBytesToReset-=n ){
-							n=std::min<TPosition>( nBytesToReset, sizeof(buf) );
+							n=std::min( nBytesToReset, (TPosition)sizeof(buf) );
 							if (i<0) // Gaussian noise
 								Utils::RandomizeData( buf, n );
 							if (!f.Write( buf, n, IgnoreIoResult )){
@@ -697,7 +697,7 @@ resetSelectionWithValue:BYTE buf[65535];
 							TSearchParams tmp;
 							if (const auto sel=caret.streamSelection){
 								f.Seek( sel.a );
-								if (tmp.patternLength=f.Read( tmp.pattern.bytes, std::min<TPosition>(sizeof(tmp.pattern.bytes),sel.GetLength()), IgnoreIoResult )){
+								if (tmp.patternLength=f.Read( tmp.pattern.bytes, std::min((TPosition)sizeof(tmp.pattern.bytes),sel.GetLength()), IgnoreIoResult )){
 									tmp.type=TSearchParams::ASCII_ANY_CASE; // should be set by the ctor above, but just to be sure
 									for( TPosition i=0; i<tmp.patternLength; i++ )
 										if (!::isprint(tmp.pattern.bytes[i])){
@@ -1263,7 +1263,7 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 									auto aView=address; auto aNearestBm=itNearestBm!=bookmarks.end()?*itNearestBm:Stream::GetErrorPosition();
 									const auto d=div( nBytesRead, (TPosition)item.nStreamBytes );
 									const bool readIncompleteItem=d.rem!=0;
-									const WORD nCompleteItems=std::min<WORD>( item.nInRow, d.quot );
+									const WORD nCompleteItems=std::min( (TPosition)item.nInRow, d.quot );
 									for( WORD n=0; n<nCompleteItems+readIncompleteItem; n++ ){
 										const BYTE nStreamBytes=readIncompleteItem && n==nCompleteItems // drawing an incomplete last Item in the Row?
 																? d.rem

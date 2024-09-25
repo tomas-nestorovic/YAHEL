@@ -293,7 +293,7 @@ namespace Utils{
 		va_list argList;
 		va_start( argList, id );
 			WCHAR buf[80];
-			GetDlgItemText( id, buf, ARRAYSIZE(buf) );
+			GetDlgItemText( id, buf );
 				::wvsprintf( buf, buf, argList );
 			SetDlgItemText( id, buf );
 		va_end(argList);
@@ -368,7 +368,7 @@ namespace Utils{
 	bool CSingleNumberDialog::GetCurrentValue(TPosition &outValue) const{
 		// True <=> input value successfully parsed, otherwise False
 		TCHAR buf[32], *p=buf;
-		auto nChars=GetDlgItemText( IDC_NUMBER, buf, ARRAYSIZE(buf) );
+		auto nChars=GetDlgItemText( IDC_NUMBER, buf );
 		if (hexa){
 			if (nChars>2 && *buf=='0' && buf[1]=='x')
 				p+=2, nChars-=2;

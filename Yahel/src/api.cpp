@@ -178,7 +178,7 @@ namespace Stream
 			// tries to read given NumberOfBytes into the Buffer, starting with current Position; returns the number of Bytes actually read (increments the Position by this actually read number of Bytes)
 			if (!target)
 				return E_INVALIDARG;
-			nCount=std::min<ULONG>( nCount, bufferLength-position );
+			nCount=std::min( nCount, (ULONG)(bufferLength-position) );
 			::memcpy( target, buffer+position, nCount );
 			position+=nCount;
 			if (pcbRead)
@@ -487,7 +487,7 @@ namespace Stream
 			}
 			TError TrySaveDefinition(){
 				// attempts to redefine an Item from current inputs; returns a DWORD-encoded error
-				auto i=GetDlgItemText( IDC_NUMBER, definitionBuffer, bufferCapacity );
+				auto i=::GetDlgItemText( hDlg, IDC_NUMBER, definitionBuffer, bufferCapacity );
 				TError err=ERROR_KOSHER; // assumption
 				if (ITEM_STREAM_BYTES_MAX<i)
 					err=ERROR_ITEM_DEF_BYTE_COUNT;
@@ -495,7 +495,7 @@ namespace Stream
 					err=ERROR_ITEM_DEF_PATTERN_INSUFFICIENT_BUFFER;
 				else{
 					definitionBuffer[i++]=';';
-					GetDlgItemText( IDC_PATTERN, definitionBuffer+i, bufferCapacity-i-1 );
+					::GetDlgItemText( hDlg, IDC_PATTERN, definitionBuffer+i, bufferCapacity-i-1 );
 					err=item.Redefine(definitionBuffer);
 				}
 				if (EnableDlgItem( IDOK, !err ))
@@ -550,7 +550,7 @@ namespace Stream
 			CItemDefinitionDialog(PWCHAR definitionBuffer,BYTE bufferCapacity,HFONT hFont)
 				// ctor
 				// . parsing the input Item Pattern
-				: definitionBuffer(definitionBuffer) , bufferCapacity(std::min<BYTE>(bufferCapacity,ARRAYSIZE(item.pattern)))
+				: definitionBuffer(definitionBuffer) , bufferCapacity(std::min(bufferCapacity,(BYTE)ARRAYSIZE(item.pattern)))
 				, patternLengthMax( bufferCapacity-1-ITEM_STREAM_BYTES_SPEC_LEN )
 				, hexaEditor( (HINSTANCE)&__ImageBase, &hexaEditor, MARK_RECURRENT_USE, hFont )
 				, processNotifications(false) {

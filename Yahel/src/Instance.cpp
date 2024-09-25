@@ -327,7 +327,7 @@ namespace Yahel{
 		caret.streamSelection.a=std::min( caret.streamSelection.a, logicalSize );
 		caret.streamSelection.z=std::min( caret.streamSelection.z, logicalSize );
 		caret.streamPosition=std::min( caret.streamPosition, logicalSize );
-		//caret.iViewHalfbyte=std::min<char>( caret.iViewHalfbyte, 0 ); // don't change the column (View vs Stream)
+		//caret.iViewHalfbyte=std::min( caret.iViewHalfbyte, '\0' ); // don't change the column (View vs Stream)
 		if (mouseInNcArea)
 			// when in the non-client area (e.g. over a scrollbar), putting updated values aside
 			update.logicalSize=logicalSize;
@@ -519,9 +519,9 @@ namespace Yahel{
 				TEmphasis tmp=*itPrev;
 					tmp.a=range.z;
 				it=emphases.insert(tmp).first; // second part
-				*const_cast<PPosition>(&itPrev->z)=range.a; // first part always non-empty; doing this is OK because Z doesn't serve as the key for the Emphases std::set
+				const_cast<TPosition &>(itPrev->z)=range.a; // first part always non-empty; doing this is OK because Z doesn't serve as the key for the Emphases std::set
 			}else if (range.a<it->z) // yes, only partly the end
-				*const_cast<PPosition>(&it++->z)=range.a; // doing this is OK because Z doesn't serve as the key for the Emphases std::set
+				const_cast<TPosition &>(it++->z)=range.a; // doing this is OK because Z doesn't serve as the key for the Emphases std::set
 			else
 				it++;
 		}
@@ -539,7 +539,7 @@ namespace Yahel{
 		// - can the new Emphasis be merged with nearest previous one?
 		if (it--!=emphases.begin())
 			if (it->IsSameColorNext(e)){ // yes, it can
-				*const_cast<PPosition>(&it->z)=e.z; // merge them; doing this is OK because Z doesn't serve as the key for the Emphases std::set
+				const_cast<TPosition &>(it->z)=e.z; // merge them; doing this is OK because Z doesn't serve as the key for the Emphases std::set
 				if (merged) // already Merged above?
 					emphases.erase(++it);
 				else
@@ -820,7 +820,7 @@ namespace Yahel{
 		const auto nRemainingBytesInRow=std::min(row.z,fLength)-itemPosition;
 		return TPosInterval(
 			itemPosition,
-			itemPosition + std::min<TPosition>( item.nStreamBytes, nRemainingBytesInRow )
+			itemPosition + std::min( (TPosition)item.nStreamBytes, nRemainingBytesInRow )
 		);
 	}
 
@@ -876,7 +876,7 @@ namespace Yahel{
 			}
 			for( ULONG nRead,nWritten; nBytesToRead>0; nBytesToRead-=nWritten ){
 				BYTE buf[65536];
-				if (FAILED(s->Read( buf, std::min<ULONG>(nBytesToRead,sizeof(buf)), &nRead ))){
+				if (FAILED(s->Read( buf, std::min(nBytesToRead,(TPosition)sizeof(buf)), &nRead ))){
 					error.msg=MSG_PASTED_PARTIALLY, error.code=ERROR_READ_FAULT;
 					break;
 				}
