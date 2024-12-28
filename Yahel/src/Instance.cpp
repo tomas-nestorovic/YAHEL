@@ -530,15 +530,15 @@ namespace Yahel{
 			return true; // ... which has just been done
 		// - can the new Emphasis be merged with nearest next one?
 		bool merged=false;
-		if (it->a==e.z && it->color==color){ // yes, it can
+		if (it!=emphases.end() && it->a==e.z && it->color==color){ // yes, it can
 			e=*it;
 				e.a=range.a;
 			emphases.erase(it), it=emphases.insert(e).first; // merge them
 			merged=true;
 		}
 		// - can the new Emphasis be merged with nearest previous one?
-		if (it--!=emphases.begin())
-			if (it->IsSameColorNext(e)){ // yes, it can
+		if (it!=emphases.begin())
+			if ((--it)->IsSameColorNext(e)){ // yes, it can
 				const_cast<TPosition &>(it->z)=e.z; // merge them; doing this is OK because Z doesn't serve as the key for the Emphases std::set
 				if (merged) // already Merged above?
 					emphases.erase(++it);
