@@ -2,29 +2,33 @@
 #include "Instance.h"
 
 namespace Yahel{
+namespace Checksum{
 
-	TChecksumParams::TChecksumParams()
+	TParams::TParams()
 		// ctor
-		: type(Add) , initValue(GetDefaultInitValue()) , range(0) {
+		: type(Add) , initValue(GetDefaultInitValue()) {
 	}
 
-	bool TChecksumParams::IsValid() const{
+	TParams::TParams(TType type,int initValue)
+		// ctor
+		: type(type) , initValue(initValue) {
+	}
+
+	bool TParams::IsValid() const{
 		return	type<Last
 				&&
-				initValue!=GetErrorChecksumValue()
-				&&
-				range.IsValidNonempty();
+				initValue!=GetErrorValue();
 	}
 
-	int TChecksumParams::GetDefaultInitValue(){
+	int GetDefaultInitValue(){
 		return 0;
 	}
 
-	int TChecksumParams::GetErrorChecksumValue(){
+	int GetErrorValue(){
 		return -1;
 	}
 
-	bool TChecksumParams::EditModalWithDefaultEnglishDialog(HWND hParent){
+	bool TParams::EditModalWithDefaultEnglishDialog(HWND hParent){
 		//
 		// - can't edit invalid Params
 		if (!IsValid())
@@ -61,15 +65,15 @@ namespace Yahel{
 		return (LOBYTE(tmp)<<8) + HIBYTE(tmp); // little endian
 	}
 
-	int CInstance::GetChecksum(const TChecksumParams &params,volatile const bool &cancel) const{
+	int Compute(const TParams &params,LPCVOID bytes,UINT nBytes){
 		//
 		// - can't compute Checksum by invalid Params
 		if (!params.IsValid())
-			return TChecksumParams::GetErrorChecksumValue();
+			return GetErrorValue();
 		// - determine computation function
 		FnAppender fn;
 		switch (params.type){
-			case TChecksumParams::Add:
+			case TParams::Add:
 				fn=Add;
 				break;
 			case TChecksumParams::Xor:
@@ -80,8 +84,32 @@ namespace Yahel{
 				break;
 			default:
 				assert(false);
-				return TChecksumParams::GetErrorChecksumValue();
+				return GetErrorValue();
 		}
+		// - computation
+		auto result=params.initValue;
+		for( const BYTE *pb=(LPBYTE)bytes; nBytes-->0; result=fn(result,*pb++) );
+		return result;
+	}
+
+	BYTE ComputeXor(LPCVOID bytes,UINT nBytes,BYTE initValue){
+		return Compute( TParams(TParams::Xor,initValue), bytes, nBytes );
+	}
+
+	int ComputeAdd(LPCVOID bytes,UINT nBytes,int initValue){
+		return Compute( TParams(TParams::Add,initValue), bytes, nBytes );
+	}
+}
+
+
+
+
+
+	int CInstance::GetChecksum(const Checksum::TParams &params,const TPosInterval &range,volatile const bool &cancel) const{
+		//
+		// - can't compute Checksum by invalid Params
+		if (!params.IsValid() || !range.IsValidNonempty())
+			return Checksum::GetErrorValue();
 		// - computation
 		struct TContent sealed:public CInstance::TContent{
 			TPosition posOrg;
@@ -99,17 +127,19 @@ namespace Yahel{
 			assert(false); // using here the same Stream always requires attention; YAHEL is fine with that - is also the client app fine with that?
 			f.stream=this->f.stream, f.posOrg=f.GetPosition();
 		}else if (FAILED(hr))
-			return TChecksumParams::GetErrorChecksumValue();
-		auto result=params.initValue;
-		f.Seek( params.range.a );
-		for( BYTE b; f.GetPosition()<params.range.z; )
+			return Checksum::GetErrorValue();
+		Checksum::TParams p=params;
+		f.Seek( range.a );
+		for( BYTE buf[65536]; f.GetPosition()<range.z; )
 			if (cancel)
-				return TChecksumParams::GetErrorChecksumValue();
-			else if (f.Read( &b, 1, IgnoreIoResult ))
-				result=fn( result, b );
-			else
+				return Checksum::GetErrorValue();
+			else if (const auto nBytesRead=f.Read( buf, std::min((TPosition)sizeof(buf),range.z-f.GetPosition()), IgnoreIoResult )){
+				p.initValue=Checksum::Compute( p, buf, nBytesRead );
+				if (p.initValue==Checksum::GetErrorValue())
+					break;
+			}else
 				f.Seek( 1, STREAM_SEEK_CUR ); // skipping irrecoverable portion of data
-		return result;
+		return p.initValue;
 	}
 
 }

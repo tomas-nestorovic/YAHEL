@@ -753,12 +753,11 @@ resetSelectionWithValue:BYTE buf[65535];
 						if (IS_RECURRENT_USE)
 							return true;
 						// . requesting the Owner for Checksum computation parameters
-						TChecksumParams cp;
+						Checksum::TParams cp;
 						cp.type=(decltype(cp.type))(wParam-ID_YAHEL_CHECKSUM_ADD);
-						cp.range=caret.streamSelection;
 						if (pOwner->QueryChecksumParams(cp) && cp.IsValid()){
-							const auto checksum=pOwner->ComputeChecksum(cp);
-							if (checksum!=cp.GetErrorChecksumValue()){
+							const auto checksum=pOwner->ComputeChecksum( cp, caret.streamSelection );
+							if (checksum!=Checksum::GetErrorValue()){
 								TCHAR msg[80];
 								::wsprintf( msg, _T("Checksum of selected stream is %d (0x%X)"), checksum, checksum );
 								::MessageBox( hWnd, msg, _T(""), 0 );

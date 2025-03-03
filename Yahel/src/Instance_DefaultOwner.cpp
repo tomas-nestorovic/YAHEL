@@ -29,12 +29,12 @@ namespace Yahel{
 
 
 	// checksum
-	bool CInstance::QueryChecksumParams(TChecksumParams &outCp) const{
+	bool CInstance::QueryChecksumParams(Checksum::TParams &outCp) const{
 		return false;
 	}
 
-	int CInstance::ComputeChecksum(const TChecksumParams &cp) const{
-		return TChecksumParams::GetErrorChecksumValue();
+	int CInstance::ComputeChecksum(const Checksum::TParams &cp,const TPosInterval &range) const{
+		return Checksum::GetErrorValue();
 	}
 
 
