@@ -76,10 +76,10 @@ namespace Checksum{
 			case TParams::Add:
 				fn=Add;
 				break;
-			case TChecksumParams::Xor:
+			case TParams::Xor:
 				fn=Xor;
 				break;
-			case TChecksumParams::Ccitt16:
+			case TParams::Ccitt16:
 				fn=Crc16Ccitt;
 				break;
 			default:
