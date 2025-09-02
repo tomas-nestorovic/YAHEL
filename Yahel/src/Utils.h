@@ -106,8 +106,8 @@ namespace Utils{
 		void InitDlgItemText(WORD id,...) const;
 		int GetDlgItemTextLength(WORD id) const;
 		inline int SetDlgItemText(WORD id,LPCTSTR text) const{ return ::SetDlgItemText( hDlg, id, text ); }
-		inline int GetDlgItemInt(WORD id) const{ return ::GetDlgItemInt( hDlg, id, nullptr, TRUE ); }
-		inline int SetDlgItemInt(WORD id,int i) const{ return ::SetDlgItemInt( hDlg, id, i, TRUE ); }
+		inline int SetDlgItemInt(WORD id,int i) const{ return Gui::SetDlgItemInt( hDlg, id, i, Gui::Signed ); }
+		inline int SetDlgItemInt(WORD id,int i,bool hexa) const{ return Gui::SetDlgItemInt( hDlg, id, i, hexa ); }
 		HWND FocusDlgItem(WORD id) const;
 		inline LRESULT SendCommand(WPARAM wParam,LPARAM lParam=0) const{ return ::SendMessage( hDlg, WM_COMMAND, wParam, lParam ); }
 		RECT MapDlgItemClientRect(WORD id) const;
@@ -131,23 +131,6 @@ namespace Utils{
 	public:
 		CViewportOrg(HDC dc,TRow r,TCol c,const CYahelFont &font);
 		~CViewportOrg();
-	};
-
-	class CSingleNumberDialog sealed:public CYahelDialog{
-		const LPCTSTR caption,label;
-		const TPosInterval range;
-		bool hexa;
-
-		bool InitDialog() override;
-		bool ValidateDialog() override;
-		bool OnCommand(WPARAM wParam,LPARAM lParam) override;
-		bool GetCurrentValue(TPosition &outValue) const;
-	public:
-		TPosition Value;
-
-		CSingleNumberDialog(LPCTSTR caption,LPCTSTR label,const TPosInterval &range,TPosition initValue,bool hexa);
-
-		inline UINT_PTR DoModal(HWND hParent=0){ return __super::DoModal(IDR_YAHEL_SINGLE_NUMBER,hParent); }
 	};
 
 

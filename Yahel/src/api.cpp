@@ -3,7 +3,9 @@
 
 namespace Yahel
 {
-	LPCWSTR IOwner::GetDefaultEnglishMessage(TMsg id){
+namespace Gui
+{
+	LPCWSTR WINAPI GetDefaultEnglishMessage(TMsg id){
 		switch (id){
 			case ERROR_KOSHER:
 				return L"Rabi approves";
@@ -52,6 +54,132 @@ namespace Yahel
 				return	id<MSG_READY ? L"General error" : nullptr;
 		}
 	}
+
+	bool WINAPI GetDlgItemInt(HWND hDlg,WORD editBoxId,TPosition &outValue,TDlgItemIntType type){
+		// True <=> EditBox text successfully parsed, otherwise False
+		static_assert( sizeof(outValue)==sizeof(int), "see _stscanf below");
+		TCHAR buf[32], *p=buf;
+		auto nChars=::GetDlgItemText( hDlg, editBoxId, buf, ARRAYSIZE(buf) );
+		if (type==TDlgItemIntType::Hexa){
+			if (nChars>2 && *buf=='0' && buf[1]=='x')
+				p+=2, nChars-=2;
+			else if (nChars>1 && (*buf=='$'||*buf=='#'||*buf=='%'))
+				p++, nChars--;
+			if (nChars>sizeof(outValue)*2)
+				return false;
+			return	_stscanf( ::CharLower(p), _T("%x"), &outValue )>0;
+		}else{
+			if (nChars>10+(*buf=='-')) // e.g. "-1234567890"
+				return false;
+			return	_stscanf( p, _T("%d"), &outValue )>0;
+		}
+	}
+
+	bool WINAPI SetDlgItemInt(HWND hDlg,WORD editBoxId,TPosition value,TDlgItemIntType type){
+		if (const HWND hWnd=::GetDlgItem( hDlg, editBoxId ))
+			if (type==TDlgItemIntType::Hexa){
+				::SetWindowLong( hWnd, GWL_STYLE, ::GetWindowLong(hWnd,GWL_STYLE)&~ES_NUMBER );
+				WCHAR buf[32];
+				::wsprintf( buf, L"0x%X", value );
+				return ::SetWindowText( hWnd, buf )!=FALSE;
+			}else{
+				::SetWindowLong( hWnd, GWL_STYLE, ::GetWindowLong(hWnd,GWL_STYLE)|ES_NUMBER );
+				return ::SetDlgItemInt( hDlg, editBoxId, value, type==TDlgItemIntType::Signed )!=FALSE;
+			}
+		return false;
+	}
+
+	bool YAHEL_DECLSPEC WINAPI QuerySingleIntA(LPCSTR caption,LPCSTR label,const TPosInterval &range,TPosition &inOutValue,TDlgItemIntType type,HWND hParent){
+		WCHAR captionW[128], labelW[256];
+		::wsprintfW( captionW, L"%S", caption );
+		::wsprintfW( labelW, L"%S", label );
+		return QuerySingleIntW( captionW, labelW, range, inOutValue, type, hParent );
+	}
+
+	bool WINAPI QuerySingleIntW(LPCWSTR caption,LPCWSTR label,const TPosInterval &rangeIncl,TPosition &inOutValue,TDlgItemIntType type,HWND hParent){
+		// - must be able to set at least two options
+		if (rangeIncl.GetLength()<1) // inclusive!
+			return false;
+		// - initial value must be within Range
+		if (!rangeIncl.Contains(inOutValue) && inOutValue!=rangeIncl.z) // inclusive!
+			return false;
+		// - defining the Dialog
+		class CSingleNumberDialog sealed:public Utils::CYahelDialog{
+			const LPCWSTR caption,label;
+			const TPosInterval rangeIncl;
+			bool hexa;
+
+			bool InitDialog() override{
+				// dialog initialization
+				::SetWindowText( hDlg, caption );
+				// - instructions
+				TCHAR buf[200], strMin[32], strMax[32];
+				if (hexa){
+					TCHAR format[32];
+					::wsprintf( format, _T("0x%%0%dX"), ::wsprintf(strMax,_T("%x"),rangeIncl.a|rangeIncl.z) );
+					::wsprintf( strMin, format, rangeIncl.a );
+					::wsprintf( strMax, format, rangeIncl.z );
+				}else{
+					::wsprintf( strMin, _T("%d"), rangeIncl.a );
+					::wsprintf( strMax, _T("%d"), rangeIncl.z );
+				}
+				const int nLabelChars=::lstrlen(label);
+				if (label[nLabelChars-1]==')') // Label finishes with text enclosed in brackets
+					::wsprintf( ::lstrcpy(buf,label)+nLabelChars-1, _T("; %s - %s):"), strMin, strMax );
+				else
+					::wsprintf( buf, _T("%s (%s - %s):"), label, strMin, strMax );
+				SetDlgItemText( IDC_INFO1, buf );
+				// - initial Value
+				SetDlgItemInt( IDC_NUMBER, Value, hexa );
+				// - value format
+				if (EnableDlgItem( IDC_HEXA, (rangeIncl.a|rangeIncl.z)>=0 ))
+					CheckDlgButton( IDC_HEXA, hexa );
+				else
+					CheckDlgButton( IDC_HEXA, false );
+				return true; // set the keyboard focus to the default control
+			}
+
+			bool ValidateDialog() override{
+				// True <=> Dialog inputs are acceptable, otherwise False
+				return	GetDlgItemInt( hDlg, IDC_NUMBER, Value, hexa )
+						? rangeIncl.Contains(Value) || Value==rangeIncl.z
+						: false;
+			}
+
+			bool OnCommand(WPARAM wParam,LPARAM lParam) override{
+				// command processing
+				switch (wParam){
+					case MAKELONG(IDC_NUMBER,EN_CHANGE):
+						EnableDlgItem( IDOK, ValidateDialog() );
+						return true;
+					case MAKELONG(IDC_HEXA,BN_CLICKED):
+						ValidateDialog();
+						hexa=IsDlgButtonChecked(IDC_HEXA);
+						InitDialog();
+						FocusDlgItem(IDC_NUMBER);
+						Edit_SetSel( GetDlgItemHwnd(IDC_NUMBER), 0, -1 ); // selecting full content
+						return true;
+				}
+				return false;
+			}
+		public:
+			TPosition Value;
+
+			CSingleNumberDialog(LPCWSTR caption,LPCWSTR label,const TPosInterval &rangeIncl,TPosition initValue,bool hexa)
+				// ctor
+				: caption(caption) , label(label) , rangeIncl(rangeIncl) , hexa(hexa)
+				, Value(initValue) {
+			}
+		} d( caption, label, rangeIncl, inOutValue, type==TDlgItemIntType::Hexa );
+		// - showing the Dialog and processing its result
+		const bool confirmed=d.DoModal( IDR_YAHEL_SINGLE_NUMBER, hParent )==IDOK;
+		if (hParent)
+			::SetFocus(hParent);
+		if (confirmed)
+			inOutValue=d.Value;
+		return confirmed;
+	}
+}
 
 
 
@@ -501,7 +629,7 @@ namespace Stream
 				if (EnableDlgItem( IDOK, !err ))
 					SetDlgItemText( IDC_ERROR, nullptr );
 				else
-					SetDlgItemText( IDC_ERROR, IOwner::GetDefaultEnglishMessage(err.code) );
+					SetDlgItemText( IDC_ERROR, Gui::GetDefaultEnglishMessage(err.code) );
 				return err;
 			}
 			void RecognizePresetItem(){

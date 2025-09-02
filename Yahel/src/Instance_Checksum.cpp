@@ -34,12 +34,10 @@ namespace Checksum{
 		if (!IsValid())
 			return false;
 		// - showing the Dialog and processing its result
-		Utils::CSingleNumberDialog d( _T("Checksum"), _T("&Initial value"), TPosInterval(0,INT_MAX), initValue, true );
-		if (d.DoModal(hParent)==IDOK){
-			initValue=d.Value;
-			return true;
-		}else
-			return false;
+		static_assert( sizeof(TPosition)==sizeof(initValue), "" );
+		return Gui::QuerySingleIntA(
+			"Checksum", "&Initial value", TPosInterval(0,INT_MAX), (TPosition &)initValue, Gui::Hexa, hParent
+		);
 	}
 
 

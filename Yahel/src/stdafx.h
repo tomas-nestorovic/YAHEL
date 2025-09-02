@@ -58,7 +58,6 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 #define FONT_WEBDINGS		L"Webdings"
 #define FONT_WINGDINGS		L"Wingdings"
 #define FONT_COURIER_NEW	L"Courier New"
-#define FONT_LUCIDA_CONSOLE	L"Lucida Console"
 
 #define GITHUB_HTTPS_NAME		_T("https://github.com")
 #define GITHUB_API_SERVER_NAME	_T("api.github.com")

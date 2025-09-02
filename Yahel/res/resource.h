@@ -11,13 +11,13 @@
 #define ID_YAHEL_DEFAULT4               1508
 #define IDC_PRESETS                     1509
 #define IDC_NUMBER                      1510
-#define IDC_HEXA                        1511
 #define IDC_FILE                        1511
 #define IDC_PATTERN                     1512
 #define IDC_SPACE                       1513
 #define IDC_ERROR                       1514
 #define IDC_INFO2                       1515
 #define IDC_INFO1                       1516
+#define IDC_HEXA                        1517
 
 // Next default values for new objects
 // 

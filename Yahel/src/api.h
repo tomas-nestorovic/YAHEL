@@ -194,8 +194,6 @@ namespace Yahel
 
 
 	typedef interface IOwner{
-		static LPCWSTR YAHEL_DECLSPEC WINAPI GetDefaultEnglishMessage(TMsg id);
-
 		// searching
 		virtual bool QueryNewSearchParams(TSearchParams &outSp) const=0;
 		virtual TPosition ContinueSearching(const TSearchParams &sp) const=0;
@@ -213,6 +211,31 @@ namespace Yahel
 		virtual void ShowInformation(TMsg id,UINT errorCode=ERROR_SUCCESS) const=0;
 		virtual bool ShowQuestionYesNo(TMsg id,UINT defaultButton=MB_DEFBUTTON2) const=0;
 	} *POwner;
+
+
+
+
+namespace Gui
+{
+	enum TDlgItemIntType{
+		Unsigned,
+		Hexa,
+		Signed
+	};
+
+	LPCWSTR YAHEL_DECLSPEC WINAPI GetDefaultEnglishMessage(TMsg id);
+	bool YAHEL_DECLSPEC WINAPI GetDlgItemInt(HWND hDlg,WORD editBoxId,TPosition &outValue,TDlgItemIntType type);
+	bool YAHEL_DECLSPEC WINAPI SetDlgItemInt(HWND hDlg,WORD editBoxId,TPosition value,TDlgItemIntType type);
+	inline bool GetDlgItemInt(HWND hDlg,WORD editBoxId,TPosition &outValue,bool hexa){ return GetDlgItemInt( hDlg, editBoxId, outValue, (TDlgItemIntType)hexa ); }
+	inline bool SetDlgItemInt(HWND hDlg,WORD editBoxId,TPosition value,bool hexa){ return SetDlgItemInt( hDlg, editBoxId, value, (TDlgItemIntType)hexa ); }
+	bool YAHEL_DECLSPEC WINAPI QuerySingleIntA(LPCSTR caption,LPCSTR label,const TPosInterval &rangeIncl,TPosition &inOutValue,TDlgItemIntType type,HWND hParent);
+	bool YAHEL_DECLSPEC WINAPI QuerySingleIntW(LPCWSTR caption,LPCWSTR label,const TPosInterval &rangeIncl,TPosition &inOutValue,TDlgItemIntType type,HWND hParent);
+	#ifdef UNICODE
+		#define QuerySingleInt QuerySingleIntW
+	#else
+		#define QuerySingleInt QuerySingleIntA
+	#endif
+}
 
 
 

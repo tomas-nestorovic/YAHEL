@@ -9,7 +9,7 @@ namespace Yahel{
 	}
 
 	bool TGoToParams::IsValid() const{
-		return addressRange.Contains(address);
+		return addressRange.Contains(address) || address==addressRange.z; // A|B, A = can navigate inside a Stream, B = can go to the end of Stream
 	}
 
 	bool TGoToParams::EditModalWithDefaultEnglishDialog(HWND hParent){
@@ -18,12 +18,9 @@ namespace Yahel{
 		if (!IsValid())
 			return false;
 		// - showing the Dialog and processing its result
-		Utils::CSingleNumberDialog d( _T("Go to"), _T("&Address"), addressRange, address, true );
-		if (d.DoModal(hParent)==IDOK){
-			address=d.Value;
-			return true;
-		}else
-			return false;
+		return Gui::QuerySingleIntA(
+			"Go to", "&Address", addressRange, address, Gui::Hexa, hParent
+		);
 	}
 
 }

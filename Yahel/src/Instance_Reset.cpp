@@ -18,12 +18,12 @@ namespace Yahel{
 		if (!IsValid())
 			return false;
 		// - showing the Dialog and processing its result
-		Utils::CSingleNumberDialog d( _T("Reset selection"), _T("&Value"), TPosInterval(0,256), byteValue, true );
-		if (d.DoModal(hParent)==IDOK){
-			byteValue=d.Value;
+		TPosition tmp=byteValue;
+		if (Gui::QuerySingleIntA( "Reset selection", "&Value", TPosInterval(0,UCHAR_MAX), tmp, Gui::Hexa, hParent )){
+			byteValue=tmp;
 			return true;
-		}else
-			return false;
+		}
+		return false;
 	}
 
 }
