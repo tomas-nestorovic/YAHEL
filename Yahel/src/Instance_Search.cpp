@@ -30,11 +30,9 @@ namespace Yahel{
 		// - defining the Dialog
 		class CParamsDialog sealed:public Utils::CYahelDialog{
 			CInstance hexaEditor;
-			bool acceptNotification; // preventing from recurrent processing
 
 			bool InitDialog() override{
 				hexaEditor.SubclassAndAttach( GetDlgItemHwnd(IDC_FILE) );
-				const Utils::CVarTempReset<bool> an0( acceptNotification, false );
 					char patternText[sizeof(params.pattern.chars)+1];
 					::SetDlgItemTextA( hDlg, ID_YAHEL_TEXT, ::lstrcpynA(patternText,params.pattern.chars,params.patternLength+1) );
 				static constexpr WORD EditControls[]={ ID_YAHEL_TEXT, IDC_FILE, ID_YAHEL_NUMBER };
@@ -47,31 +45,29 @@ namespace Yahel{
 
 			bool ValidateDialog() override{
 				static_assert( sizeof(params.type)==sizeof(int), "" );
+				static constexpr WORD SearchButtons[]={ ID_YAHEL_FIND_PREV, ID_YAHEL_FIND_NEXT, 0 };
+				EnableDlgItems( SearchButtons, false ); // assumption (the Dialog has invalid configuration)
 				if (IsDlgButtonChecked(ID_YAHEL_DEFAULT1)){
 					params.type=ASCII_ANY_CASE;
 					params.patternLength=::GetDlgItemTextA( hDlg, ID_YAHEL_TEXT, params.pattern.chars, sizeof(params.pattern.chars) );
 					if (IsDlgButtonChecked(ID_YAHEL_ACCURACY))
 						params.type=ASCII_MATCH_CASE;
-					return true; // the Dialog has valid inputs
 				}else if (IsDlgButtonChecked(ID_YAHEL_DEFAULT2)){
 					params.type=HEXA;
 					params.patternLength=hexaEditor.f.GetLength();
-					return true; // the Dialog has valid inputs
 				}else if (IsDlgButtonChecked(ID_YAHEL_DEFAULT3)){
 					params.type=NOT_BYTE;
-					BOOL hasIntegerValue=FALSE;
-					const auto i=::GetDlgItemInt( hDlg, ID_YAHEL_NUMBER, &hasIntegerValue, FALSE );
-					if (!hasIntegerValue || i>255)
+					BOOL parsed=FALSE;
+					const auto i=::GetDlgItemInt( hDlg, ID_YAHEL_NUMBER, &parsed, false );
+					if (!parsed || i>UCHAR_MAX)
 						return false;
 					*params.pattern.bytes=i, params.patternLength=1;
-					return true; // the Dialog has valid inputs
-				}
-				assert(false);
-				return false;
+				}else
+					return false;
+				return EnableDlgItems( SearchButtons, params.patternLength>0 );
 			}
 
 			bool OnCommand(WPARAM wParam,LPARAM lParam) override{
-				static constexpr WORD SearchButtons[]={ ID_YAHEL_FIND_PREV, ID_YAHEL_FIND_NEXT, 0 };
 				switch (wParam){
 					case ID_YAHEL_FIND_PREV:
 					case ID_YAHEL_FIND_NEXT:
@@ -80,46 +76,43 @@ namespace Yahel{
 						return true;
 				// ASCII search events
 					case MAKELONG(ID_YAHEL_DEFAULT1,BN_CLICKED):
-					case MAKELONG(ID_YAHEL_TEXT,EN_SETFOCUS):
 					case MAKELONG(ID_YAHEL_ACCURACY,BN_CLICKED):
+						FocusDlgItem(ID_YAHEL_TEXT);
+						//fallthrough
+					case MAKELONG(ID_YAHEL_TEXT,EN_SETFOCUS):
 						::CheckRadioButton( hDlg, ID_YAHEL_DEFAULT1, ID_YAHEL_DEFAULT4, ID_YAHEL_DEFAULT1 );
 						//fallthrough
 					case MAKELONG(ID_YAHEL_TEXT,EN_CHANGE):
-						if (acceptNotification){
-							acceptNotification=false; // preventing from recurrent processing
-								hexaEditor.SetStreamLogicalSize(
-									params.patternLength=std::min( GetDlgItemTextLength(ID_YAHEL_TEXT), (int)sizeof(params.pattern.chars)-1 )
-								);
-								hexaEditor.f.SetLength( params.patternLength ); // zeros new space
-								::GetDlgItemTextA( hDlg, ID_YAHEL_TEXT, params.pattern.chars, sizeof(params.pattern.chars) );
-								hexaEditor.RepaintData();
-							acceptNotification=true;
-							EnableDlgItems( SearchButtons, params.patternLength>0 );
-						}
+						ValidateDialog();
+						hexaEditor.SetStreamLogicalSize( params.patternLength );
+						hexaEditor.f.SetLength( params.patternLength ); // zeros new space
+						::GetDlgItemTextA( hDlg, ID_YAHEL_TEXT, params.pattern.chars, sizeof(params.pattern.chars) ); // already in ValidateDialog, here once more as the Stream misses the tail of the text
+						hexaEditor.RepaintData();
 						return true;
 				// View search events
 					case MAKELONG(ID_YAHEL_DEFAULT2,BN_CLICKED):
+						FocusDlgItem(IDC_FILE);
+						//fallthrough
 					case MAKELONG(IDC_FILE,EN_SETFOCUS):
 						::CheckRadioButton( hDlg, ID_YAHEL_DEFAULT1, ID_YAHEL_DEFAULT4, ID_YAHEL_DEFAULT2 );
 						//fallthrough
 					case MAKELONG(IDC_FILE,EN_CHANGE):
-						if (acceptNotification){
-							acceptNotification=false; // preventing from recurrent processing
-								params.pattern.chars[ params.patternLength=hexaEditor.f.GetLength() ]='\0';
-								::SetDlgItemTextA( hDlg, ID_YAHEL_TEXT, params.pattern.chars );
-							acceptNotification=true;
-							EnableDlgItems( SearchButtons, params.patternLength>0 );
-						}
+						ValidateDialog();
+						params.pattern.chars[params.patternLength]='\0';
+						::SetDlgItemTextA( hDlg, ID_YAHEL_TEXT, params.pattern.chars );
 						return true;
 				// "Not-Byte" search events
 					case MAKELONG(ID_YAHEL_DEFAULT3,BN_CLICKED):
+						FocusDlgItem(ID_YAHEL_NUMBER);
+						//fallthrough
 					case MAKELONG(ID_YAHEL_NUMBER,EN_SETFOCUS):
 						::CheckRadioButton( hDlg, ID_YAHEL_DEFAULT1, ID_YAHEL_DEFAULT4, ID_YAHEL_DEFAULT3 );
 						//fallthrough
-					case MAKELONG(ID_YAHEL_NUMBER,EN_CHANGE):
-						if (acceptNotification)
-							EnableDlgItems( SearchButtons, GetDlgItemTextLength(ID_YAHEL_NUMBER)>0 );
+					case MAKELONG(ID_YAHEL_NUMBER,EN_CHANGE):{
+						const Utils::CVarBackup<BYTE> b0(*params.pattern.bytes); // "ValidateDialog" below overwrites the first Byte in the Stream, affecting HexaEditor and subsequently Ascii, giving bad impression to the user
+						ValidateDialog();
 						return true;
+					}
 				}
 				return false; // unrecognized command
 			}
@@ -128,7 +121,6 @@ namespace Yahel{
 
 			CParamsDialog(const TSearchParams &params0,HFONT hFont)
 				: params(params0)
-				, acceptNotification(true)
 				, hexaEditor( (HINSTANCE)&__ImageBase, &hexaEditor, MARK_RECURRENT_USE, hFont ) {
 				IStream *const s=Stream::FromBuffer( params.pattern.bytes, params.patternLength );
 					hexaEditor.Reset( s, nullptr, TPosInterval(1,sizeof(params.pattern.bytes)) );
