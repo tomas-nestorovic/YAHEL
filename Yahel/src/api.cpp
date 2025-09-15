@@ -615,14 +615,15 @@ namespace Stream
 			}
 			TError TrySaveDefinition(){
 				// attempts to redefine an Item from current inputs; returns a DWORD-encoded error
-				auto i=::GetDlgItemText( hDlg, IDC_NUMBER, definitionBuffer, bufferCapacity );
+				BOOL parsed=FALSE; // assumption
+				const int nStreamBytes=::GetDlgItemInt( hDlg, IDC_NUMBER, &parsed, false );
 				TError err=ERROR_KOSHER; // assumption
-				if (ITEM_STREAM_BYTES_MAX<i)
+				if (!parsed || ITEM_STREAM_BYTES_MAX<nStreamBytes)
 					err=ERROR_ITEM_DEF_BYTE_COUNT;
 				else if (patternLengthMax<GetDlgItemTextLength(IDC_PATTERN))
 					err=ERROR_ITEM_DEF_PATTERN_INSUFFICIENT_BUFFER;
 				else{
-					definitionBuffer[i++]=';';
+					const int i=::wsprintfW( definitionBuffer, L"%d;", nStreamBytes );
 					::GetDlgItemText( hDlg, IDC_PATTERN, definitionBuffer+i, bufferCapacity-i-1 );
 					err=item.Redefine(definitionBuffer);
 				}
