@@ -217,19 +217,19 @@ namespace Yahel
 
 namespace Gui
 {
-	enum TDlgItemIntType{
-		Unsigned,
+	enum TNotation{
+		Decadic,
 		Hexa,
-		Signed
+		Last
 	};
 
 	LPCWSTR YAHEL_DECLSPEC WINAPI GetDefaultEnglishMessage(TMsg id);
-	bool YAHEL_DECLSPEC WINAPI GetDlgItemInt(HWND hDlg,WORD editBoxId,TPosition &outValue,TDlgItemIntType type);
-	bool YAHEL_DECLSPEC WINAPI SetDlgItemInt(HWND hDlg,WORD editBoxId,TPosition value,TDlgItemIntType type);
-	inline bool GetDlgItemInt(HWND hDlg,WORD editBoxId,TPosition &outValue,bool hexa){ return GetDlgItemInt( hDlg, editBoxId, outValue, (TDlgItemIntType)hexa ); }
-	inline bool SetDlgItemInt(HWND hDlg,WORD editBoxId,TPosition value,bool hexa){ return SetDlgItemInt( hDlg, editBoxId, value, (TDlgItemIntType)hexa ); }
-	bool YAHEL_DECLSPEC WINAPI QuerySingleIntA(LPCSTR caption,LPCSTR label,const TPosInterval &rangeIncl,TPosition &inOutValue,TDlgItemIntType type,HWND hParent);
-	bool YAHEL_DECLSPEC WINAPI QuerySingleIntW(LPCWSTR caption,LPCWSTR label,const TPosInterval &rangeIncl,TPosition &inOutValue,TDlgItemIntType type,HWND hParent);
+	bool YAHEL_DECLSPEC WINAPI IsWindowIntHexa(HWND hEditBox);
+	bool YAHEL_DECLSPEC WINAPI IsDlgItemIntHexa(HWND hDlg,UINT idEditBox);
+	void YAHEL_DECLSPEC WINAPI SetWindowIntBuddyW(HWND hEditBox,TNotation defaultNotation,bool protrudeEditBox);
+	void YAHEL_DECLSPEC WINAPI SetDlgItemIntBuddyW(HWND hDlg,UINT idEditBox,TPosition defaultValue,bool bSigned,TNotation defaultNotation,bool protrudeEditBox);
+	bool YAHEL_DECLSPEC WINAPI QuerySingleIntA(LPCSTR caption,LPCSTR label,const TPosInterval &rangeIncl,TPosition &inOutValue,bool bSigned,TNotation defaultNotation,HWND hParent);
+	bool YAHEL_DECLSPEC WINAPI QuerySingleIntW(LPCWSTR caption,LPCWSTR label,const TPosInterval &rangeIncl,TPosition &inOutValue,bool bSigned,TNotation defaultNotation,HWND hParent);
 	#ifdef UNICODE
 		#define QuerySingleInt QuerySingleIntW
 	#else

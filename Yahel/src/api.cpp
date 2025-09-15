@@ -55,48 +55,189 @@ namespace Gui
 		}
 	}
 
-	bool WINAPI GetDlgItemInt(HWND hDlg,WORD editBoxId,TPosition &outValue,TDlgItemIntType type){
-		// True <=> EditBox text successfully parsed, otherwise False
-		static_assert( sizeof(outValue)==sizeof(int), "see _stscanf below");
-		TCHAR buf[32], *p=buf;
-		auto nChars=::GetDlgItemText( hDlg, editBoxId, buf, ARRAYSIZE(buf) );
-		if (type==TDlgItemIntType::Hexa){
-			if (nChars>2 && *buf=='0' && buf[1]=='x')
-				p+=2, nChars-=2;
-			else if (nChars>1 && (*buf=='$'||*buf=='#'||*buf=='%'))
-				p++, nChars--;
-			if (nChars>sizeof(outValue)*2)
-				return false;
-			return	_stscanf( ::CharLower(p), _T("%x"), &outValue )>0;
+	#define BUDDY_ID	ID_YAHEL_EDIT_RESET
+	#define BUDDY_MARGIN 1
+
+	bool WINAPI IsWindowIntHexa(HWND hEditBox){
+		// True <=> EditBox content is to be interpreted in hexa-decimal form
+		return ::IsDlgButtonChecked( hEditBox, BUDDY_ID )==BST_CHECKED;
+	}
+
+	bool YAHEL_DECLSPEC WINAPI IsDlgItemIntHexa(HWND hDlg,UINT idEditBox){
+		// True <=> EditBox content is to be interpreted in hexa-decimal form
+		return IsWindowIntHexa( ::GetDlgItem(hDlg,idEditBox) );
+	}
+
+	#define TEXT_BUDDY	L"hex"
+	#define TEXT_HEXA	L"0x"
+
+	void WINAPI SetWindowIntBuddyW(HWND hEditBox,TNotation defaultNotation,bool protrudeEditBox){
+		// creates a default Buddy checkbox inside an existing EditBox
+		if (!hEditBox)
+			return;
+		// - create the Buddy
+		const HWND hBuddy=::CreateWindowExW( 0, WC_BUTTONW, TEXT_BUDDY,
+			WS_CHILD|WS_VISIBLE|BS_PUSHLIKE|BS_CHECKBOX,
+			0,0, 1,1, // positioned and sized in WM_SIZE
+			hEditBox, (HMENU)BUDDY_ID, 0, nullptr
+		);
+		::CheckDlgButton( hEditBox, BUDDY_ID, BST_CHECKED*(defaultNotation==TNotation::Hexa) );
+		// - derive from EditBox
+		struct TParams sealed{
+			const WNDPROC wndProcOrg;
+			const Utils::CYahelFont font;
+			const int buddyWidth;
+
+			TParams(WNDPROC wndProcOrg,const Utils::CYahelFont::TLogFont &lf)
+				: wndProcOrg(wndProcOrg) , font(lf)
+				, buddyWidth( font.GetTextSize(TEXT_BUDDY).cx*ARRAYSIZE(TEXT_BUDDY)/(ARRAYSIZE(TEXT_BUDDY)-1) ) { // aka. "N+1/N characters"
+			}
+		};
+		struct F{
+			static HRESULT CALLBACK WndProcW(HWND hEditBox,UINT msg,WPARAM wParam,LPARAM lParam){
+				const HWND hBuddy=::GetDlgItem( hEditBox, BUDDY_ID );
+				const TParams &p=*(TParams *)::GetWindowLongW( hBuddy, GWL_USERDATA );
+				constexpr int DecadicCharsMax=32; // enough to accommodate the largest/smallest 64-bit number
+				switch (msg){
+					case WM_SIZE:
+						// window size changed
+						::SetWindowPos( // position the Buddy
+							hBuddy, 0,
+							LOWORD(lParam)-p.buddyWidth-BUDDY_MARGIN, BUDDY_MARGIN, p.buddyWidth, HIWORD(lParam)-2*BUDDY_MARGIN,
+							SWP_NOZORDER
+						);
+						break;
+					case WM_KEYDOWN:
+						// a key has been pressed
+						if (::GetKeyState(VK_CONTROL)<0)
+							switch (wParam){
+								case 'A': // want select all text
+									::SendMessage( hEditBox, EM_SETSEL, 0, -1 );
+									break;
+							}
+						break;
+					case WM_CHAR:
+						// character
+						if (wParam=='\x8')
+							break; // pass through backspace
+						if (wParam=='-'){ // want negative number ?
+							WCHAR buf[2];
+							::GetWindowTextW( hEditBox, buf, ARRAYSIZE(buf) );
+							if (*buf=='-')
+								return 0; // block insertion of second negative sign
+							Edit_SetSel( hEditBox, 0, 0 );
+							break; // insert negative sign
+						}
+						if ('0'<=wParam && wParam<='9')
+							break; // pass through all digits
+						if ('a'<=wParam && wParam<='z')
+							wParam-=32; // convert to capitals
+						if (wParam=='X') // want toggle Notation ?
+							return ::SendMessageW( hEditBox, WM_COMMAND, BUDDY_ID, (LPARAM)::GetDlgItem(hEditBox,BUDDY_ID) ); // don't use "::CheckDlgButton" as it doesn't send BN_CLICKED
+						if (wParam<'A' || 'F'<wParam)
+							return 0; // block all non-hexa chars
+						if (IsWindowIntHexa(hEditBox))
+							break; // do nothing extra if already in hexa-mode
+						::CheckDlgButton( hEditBox, BUDDY_ID, BST_CHECKED ); // upgrade notation without sending BN_CLICKED
+						break; // enter character
+					case WM_COMMAND:
+						switch (wParam){
+							case MAKELONG(BUDDY_ID,BN_CLICKED):{
+								// toggle number base, decadic vs hexadecimal
+								// . toggle
+								WCHAR buf[DecadicCharsMax];
+								::GetWindowTextW( hEditBox, buf, ARRAYSIZE(buf) );
+								::CheckDlgButton( hEditBox, BUDDY_ID, BST_CHECKED*!IsWindowIntHexa(hEditBox) ); // toggle, see '!'
+								::SetWindowTextW( hEditBox, buf );
+								// . focus EditBox (focus may be set to the Buddy instead)
+								::SetFocus(hEditBox);
+								// . select all text
+								::SendMessage( hEditBox, EM_SETSEL, 0, -1 );
+								break;
+							}
+						}
+						break;
+					case WM_GETTEXT:
+						// want Decadic notation
+						if (IsWindowIntHexa(hEditBox)){
+							WCHAR buf[ARRAYSIZE(TEXT_HEXA)+DecadicCharsMax];
+							::CallWindowProcW(
+								p.wndProcOrg, hEditBox, msg, DecadicCharsMax, 
+								(LPARAM)(::lstrcpyW(buf,TEXT_HEXA)+ARRAYSIZE(TEXT_HEXA)-1)
+							);
+							INT64 i;
+							return	::StrToInt64ExW( buf, STIF_SUPPORT_HEX, &i )
+									? ::wsprintfW( (LPWSTR)lParam, L"%I64i", i )
+									: 0;
+						}
+						break;
+					case WM_GETTEXTLENGTH:
+						// want Decadic notation length
+						return 0; //TODO
+					case WM_SETTEXT:{
+						// providing Decadic notation
+						INT64 i;
+						if (!::StrToInt64ExW( (LPCWSTR)lParam, STIF_DEFAULT, &i ))
+							return FALSE;
+						if (IsWindowIntHexa(hEditBox))
+							::wsprintfW( (LPWSTR)lParam, L"%I64X", i );
+						else
+							::wsprintfW( (LPWSTR)lParam, L"%I64i", i );
+						break;
+					}
+					case WM_DESTROY:
+						// window destroyed
+						// . revert subclassing (and avoid WM_NCDESTROY that would cause a crash)
+						::SetWindowLongW( hEditBox, GWL_WNDPROC, (LONG)p.wndProcOrg );
+						// . base
+						::CallWindowProcW( p.wndProcOrg, hEditBox, msg, wParam, lParam );
+						// . cleanup and done
+						delete &p;
+						return 0;
+				}
+				return ::CallWindowProcW( p.wndProcOrg, hEditBox, msg, wParam, lParam );
+			}
+		};
+		::SetWindowLongW( hEditBox, GWL_STYLE, ::GetWindowLongW(hEditBox,GWL_STYLE)&~ES_NUMBER ); // remove ES_NUMBER (want hexa 'a-f' chars)
+		Utils::CYahelFont::TLogFont lf( (HFONT)::SendMessageW(hEditBox,WM_GETFONT,0,0) );
+			::lstrcpy( lf.lfFaceName, FONT_COURIER_NEW );
+		TParams *const pParams=new TParams(
+			(WNDPROC)::SetWindowLongW( hEditBox, GWL_WNDPROC, (LONG)F::WndProcW ),
+			lf
+		);
+		::SetWindowLongW( hBuddy, GWL_USERDATA, (LONG)pParams );
+		::SendMessageW( hBuddy, WM_SETFONT, pParams->font, 0 );
+		// - make space to accommodate extras, e.g. the Buddy to the right
+		::SendMessageW( hEditBox, EM_SETMARGINS, EC_RIGHTMARGIN, MAKELONG(0,pParams->buddyWidth) );
+		// - want preserve the current size of the EditBox ?
+		RECT rc;
+		if (protrudeEditBox){
+			::GetWindowRect( hEditBox, &rc );
+			::SetWindowPos( hEditBox, // also puts Buddy into correct place
+				0, 0,0, rc.right-rc.left+2*BUDDY_MARGIN+pParams->buddyWidth, rc.bottom-rc.top, SWP_NOZORDER|SWP_NOMOVE
+			);
 		}else{
-			if (nChars>10+(*buf=='-')) // e.g. "-1234567890"
-				return false;
-			return	_stscanf( p, _T("%d"), &outValue )>0;
+			::GetClientRect( hEditBox, &rc );
+			::SendMessageW( hEditBox, // must send dummy sizing to invoke Buddy positioning
+				WM_SIZE, 0, MAKELONG(rc.right,rc.bottom)
+			);
 		}
 	}
 
-	bool WINAPI SetDlgItemInt(HWND hDlg,WORD editBoxId,TPosition value,TDlgItemIntType type){
-		if (const HWND hWnd=::GetDlgItem( hDlg, editBoxId ))
-			if (type==TDlgItemIntType::Hexa){
-				::SetWindowLong( hWnd, GWL_STYLE, ::GetWindowLong(hWnd,GWL_STYLE)&~ES_NUMBER );
-				WCHAR buf[32];
-				::wsprintf( buf, L"0x%X", value );
-				return ::SetWindowText( hWnd, buf )!=FALSE;
-			}else{
-				::SetWindowLong( hWnd, GWL_STYLE, ::GetWindowLong(hWnd,GWL_STYLE)|ES_NUMBER );
-				return ::SetDlgItemInt( hDlg, editBoxId, value, type==TDlgItemIntType::Signed )!=FALSE;
-			}
-		return false;
+	void WINAPI SetDlgItemIntBuddyW(HWND hDlg,UINT idEditBox,TPosition defaultValue,bool bSigned,TNotation defaultNotation,bool protrudeEditBox){
+		// creates a default Buddy checkbox inside an existing EditBox
+		SetWindowIntBuddyW( ::GetDlgItem(hDlg,idEditBox), defaultNotation, protrudeEditBox );
+		::SetDlgItemInt( hDlg, idEditBox, defaultValue, bSigned );
 	}
 
-	bool YAHEL_DECLSPEC WINAPI QuerySingleIntA(LPCSTR caption,LPCSTR label,const TPosInterval &range,TPosition &inOutValue,TDlgItemIntType type,HWND hParent){
+	bool YAHEL_DECLSPEC WINAPI QuerySingleIntA(LPCSTR caption,LPCSTR label,const TPosInterval &range,TPosition &inOutValue,bool bSigned,TNotation defaultNotation,HWND hParent){
 		WCHAR captionW[128], labelW[256];
 		::wsprintfW( captionW, L"%S", caption );
 		::wsprintfW( labelW, L"%S", label );
-		return QuerySingleIntW( captionW, labelW, range, inOutValue, type, hParent );
+		return QuerySingleIntW( captionW, labelW, range, inOutValue, bSigned, defaultNotation, hParent );
 	}
 
-	bool WINAPI QuerySingleIntW(LPCWSTR caption,LPCWSTR label,const TPosInterval &rangeIncl,TPosition &inOutValue,TDlgItemIntType type,HWND hParent){
+	bool WINAPI QuerySingleIntW(LPCWSTR caption,LPCWSTR label,const TPosInterval &rangeIncl,TPosition &inOutValue,bool bSigned,TNotation defaultNotation,HWND hParent){
 		// - must be able to set at least two options
 		if (rangeIncl.GetLength()<1) // inclusive!
 			return false;
@@ -107,14 +248,21 @@ namespace Gui
 		class CSingleNumberDialog sealed:public Utils::CYahelDialog{
 			const LPCWSTR caption,label;
 			const TPosInterval rangeIncl;
-			bool hexa;
+			const bool bSigned;
+			const TNotation defaultNotation;
 
 			bool InitDialog() override{
 				// dialog initialization
 				::SetWindowText( hDlg, caption );
-				// - instructions
+				SetDlgItemIntBuddyW( hDlg, IDC_NUMBER, Value, bSigned, defaultNotation, false );
+				ReformulateInstructions();
+				return true; // set the keyboard focus to the default control
+			}
+
+			void ReformulateInstructions(){
+				// reformulates instructions using current Notation
 				TCHAR buf[200], strMin[32], strMax[32];
-				if (hexa){
+				if (IsDlgItemIntHexa( hDlg, IDC_NUMBER )){
 					TCHAR format[32];
 					::wsprintf( format, _T("0x%%0%dX"), ::wsprintf(strMax,_T("%x"),rangeIncl.a|rangeIncl.z) );
 					::wsprintf( strMin, format, rangeIncl.a );
@@ -129,19 +277,13 @@ namespace Gui
 				else
 					::wsprintf( buf, _T("%s (%s - %s):"), label, strMin, strMax );
 				SetDlgItemText( IDC_INFO1, buf );
-				// - initial Value
-				SetDlgItemInt( IDC_NUMBER, Value, hexa );
-				// - value format
-				if (EnableDlgItem( IDC_HEXA, (rangeIncl.a|rangeIncl.z)>=0 ))
-					CheckDlgButton( IDC_HEXA, hexa );
-				else
-					CheckDlgButton( IDC_HEXA, false );
-				return true; // set the keyboard focus to the default control
 			}
 
 			bool ValidateDialog() override{
 				// True <=> Dialog inputs are acceptable, otherwise False
-				return	GetDlgItemInt( hDlg, IDC_NUMBER, Value, hexa )
+				BOOL parsed=FALSE;
+				Value=::GetDlgItemInt( hDlg, IDC_NUMBER, &parsed, bSigned );
+				return	parsed
 						? rangeIncl.Contains(Value) || Value==rangeIncl.z
 						: false;
 			}
@@ -149,28 +291,23 @@ namespace Gui
 			bool OnCommand(WPARAM wParam,LPARAM lParam) override{
 				// command processing
 				switch (wParam){
-					case MAKELONG(IDC_NUMBER,EN_CHANGE):
-						EnableDlgItem( IDOK, ValidateDialog() );
+					case MAKELONG(IDC_NUMBER,EN_CHANGE):{
+						ReformulateInstructions();
+						EnableDlgItem( IDOK, ValidateDialog() ); // indicate validity
 						return true;
-					case MAKELONG(IDC_HEXA,BN_CLICKED):
-						ValidateDialog();
-						hexa=IsDlgButtonChecked(IDC_HEXA);
-						InitDialog();
-						FocusDlgItem(IDC_NUMBER);
-						Edit_SetSel( GetDlgItemHwnd(IDC_NUMBER), 0, -1 ); // selecting full content
-						return true;
+					}
 				}
 				return false;
 			}
 		public:
 			TPosition Value;
 
-			CSingleNumberDialog(LPCWSTR caption,LPCWSTR label,const TPosInterval &rangeIncl,TPosition initValue,bool hexa)
+			CSingleNumberDialog(LPCWSTR caption,LPCWSTR label,const TPosInterval &rangeIncl,TPosition initValue,bool bSigned,TNotation defaultNotation)
 				// ctor
-				: caption(caption) , label(label) , rangeIncl(rangeIncl) , hexa(hexa)
+				: caption(caption) , label(label) , rangeIncl(rangeIncl) , bSigned(bSigned) , defaultNotation(defaultNotation)
 				, Value(initValue) {
 			}
-		} d( caption, label, rangeIncl, inOutValue, type==TDlgItemIntType::Hexa );
+		} d( caption, label, rangeIncl, inOutValue, bSigned, defaultNotation );
 		// - showing the Dialog and processing its result
 		const bool confirmed=d.DoModal( IDR_YAHEL_SINGLE_NUMBER, hParent )==IDOK;
 		if (hParent)
@@ -590,7 +727,7 @@ namespace Stream
 			}
 			void ShowItem(){
 				const Utils::CVarTempReset<bool> pn0( processNotifications, false ); // don't recurrently trigger notifications
-				SetDlgItemInt( IDC_NUMBER, item.nStreamBytes );
+				::SetDlgItemInt( hDlg, IDC_NUMBER, item.nStreamBytes, FALSE );
 				UpdateStreamLength();
 				WCHAR pattern[ARRAYSIZE(item.pattern)+1];
 				SetDlgItemText( IDC_PATTERN, item.GetDefinition(pattern) );
@@ -608,6 +745,7 @@ namespace Stream
 				ShowItem();
 				RecognizePresetItem();
 				// . (!!) creation and initial populating of the HexaEditor; MUST BE THE LAST IN THIS METHOD ...
+				Gui::SetDlgItemIntBuddyW( hDlg, IDC_NUMBER, item.nStreamBytes, false, Gui::Decadic, true );
 				hexaEditor.SubclassAndAttach( GetDlgItemHwnd(IDC_FILE) );
 				processNotifications=true; // ... BECAUSE OF THIS
 				SendCommand( MAKELONG(IDC_NUMBER,EN_CHANGE) );

@@ -74,6 +74,7 @@ namespace Utils{
 		~CYahelFont();
 
 		inline operator HFONT() const{ return handle; }
+		inline operator WPARAM() const{ return (WPARAM)handle; }
 
 		inline int GetCharAvgWidth() const{ return charAvgWidth; }
 		inline int GetCharHeight() const{ return charHeight; }
@@ -106,8 +107,6 @@ namespace Utils{
 		void InitDlgItemText(WORD id,...) const;
 		int GetDlgItemTextLength(WORD id) const;
 		inline int SetDlgItemText(WORD id,LPCTSTR text) const{ return ::SetDlgItemText( hDlg, id, text ); }
-		inline int SetDlgItemInt(WORD id,int i) const{ return Gui::SetDlgItemInt( hDlg, id, i, Gui::Signed ); }
-		inline int SetDlgItemInt(WORD id,int i,bool hexa) const{ return Gui::SetDlgItemInt( hDlg, id, i, hexa ); }
 		HWND FocusDlgItem(WORD id) const;
 		inline LRESULT SendCommand(WPARAM wParam,LPARAM lParam=0) const{ return ::SendMessage( hDlg, WM_COMMAND, wParam, lParam ); }
 		RECT MapDlgItemClientRect(WORD id) const;

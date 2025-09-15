@@ -36,7 +36,7 @@ namespace Checksum{
 		// - showing the Dialog and processing its result
 		static_assert( sizeof(TPosition)==sizeof(initValue), "" );
 		return Gui::QuerySingleIntA(
-			"Checksum", "&Initial value", TPosInterval(0,INT_MAX), (TPosition &)initValue, Gui::Hexa, hParent
+			"Checksum", "&Initial value", TPosInterval(0,INT_MAX), (TPosition &)initValue, false, Gui::Hexa, hParent
 		);
 	}
 
