@@ -17,6 +17,20 @@ namespace Utils{
 
 
 
+	CGlobalMemLocker::CGlobalMemLocker(HGLOBAL handle)
+		// ctor
+		: handle(handle)
+		, pMem( ::GlobalLock(handle) ) {
+	}
+
+	CGlobalMemLocker::~CGlobalMemLocker(){
+		// dtor
+		::GlobalUnlock(handle);
+	}
+
+
+
+
 	CViewportOrg::CViewportOrg(HDC dc,TRow r,TCol c,const CYahelFont &font)
 		: dc(dc) {
 		::SetViewportOrgEx( dc, c*font.GetCharAvgWidth(), r*font.GetCharHeight(), &pt0 );
@@ -135,8 +149,8 @@ namespace Utils{
 								if (tmp.cx>result.cx)
 									result.cx=tmp.cx;
 								result.cy+=charHeight;
-								subA=subZ+(*subZ!='\0');
 							}
+							subA=subZ+(*subZ!='\0');
 							break;
 					}
 			::SelectObject( screen, hFont0 );

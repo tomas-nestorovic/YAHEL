@@ -281,8 +281,8 @@ namespace Gui
 
 			bool ValidateDialog() override{
 				// True <=> Dialog inputs are acceptable, otherwise False
-				BOOL parsed=FALSE;
-				Value=::GetDlgItemInt( hDlg, IDC_NUMBER, &parsed, bSigned );
+				BOOL parsed;
+				Value=GetDlgItemInt( IDC_NUMBER, &parsed, bSigned );
 				return	parsed
 						? rangeIncl.Contains(Value) || Value==rangeIncl.z
 						: false;
@@ -573,14 +573,13 @@ namespace Stream
 				case TYMED_HGLOBAL:
 					if (::GlobalSize(pMedium->hGlobal)<range.GetLength())
 						return E_NOT_SUFFICIENT_BUFFER;
-					if (const PBYTE pData=(PBYTE)::GlobalLock(pMedium->hGlobal)){
-						PBYTE p=pData; f.Seek(range.a);
+					if (const auto &&data=Utils::CGlobalMemLocker(pMedium->hGlobal)){
+						PBYTE p=data; f.Seek(range.a);
 						while (nBytesToRead>0)
 							if (const auto nBytesRead=f.Read( p, nBytesToRead, IgnoreIoResult ))
 								p+=nBytesRead, nBytesToRead-=nBytesRead;
 							else
 								break;
-						::GlobalUnlock(pMedium->hGlobal);
 						return S_OK;
 					}else
 						return STG_E_LOCKVIOLATION;
@@ -753,8 +752,8 @@ namespace Stream
 			}
 			TError TrySaveDefinition(){
 				// attempts to redefine an Item from current inputs; returns a DWORD-encoded error
-				BOOL parsed=FALSE; // assumption
-				const int nStreamBytes=::GetDlgItemInt( hDlg, IDC_NUMBER, &parsed, false );
+				BOOL parsed;
+				const int nStreamBytes=GetDlgItemInt( IDC_NUMBER, parsed );
 				TError err=ERROR_KOSHER; // assumption
 				if (!parsed || ITEM_STREAM_BYTES_MAX<nStreamBytes)
 					err=ERROR_ITEM_DEF_BYTE_COUNT;

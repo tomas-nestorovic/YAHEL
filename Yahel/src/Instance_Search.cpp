@@ -58,7 +58,7 @@ namespace Yahel{
 				}else if (IsDlgButtonChecked(ID_YAHEL_DEFAULT3)){
 					params.type=NOT_BYTE;
 					BOOL parsed=FALSE;
-					const auto i=::GetDlgItemInt( hDlg, ID_YAHEL_NUMBER, &parsed, false );
+					const auto i=GetDlgItemInt( ID_YAHEL_NUMBER, parsed );
 					if (!parsed || i>UCHAR_MAX)
 						return false;
 					*params.pattern.bytes=i, params.patternLength=1;

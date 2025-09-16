@@ -38,6 +38,17 @@ namespace Utils{
 		~CExclusivelyLocked();
 	};
 
+	class CGlobalMemLocker{
+		const HGLOBAL handle;
+		const PVOID pMem;
+	public:
+		CGlobalMemLocker(HGLOBAL handle);
+		~CGlobalMemLocker();
+
+		inline operator bool() const{ return pMem!=nullptr; }
+		template<typename T> inline operator T *() const{ return (T *)pMem; }
+	};
+
 	class CYahelPen:public LOGPEN{
 		const HPEN handle;
 	public:
@@ -107,6 +118,7 @@ namespace Utils{
 		void InitDlgItemText(WORD id,...) const;
 		int GetDlgItemTextLength(WORD id) const;
 		inline int SetDlgItemText(WORD id,LPCTSTR text) const{ return ::SetDlgItemText( hDlg, id, text ); }
+		inline UINT GetDlgItemInt(WORD id,BOOL &outParsed,bool bSigned=false) const{ return ::GetDlgItemInt( hDlg, id, &outParsed, bSigned ); }
 		HWND FocusDlgItem(WORD id) const;
 		inline LRESULT SendCommand(WPARAM wParam,LPARAM lParam=0) const{ return ::SendMessage( hDlg, WM_COMMAND, wParam, lParam ); }
 		RECT MapDlgItemClientRect(WORD id) const;
