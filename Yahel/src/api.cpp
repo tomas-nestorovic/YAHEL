@@ -121,12 +121,13 @@ namespace Gui
 						if (wParam=='\x8')
 							break; // pass through backspace
 						if (wParam=='-'){ // want negative number ?
+							if (IsWindowIntHexa(hEditBox))
+								return 0; // can't enter minus sign in Hexa Notation
 							WCHAR buf[2];
-							::GetWindowTextW( hEditBox, buf, ARRAYSIZE(buf) );
-							if (*buf=='-')
-								return 0; // block insertion of second negative sign
+							if (::GetWindowTextW(hEditBox,buf,ARRAYSIZE(buf)) && *buf=='-')
+								return 0; // block insertion of second minus sign
 							Edit_SetSel( hEditBox, 0, 0 );
-							break; // insert negative sign
+							break; // prepend an existing Decadic number with a minus sign
 						}
 						if ('0'<=wParam && wParam<='9')
 							break; // pass through all digits
