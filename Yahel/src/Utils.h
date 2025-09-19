@@ -136,6 +136,15 @@ namespace Utils{
 		UINT_PTR DoModal(UINT nIDTemplate,HWND hParent=0);
 	};
 
+	class CScreenDC{
+		const HDC dc;
+	public:
+		inline CScreenDC() : dc(::GetDC(nullptr)) {}
+		inline ~CScreenDC(){ ::ReleaseDC(nullptr,dc); }
+
+		inline operator HDC() const{ return dc; }
+	};
+
 	class CViewportOrg{
 		const HDC dc;
 		POINT pt0;

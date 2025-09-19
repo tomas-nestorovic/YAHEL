@@ -218,7 +218,7 @@ namespace Yahel
 namespace Gui
 {
 	enum TNotation{
-		Decadic,
+		Decimal,
 		Hexa,
 		Last
 	};

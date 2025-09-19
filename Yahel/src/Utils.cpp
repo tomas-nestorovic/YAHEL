@@ -121,14 +121,13 @@ namespace Utils{
 		// - initialization
 		: handle( ::CreateFontIndirectW(&lf) ) {
 		// - determining the AvgWidth and Height of Font characters
-		const HDC screen=::GetDC(0);
+		const CScreenDC screen;
 			const HGDIOBJ hFont0=::SelectObject( screen, handle );
 				TEXTMETRICW tm;
 				::GetTextMetricsW( screen, &tm );
 				charAvgWidth=tm.tmAveCharWidth;
 				charHeight=tm.tmHeight;
 			::SelectObject(screen,hFont0);
-		::ReleaseDC(0,screen);
 	}
 
 	CYahelFont::~CYahelFont(){
@@ -139,7 +138,7 @@ namespace Utils{
 	SIZE CYahelFont::GetTextSize(LPCTSTR text,int textLength) const{
 		// determines and returns the Size of the specified Text using using this font face
 		SIZE result={},tmp;
-		const HDC screen=::GetDC(0);
+		const CScreenDC screen;
 			const HGDIOBJ hFont0=::SelectObject( screen, handle );
 				for( LPCTSTR subA=text,subZ=subA; *subA; subZ++ )
 					switch (*subZ){
@@ -154,7 +153,6 @@ namespace Utils{
 							break;
 					}
 			::SelectObject( screen, hFont0 );
-		::ReleaseDC(0,screen);
 		return result;
 	}
 
@@ -240,9 +238,7 @@ namespace Utils{
 				// . injecting Font (adopted from MFC library)
 				PWCHAR p=(PWCHAR)((PBYTE)&dlgTemplate+nBytesBeforeFont);
 				const CYahelFont::TLogFont lf(hFont);
-				const HDC hDC=::GetDC(nullptr);
-					*p++=::MulDiv( std::abs(lf.lfHeight), 72, ::GetDeviceCaps(hDC,LOGPIXELSY) );
-				::ReleaseDC( nullptr, hDC );
+				*p++=::MulDiv( std::abs(lf.lfHeight), 72, ::GetDeviceCaps(CScreenDC(),LOGPIXELSY) );
 				p+=::lstrlenW( ::lstrcpyW(p,lf.lfFaceName) );
 				*(LPDWORD)p++=0;
 				dlgTemplate.header.style|=DS_SETFONT;

@@ -97,7 +97,7 @@ namespace Gui
 			static HRESULT CALLBACK WndProcW(HWND hEditBox,UINT msg,WPARAM wParam,LPARAM lParam){
 				const HWND hBuddy=::GetDlgItem( hEditBox, BUDDY_ID );
 				const TParams &p=*(TParams *)::GetWindowLongW( hBuddy, GWL_USERDATA );
-				constexpr int DecadicCharsMax=32; // enough to accommodate the largest/smallest 64-bit number
+				constexpr int DecimalCharsMax=32; // enough to accommodate the largest/smallest 64-bit number
 				switch (msg){
 					case WM_SIZE:
 						// window size changed
@@ -127,7 +127,7 @@ namespace Gui
 							if (::GetWindowTextW(hEditBox,buf,ARRAYSIZE(buf)) && *buf=='-')
 								return 0; // block insertion of second minus sign
 							Edit_SetSel( hEditBox, 0, 0 );
-							break; // prepend an existing Decadic number with a minus sign
+							break; // prepend an existing Decimal number with a minus sign
 						}
 						if ('0'<=wParam && wParam<='9')
 							break; // pass through all digits
@@ -144,9 +144,9 @@ namespace Gui
 					case WM_COMMAND:
 						switch (wParam){
 							case MAKELONG(BUDDY_ID,BN_CLICKED):{
-								// toggle number base, decadic vs hexadecimal
+								// toggle number base, Decimal vs Hexadecimal
 								// . toggle
-								WCHAR buf[DecadicCharsMax];
+								WCHAR buf[DecimalCharsMax];
 								::GetWindowTextW( hEditBox, buf, ARRAYSIZE(buf) );
 								::CheckDlgButton( hEditBox, BUDDY_ID, BST_CHECKED*!IsWindowIntHexa(hEditBox) ); // toggle, see '!'
 								::SetWindowTextW( hEditBox, buf );
@@ -159,11 +159,11 @@ namespace Gui
 						}
 						break;
 					case WM_GETTEXT:
-						// want Decadic notation
+						// want Decimal notation
 						if (IsWindowIntHexa(hEditBox)){
-							WCHAR buf[ARRAYSIZE(TEXT_HEXA)+DecadicCharsMax];
+							WCHAR buf[ARRAYSIZE(TEXT_HEXA)+DecimalCharsMax];
 							::CallWindowProcW(
-								p.wndProcOrg, hEditBox, msg, DecadicCharsMax, 
+								p.wndProcOrg, hEditBox, msg, DecimalCharsMax, 
 								(LPARAM)(::lstrcpyW(buf,TEXT_HEXA)+ARRAYSIZE(TEXT_HEXA)-1)
 							);
 							INT64 i;
@@ -173,10 +173,10 @@ namespace Gui
 						}
 						break;
 					case WM_GETTEXTLENGTH:
-						// want Decadic notation length
+						// want Decimal Notation length
 						return 0; //TODO
 					case WM_SETTEXT:{
-						// providing Decadic notation
+						// providing Decimal notation
 						INT64 i;
 						if (!::StrToInt64ExW( (LPCWSTR)lParam, STIF_DEFAULT, &i ))
 							return FALSE;
@@ -745,7 +745,7 @@ namespace Stream
 				ShowItem();
 				RecognizePresetItem();
 				// . (!!) creation and initial populating of the HexaEditor; MUST BE THE LAST IN THIS METHOD ...
-				Gui::SetDlgItemIntBuddyW( hDlg, IDC_NUMBER, item.nStreamBytes, false, Gui::Decadic, true );
+				Gui::SetDlgItemIntBuddyW( hDlg, IDC_NUMBER, item.nStreamBytes, false, Gui::Decimal, true );
 				hexaEditor.SubclassAndAttach( GetDlgItemHwnd(IDC_FILE) );
 				processNotifications=true; // ... BECAUSE OF THIS
 				SendCommand( MAKELONG(IDC_NUMBER,EN_CHANGE) );
