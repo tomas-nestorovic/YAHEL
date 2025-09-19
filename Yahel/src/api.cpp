@@ -115,6 +115,11 @@ namespace Gui
 									::SendMessage( hEditBox, EM_SETSEL, 0, -1 );
 									break;
 							}
+						//fallthrough
+					case WM_LBUTTONDOWN:
+					case WM_LBUTTONDBLCLK:
+					case WM_LBUTTONUP:
+						::InvalidateRect( hBuddy, nullptr, false ); // the margin is forced white on Win10+, so force Buddy redrawing
 						break;
 					case WM_CHAR:
 						// character
@@ -283,7 +288,7 @@ namespace Gui
 			bool ValidateDialog() override{
 				// True <=> Dialog inputs are acceptable, otherwise False
 				BOOL parsed;
-				Value=GetDlgItemInt( IDC_NUMBER, &parsed, bSigned );
+				Value=GetDlgItemInt( IDC_NUMBER, parsed, bSigned );
 				return	parsed
 						? rangeIncl.Contains(Value) || Value==rangeIncl.z
 						: false;
