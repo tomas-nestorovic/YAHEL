@@ -722,11 +722,10 @@ namespace Stream
 				ComboBox_SetItemData( hPresets, ::SendMessage(hPresets,CB_ADDSTRING,0,(LPARAM)buf), pattern );
 			}
 			void UpdateStreamLength(){
-				if (IStream *const s=hexaEditor.GetCurrentStream()){
+				if (const auto &s=hexaEditor.GetCurrentStream()){
 					ULARGE_INTEGER uli;
 						uli.QuadPart=item.nStreamBytes;
 					s->SetSize(uli);
-					s->Release();
 				}
 				hexaEditor.RepaintData();
 			}

@@ -294,7 +294,7 @@ namespace Gui
 		virtual bool IsEditable() const=0;
 		virtual void ShowColumns(BYTE columns=TColumn::ALL)=0;
 		virtual bool IsColumnShown(TColumn c) const=0;
-		virtual IStream *GetCurrentStream() const=0;
+		virtual const ATL::CComPtr<IStream> &GetCurrentStream() const=0;
 		virtual void Update(IStream *s,Stream::IAdvisor *sa)=0;
 		virtual bool Update(IStream *s,Stream::IAdvisor *sa,const TPosInterval &fileLogicalSizeLimits)=0;
 		virtual bool Reset(IStream *s,Stream::IAdvisor *sa,const TPosInterval &fileLogicalSizeLimits)=0;

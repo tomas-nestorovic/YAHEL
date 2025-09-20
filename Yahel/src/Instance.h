@@ -232,7 +232,7 @@ namespace Yahel{
 		bool IsEditable() const override;
 		void ShowColumns(BYTE columns=TColumn::ALL) override;
 		bool IsColumnShown(TColumn c) const override;
-		IStream *GetCurrentStream() const override;
+		const CComPtr<IStream> &GetCurrentStream() const override;
 		void Update(IStream *f,Stream::IAdvisor *sa) override;
 		bool Update(IStream *f,Stream::IAdvisor *sa,const TPosInterval &fileLogicalSizeLimits) override;
 		bool Reset(IStream *f,Stream::IAdvisor *sa,const TPosInterval &fileLogicalSizeLimits) override;

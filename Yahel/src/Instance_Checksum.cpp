@@ -123,7 +123,7 @@ namespace Checksum{
 		const HRESULT hr=this->f.stream->Clone( &f.stream.p );
 		if (hr==E_NOTIMPL){ // have to reuse existing Stream?
 			assert(false); // using here the same Stream always requires attention; YAHEL is fine with that - is also the client app fine with that?
-			f.stream=this->f.stream, f.posOrg=f.GetPosition();
+			( f.stream=this->f.stream )->AddRef(), f.posOrg=f.GetPosition();
 		}else if (FAILED(hr))
 			return Checksum::GetErrorValue();
 		Checksum::TParams p=params;

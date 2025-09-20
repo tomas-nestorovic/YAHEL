@@ -250,10 +250,8 @@ namespace Yahel{
 		return (columns&c)!=0;
 	}
 
-	IStream *CInstance::GetCurrentStream() const{
-		if (f.stream.p!=nullptr)
-			f.stream.p->AddRef();
-		return f;
+	const CComPtr<IStream> &CInstance::GetCurrentStream() const{
+		return f.stream;
 	}
 
 	void CInstance::Update(IStream *f,Stream::IAdvisor *sa){
