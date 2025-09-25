@@ -264,31 +264,32 @@ moveCaretDown:			const auto iRow=__logicalPositionToRow__(caret.streamPosition);
 						}
 					}
 					case VK_BACK:
-						// deleting the Byte before Caret, or deleting the Selection
+						// deleting the Byte/Item immediately before Caret, or deleting the Selection
 						if (!editable) return true; // can't edit content of a disabled window
 						if (!f) return true; // there's nothing to do without an underlying Content
-						// . if Selection not set, setting it as the Byte immediately before Caret
+						// . if Selection not set, set it as the Byte/Item immediately before Caret
 						if (!caret.SelectionExists())
-							if (caret.IsInStream()) // in Stream column
+							if (!caret.streamPosition) // can actually delete anything before the Caret?
+								return true;
+							else if (caret.IsInStream()) // in Stream column
 								caret.streamSelection=TPosInterval( caret.streamPosition-1 );
-							else // in View column - nothing actually deleted yet, merely created a Selection to delete with another press of Backspace
-								return ProcessMessage( msg, VK_DELETE, 0, outResult ); // select current Item
+							else{ // in View column - nothing actually deleted yet, merely created a Selection to delete with another press of Backspace
+								const Utils::CVarBackup<TCaretPosition> c0=caret; // not the whole Caret, just its Position!
+								caret.streamPosition--;
+								caret.streamSelection=GetItemAt(caret);
+								RepaintData();
+								goto caretRefresh;
+							}
 						// . delete
-						ProcessMessage( msg, VK_DELETE, 0, outResult );
-						if (caret.SelectionExists()) // not yet deleted? (e.g. just a message-box shown?)
-							return true;
-						// . move caret before Selection
-						if (!caret.IsInStream()) // in View column
-							caret.streamPosition--;
-						goto caretCorrectlyMoveTo;
+						//fallthrough
 					case VK_DELETE:{
-						// deleting the Byte after Caret, or deleting the Selection
+						// deleting the Byte/Item containing Caret, or deleting the Selection
 editDelete:				if (!editable) return true; // can't edit content of a disabled window
 						if (!f) return true; // there's nothing to do without an underlying Content
-						// . if Selection not set, setting it as the Byte immediately after Caret
+						// . if Selection not set, set it as the Byte/Item containing Caret
 						const auto caret0=caret;
 						if (!caret.SelectionExists())
-							if (caret.streamPosition>=f.GetLength()) // can actually delete anything after the Caret?
+							if (caret.streamPosition>=f.GetLength()) // can actually delete anything at Caret Position?
 								return true;
 							else if (caret.IsInStream()) // in Stream column
 								caret.streamSelection=TPosInterval( caret.streamPosition );
