@@ -170,30 +170,32 @@ namespace Gui
 							}
 						}
 						break;
-					case WM_GETTEXT:
+					case WM_GETTEXT:{
 						// want Decimal notation
-						if (IsWindowIntHexa(hEditBox)){
-							WCHAR buf[ARRAYSIZE(TEXT_HEXA)+DecimalCharsMax];
-							::CallWindowProcW(
-								p.wndProcOrg, hEditBox, msg, DecimalCharsMax, 
-								(LPARAM)(::lstrcpyW(buf,TEXT_HEXA)+ARRAYSIZE(TEXT_HEXA)-1)
-							);
-							INT64 i;
-							return	::StrToInt64ExW( buf, STIF_SUPPORT_HEX, &i )
-									? ::wsprintfW( (LPWSTR)lParam, L"%I64i", i )
-									: 0;
-						}
-						break;
+						WCHAR buf[2*ARRAYSIZE(TEXT_HEXA)+DecimalCharsMax];
+						static_assert( (ARRAYSIZE(TEXT_HEXA)-1)*sizeof(*buf)==sizeof(int), "" ); // see 'PINT' below
+						*(PINT)buf=MAKELONG( ' ', ' ' );
+						::CallWindowProcW(
+							p.wndProcOrg, hEditBox, msg, ARRAYSIZE(buf),
+							(LPARAM)(buf+ARRAYSIZE(TEXT_HEXA)-1)
+						);
+						if (IsWindowIntHexa(hEditBox))
+							if (!::StrChrIW(buf,'x')) // missing the '0x' prefix ?
+								*(PINT)buf=*(PINT)TEXT_HEXA;
+						INT64 i;
+						return	::StrToInt64ExW( buf, STIF_SUPPORT_HEX, &i )
+								? ::wsprintfW( (LPWSTR)lParam, L"%I64i", i )
+								: ( *(LPWSTR)lParam='\0' );
+					}
 					case WM_GETTEXTLENGTH:
 						// want Decimal Notation length
 						return 0; //TODO
 					case WM_SETTEXT:{
-						// providing Decimal notation
-						INT64 i;
-						if (!::StrToInt64ExW( (LPCWSTR)lParam, STIF_DEFAULT, &i ))
-							return FALSE;
+						// providing Hexa/Decimal notation
+						INT64 i=0;
+						::StrToInt64ExW( (LPCWSTR)lParam, STIF_SUPPORT_HEX, &i );
 						if (IsWindowIntHexa(hEditBox))
-							::wsprintfW( (LPWSTR)lParam, L"%I64X", i );
+							::wsprintfW( (LPWSTR)lParam, TEXT_HEXA L"%I64X", i );
 						else
 							::wsprintfW( (LPWSTR)lParam, L"%I64i", i );
 						break;
