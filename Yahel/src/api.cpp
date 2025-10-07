@@ -130,8 +130,8 @@ namespace Gui
 						break;
 					case WM_CHAR:
 						// character
-						if (wParam=='\x8')
-							break; // pass through backspace
+						if (::StrChrIW( L"\x8\x3\x16", wParam ))
+							break; // pass through backspace, ETX (Ctrl+C), and SYN (Ctrl+V) chars
 						if (wParam=='-'){ // want negative number ?
 							if (IsWindowIntHexa(hEditBox))
 								return 0; // can't enter minus sign in Hexa Notation
@@ -199,6 +199,27 @@ namespace Gui
 						else
 							::wsprintfW( (LPWSTR)lParam, L"%I64i", i );
 						break;
+					}
+					case WM_COPY:{
+						// copy to the clipboard in current Notation
+						WCHAR buf[ARRAYSIZE(TEXT_HEXA)+DecimalCharsMax];
+						::GetWindowTextW( hEditBox, buf, ARRAYSIZE(buf) );
+						::SetWindowTextW( hEditBox, buf ); // assure number in the correct Notation
+						SelectAll(hEditBox); // indicate whole number copied
+						break;
+					}
+					case WM_PASTE:{
+						// paste from the clipboard in provided Notation
+						::CallWindowProcW( // paste
+							p.wndProcOrg, hEditBox, msg, wParam, lParam
+						);
+						WCHAR buf[ARRAYSIZE(TEXT_HEXA)+DecimalCharsMax];
+						::CallWindowProcW( // get what's been pasted without processing it (aka. without 'GetWindowText')
+							p.wndProcOrg, hEditBox, WM_GETTEXT, ARRAYSIZE(buf), (LPARAM)buf
+						);
+						::SetWindowTextW( hEditBox, buf ); // assure number in the correct Notation
+						Edit_SetSel( hEditBox, DecimalCharsMax, -1 ); // caret to the end
+						return 0;
 					}
 					case WM_DESTROY:
 						// window destroyed
