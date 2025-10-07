@@ -96,14 +96,27 @@ namespace Gui
 				, buddyWidth( font.GetTextSize(TEXT_BUDDY).cx*ARRAYSIZE(TEXT_BUDDY)/(ARRAYSIZE(TEXT_BUDDY)-1) ) { // aka. "N+1/N characters"
 			}
 		};
+		static constexpr int DecimalCharsMax=32; // enough to accommodate the largest/smallest 64-bit number
 		struct F{
 			static void SelectAll(HWND hEditBox){
 				::SendMessageW( hEditBox, EM_SETSEL, 0, -1 );
 			}
+			static INT64 GetWindowInt(HWND hEditBox){
+				WCHAR buf[DecimalCharsMax];
+				::GetWindowTextW( hEditBox, buf, ARRAYSIZE(buf) );
+				INT64 i;
+				::StrToInt64ExW( buf, STIF_SUPPORT_HEX, &i );
+				return i;
+			}
+			static void SetWindowInt(HWND hEditBox,INT64 i){
+				WCHAR buf[DecimalCharsMax];
+				::wsprintfW( buf, L"%I64i", i );
+				::SetWindowTextW( hEditBox, buf );
+			}
+
 			static HRESULT CALLBACK WndProcW(HWND hEditBox,UINT msg,WPARAM wParam,LPARAM lParam){
 				const HWND hBuddy=::GetDlgItem( hEditBox, BUDDY_ID );
 				const TParams &p=*(TParams *)::GetWindowLongW( hBuddy, GWL_USERDATA );
-				constexpr int DecimalCharsMax=32; // enough to accommodate the largest/smallest 64-bit number
 				switch (msg){
 					case WM_SIZE:{
 						// window size changed
@@ -125,6 +138,21 @@ namespace Gui
 							switch (wParam){
 								case 'A': // want select all text
 									SelectAll(hEditBox);
+									break;
+								case VK_UP: // want increment value by magnitude
+									SetWindowInt( hEditBox, GetWindowInt(hEditBox)+(10+6*IsWindowIntHexa(hEditBox)) );
+									break;
+								case VK_DOWN: // want decrement value by magnitude
+									SetWindowInt( hEditBox, GetWindowInt(hEditBox)-(10+6*IsWindowIntHexa(hEditBox)) );
+									break;
+							}
+						else
+							switch (wParam){
+								case VK_UP: // want increment value
+									SetWindowInt( hEditBox, GetWindowInt(hEditBox)+1 );
+									break;
+								case VK_DOWN: // want decrement value
+									SetWindowInt( hEditBox, GetWindowInt(hEditBox)-1 );
 									break;
 							}
 						break;
