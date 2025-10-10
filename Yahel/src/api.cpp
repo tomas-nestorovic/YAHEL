@@ -112,6 +112,7 @@ namespace Gui
 				WCHAR buf[DecimalCharsMax];
 				::wsprintfW( buf, L"%I64i", i );
 				::SetWindowTextW( hEditBox, buf );
+				::SendMessageW( ::GetParent(hEditBox), WM_COMMAND, MAKELONG(::GetWindowLongW(hEditBox,GWL_ID),EN_CHANGE), (LPARAM)hEditBox );
 			}
 
 			static HRESULT CALLBACK WndProcW(HWND hEditBox,UINT msg,WPARAM wParam,LPARAM lParam){
