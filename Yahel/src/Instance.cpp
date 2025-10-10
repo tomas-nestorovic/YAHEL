@@ -320,7 +320,7 @@ namespace Yahel{
 
 	void CInstance::SetStreamLogicalSize(TPosition logicalSize){
 		// changes the LogicalSize of File content (originally set when Resetting the HexaEditor)
-		logicalSize=std::max( 0L, logicalSize ); // mustn't be negative
+		logicalSize=std::max( 0LL, logicalSize ); // mustn't be negative
 		EXCLUSIVELY_LOCK_THIS_OBJECT();
 		caret.streamSelection.a=std::min( caret.streamSelection.a, logicalSize );
 		caret.streamSelection.z=std::min( caret.streamSelection.z, logicalSize );
@@ -349,7 +349,7 @@ namespace Yahel{
 		// sets current Selection, moving Caret to the end of the Selection
 		if (selA>selZ)
 			std::swap( selA, selZ );
-		caret.streamSelection.a = caret.selectionInit = std::max( 0L, selA );
+		caret.streamSelection.a = caret.selectionInit = std::max( 0LL, selA );
 		caret.streamSelection.z = caret.streamPosition = std::min( selZ, logicalSizeLimits.z );
 		if (!caret.IsInStream()) // in View column
 			caret.iViewHalfbyte=item.iFirstPlaceholder;

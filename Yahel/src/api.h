@@ -72,7 +72,7 @@ namespace Yahel
 	};
 
 	typedef int TRow,TCol;
-	typedef long TPosition,*PPosition;
+	typedef INT64 TPosition,*PPosition;
 	typedef TInterval<TPosition> TPosInterval;
 
 
@@ -137,7 +137,10 @@ namespace Yahel
 				Ccitt16,
 				Last
 			} type;
-			int initValue;
+			union{
+				int initValue;
+				TPosition initValue64;
+			};
 
 			TParams();
 			TParams(TType type,int initValue);

@@ -447,7 +447,7 @@ namespace Stream
 					position=std::min( offset, bufferLength );
 					break;
 				case STREAM_SEEK_END:
-					position=std::max( bufferLength-offset, 0L );
+					position=std::max( bufferLength-offset, 0LL );
 					break;
 				default:
 					assert(FALSE);
