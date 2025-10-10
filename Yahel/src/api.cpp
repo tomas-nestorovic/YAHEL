@@ -63,9 +63,35 @@ namespace Gui
 		return ::IsDlgButtonChecked( hEditBox, BUDDY_ID )==BST_CHECKED;
 	}
 
-	bool YAHEL_DECLSPEC WINAPI IsDlgItemIntHexa(HWND hDlg,UINT idEditBox){
+	bool WINAPI IsDlgItemIntHexa(HWND hDlg,UINT idEditBox){
 		// True <=> EditBox content is to be interpreted in hexa-decimal form
 		return IsWindowIntHexa( ::GetDlgItem(hDlg,idEditBox) );
+	}
+
+	#define DecimalCharsMax 32
+		// enough to accommodate the largest/smallest 64-bit number
+
+	static INT64 GetWindowInt(HWND hEditBox){
+		WCHAR buf[DecimalCharsMax];
+		::GetWindowTextW( hEditBox, buf, ARRAYSIZE(buf) );
+		INT64 i;
+		::StrToInt64ExW( buf, STIF_SUPPORT_HEX, &i );
+		return i;
+	}
+
+	TPosition WINAPI GetDlgItemInt(HWND hDlg,UINT idEditBox){
+		return GetWindowInt( ::GetDlgItem(hDlg,idEditBox) );
+	}
+
+	static void SetWindowInt(HWND hEditBox,INT64 i){
+		WCHAR buf[DecimalCharsMax];
+		::wsprintfW( buf, L"%I64i", i );
+		::SetWindowTextW( hEditBox, buf );
+		::SendMessageW( ::GetParent(hEditBox), WM_COMMAND, MAKELONG(::GetWindowLongW(hEditBox,GWL_ID),EN_CHANGE), (LPARAM)hEditBox );
+	}
+
+	void WINAPI SetDlgItemInt(HWND hDlg,UINT idEditBox,TPosition value){
+		SetWindowInt( ::GetDlgItem(hDlg,idEditBox), value );
 	}
 
 	#define TEXT_BUDDY	L"hex"
@@ -96,23 +122,9 @@ namespace Gui
 				, buddyWidth( font.GetTextSize(TEXT_BUDDY).cx*ARRAYSIZE(TEXT_BUDDY)/(ARRAYSIZE(TEXT_BUDDY)-1) ) { // aka. "N+1/N characters"
 			}
 		};
-		static constexpr int DecimalCharsMax=32; // enough to accommodate the largest/smallest 64-bit number
 		struct F{
 			static void SelectAll(HWND hEditBox){
 				::SendMessageW( hEditBox, EM_SETSEL, 0, -1 );
-			}
-			static INT64 GetWindowInt(HWND hEditBox){
-				WCHAR buf[DecimalCharsMax];
-				::GetWindowTextW( hEditBox, buf, ARRAYSIZE(buf) );
-				INT64 i;
-				::StrToInt64ExW( buf, STIF_SUPPORT_HEX, &i );
-				return i;
-			}
-			static void SetWindowInt(HWND hEditBox,INT64 i){
-				WCHAR buf[DecimalCharsMax];
-				::wsprintfW( buf, L"%I64i", i );
-				::SetWindowTextW( hEditBox, buf );
-				::SendMessageW( ::GetParent(hEditBox), WM_COMMAND, MAKELONG(::GetWindowLongW(hEditBox,GWL_ID),EN_CHANGE), (LPARAM)hEditBox );
 			}
 
 			static HRESULT CALLBACK WndProcW(HWND hEditBox,UINT msg,WPARAM wParam,LPARAM lParam){
@@ -286,7 +298,7 @@ namespace Gui
 			);
 		}
 		// - set DefaultValue
-		F::SetWindowInt( hEditBox, defaultValue );
+		SetWindowInt( hEditBox, defaultValue );
 	}
 
 	void WINAPI SetDlgItemIntBuddyW(HWND hDlg,UINT idEditBox,TPosition defaultValue,TNotation defaultNotation,bool protrudeEditBox){
@@ -294,14 +306,14 @@ namespace Gui
 		SetWindowIntBuddyW( ::GetDlgItem(hDlg,idEditBox), defaultValue, defaultNotation, protrudeEditBox );
 	}
 
-	bool YAHEL_DECLSPEC WINAPI QuerySingleIntA(LPCSTR caption,LPCSTR label,const TPosInterval &range,TPosition &inOutValue,bool bSigned,TNotation defaultNotation,HWND hParent){
+	bool YAHEL_DECLSPEC WINAPI QuerySingleIntA(LPCSTR caption,LPCSTR label,const TPosInterval &range,TPosition &inOutValue,TNotation defaultNotation,HWND hParent){
 		WCHAR captionW[128], labelW[256];
 		::wsprintfW( captionW, L"%S", caption );
 		::wsprintfW( labelW, L"%S", label );
-		return QuerySingleIntW( captionW, labelW, range, inOutValue, bSigned, defaultNotation, hParent );
+		return QuerySingleIntW( captionW, labelW, range, inOutValue, defaultNotation, hParent );
 	}
 
-	bool WINAPI QuerySingleIntW(LPCWSTR caption,LPCWSTR label,const TPosInterval &rangeIncl,TPosition &inOutValue,bool bSigned,TNotation defaultNotation,HWND hParent){
+	bool WINAPI QuerySingleIntW(LPCWSTR caption,LPCWSTR label,const TPosInterval &rangeIncl,TPosition &inOutValue,TNotation defaultNotation,HWND hParent){
 		// - must be able to set at least two options
 		if (rangeIncl.GetLength()<1) // inclusive!
 			return false;
@@ -312,7 +324,6 @@ namespace Gui
 		class CSingleNumberDialog sealed:public Utils::CYahelDialog{
 			const LPCWSTR caption,label;
 			const TPosInterval rangeIncl;
-			const bool bSigned;
 			const TNotation defaultNotation;
 
 			bool InitDialog() override{
@@ -345,11 +356,8 @@ namespace Gui
 
 			bool ValidateDialog() override{
 				// True <=> Dialog inputs are acceptable, otherwise False
-				BOOL parsed;
-				Value=GetDlgItemInt( IDC_NUMBER, parsed, bSigned );
-				return	parsed
-						? rangeIncl.Contains(Value) || Value==rangeIncl.z
-						: false;
+				Value=GetDlgItemInt(IDC_NUMBER);
+				return	rangeIncl.Contains(Value) || Value==rangeIncl.z;
 			}
 
 			bool OnCommand(WPARAM wParam,LPARAM lParam) override{
@@ -366,12 +374,12 @@ namespace Gui
 		public:
 			TPosition Value;
 
-			CSingleNumberDialog(LPCWSTR caption,LPCWSTR label,const TPosInterval &rangeIncl,TPosition initValue,bool bSigned,TNotation defaultNotation)
+			CSingleNumberDialog(LPCWSTR caption,LPCWSTR label,const TPosInterval &rangeIncl,TPosition initValue,TNotation defaultNotation)
 				// ctor
-				: caption(caption) , label(label) , rangeIncl(rangeIncl) , bSigned(bSigned) , defaultNotation(defaultNotation)
+				: caption(caption) , label(label) , rangeIncl(rangeIncl) , defaultNotation(defaultNotation)
 				, Value(initValue) {
 			}
-		} d( caption, label, rangeIncl, inOutValue, bSigned, defaultNotation );
+		} d( caption, label, rangeIncl, inOutValue, defaultNotation );
 		// - showing the Dialog and processing its result
 		const bool confirmed=d.DoModal( IDR_YAHEL_SINGLE_NUMBER, hParent )==IDOK;
 		if (hParent)
@@ -815,10 +823,9 @@ namespace Stream
 			}
 			TError TrySaveDefinition(){
 				// attempts to redefine an Item from current inputs; returns a DWORD-encoded error
-				BOOL parsed;
-				const int nStreamBytes=GetDlgItemInt( IDC_NUMBER, parsed );
+				const int nStreamBytes=GetDlgItemInt(IDC_NUMBER);
 				TError err=ERROR_KOSHER; // assumption
-				if (!parsed || ITEM_STREAM_BYTES_MAX<nStreamBytes)
+				if (ITEM_STREAM_BYTES_MAX<nStreamBytes)
 					err=ERROR_ITEM_DEF_BYTE_COUNT;
 				else if (patternLengthMax<GetDlgItemTextLength(IDC_PATTERN))
 					err=ERROR_ITEM_DEF_PATTERN_INSUFFICIENT_BUFFER;

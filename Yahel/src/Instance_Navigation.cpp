@@ -19,7 +19,7 @@ namespace Yahel{
 			return false;
 		// - showing the Dialog and processing its result
 		return Gui::QuerySingleIntA(
-			"Go to", "&Address", addressRange, address, false, Gui::Hexa, hParent
+			"Go to", "&Address", addressRange, address, Gui::Hexa, hParent
 		);
 	}
 
