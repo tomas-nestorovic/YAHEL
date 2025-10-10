@@ -39,7 +39,7 @@ namespace Yahel{
 				const HWND hEdit=GetDlgItemHwnd( EditControls[params.type] );
 				::SetFocus(hEdit);
 				::SendMessage( hEdit, EM_SETSEL, 0, params.patternLength );
-				Gui::SetDlgItemIntBuddyW( hDlg, ID_YAHEL_NUMBER, 0, false, Gui::Hexa, true );
+				Gui::SetDlgItemIntBuddyW( hDlg, ID_YAHEL_NUMBER, 0, Gui::Hexa, true );
 				return false; // focus already set manually
 			}
 

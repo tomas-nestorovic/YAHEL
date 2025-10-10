@@ -71,7 +71,7 @@ namespace Gui
 	#define TEXT_BUDDY	L"hex"
 	#define TEXT_HEXA	L"0x"
 
-	void WINAPI SetWindowIntBuddyW(HWND hEditBox,TNotation defaultNotation,bool protrudeEditBox){
+	void WINAPI SetWindowIntBuddyW(HWND hEditBox,TPosition defaultValue,TNotation defaultNotation,bool protrudeEditBox){
 		// creates a default Buddy checkbox inside an existing EditBox
 		if (!hEditBox)
 			return;
@@ -285,12 +285,13 @@ namespace Gui
 				WM_SIZE, 0, MAKELONG(rc.right,rc.bottom)
 			);
 		}
+		// - set DefaultValue
+		F::SetWindowInt( hEditBox, defaultValue );
 	}
 
-	void WINAPI SetDlgItemIntBuddyW(HWND hDlg,UINT idEditBox,TPosition defaultValue,bool bSigned,TNotation defaultNotation,bool protrudeEditBox){
+	void WINAPI SetDlgItemIntBuddyW(HWND hDlg,UINT idEditBox,TPosition defaultValue,TNotation defaultNotation,bool protrudeEditBox){
 		// creates a default Buddy checkbox inside an existing EditBox
-		SetWindowIntBuddyW( ::GetDlgItem(hDlg,idEditBox), defaultNotation, protrudeEditBox );
-		::SetDlgItemInt( hDlg, idEditBox, defaultValue, bSigned );
+		SetWindowIntBuddyW( ::GetDlgItem(hDlg,idEditBox), defaultValue, defaultNotation, protrudeEditBox );
 	}
 
 	bool YAHEL_DECLSPEC WINAPI QuerySingleIntA(LPCSTR caption,LPCSTR label,const TPosInterval &range,TPosition &inOutValue,bool bSigned,TNotation defaultNotation,HWND hParent){
@@ -317,7 +318,7 @@ namespace Gui
 			bool InitDialog() override{
 				// dialog initialization
 				::SetWindowText( hDlg, caption );
-				SetDlgItemIntBuddyW( hDlg, IDC_NUMBER, Value, bSigned, defaultNotation, false );
+				SetDlgItemIntBuddyW( hDlg, IDC_NUMBER, Value, defaultNotation, false );
 				ReformulateInstructions();
 				return true; // set the keyboard focus to the default control
 			}
@@ -806,7 +807,7 @@ namespace Stream
 				ShowItem();
 				RecognizePresetItem();
 				// . (!!) creation and initial populating of the HexaEditor; MUST BE THE LAST IN THIS METHOD ...
-				Gui::SetDlgItemIntBuddyW( hDlg, IDC_NUMBER, item.nStreamBytes, false, Gui::Decimal, true );
+				Gui::SetDlgItemIntBuddyW( hDlg, IDC_NUMBER, item.nStreamBytes, Gui::Decimal, true );
 				hexaEditor.SubclassAndAttach( GetDlgItemHwnd(IDC_FILE) );
 				processNotifications=true; // ... BECAUSE OF THIS
 				SendCommand( MAKELONG(IDC_NUMBER,EN_CHANGE) );
