@@ -721,6 +721,36 @@ namespace Stream
 	TPosition IAdvisor::GetMaximumRecordLength(){
 		return 0x7fffff00;
 	}
+
+	// see also the following functions from NtDll.dll for working with 64-bit integers without C++ Runtime
+	// - LARGE_INTEGER RtlExtendedIntegerMultiply(LARGE_INTEGER multiplicand,LONG multiplier);
+	// - LARGE_INTEGER RtlExtendedLargeIntegerDivide(LARGE_INTEGER dividend,ULONG divisor,PULONG remainder);
+
+/*	lldiv_t IAdvisor::div(TPosition dividend,ULONG divisor){
+		// performs 64-bit integer division without C++ Runtime, using just 'RtlExtendedLargeIntegerDivide' from NtDll.dll
+		static const HMODULE hNtDll=::LoadLibraryA("ntdll.dll");
+		typedef LARGE_INTEGER (WINAPI *F)(LARGE_INTEGER,ULONG,PULONG);
+		static const F RtlExtendedLargeIntegerDivide=(F)::GetProcAddress( hNtDll, "RtlExtendedLargeIntegerDivide" );
+		static_assert( sizeof(TPosition)==sizeof(LARGE_INTEGER), "" );
+		ULONG rem;
+		const LARGE_INTEGER quot=RtlExtendedLargeIntegerDivide( (LARGE_INTEGER &)dividend, divisor, &rem );
+		const lldiv_t result={ quot.QuadPart, rem };
+		return result;
+	}*/
+
+#ifdef RELEASE_MFC42
+	//#pragma optimize("",off) // optimizations off for RoundDivUp ('_alldvrm' routine may not be found for 'long long' arguments, must use '_alldiv' and '_allrem' instead)
+	lldiv_t IAdvisor::div(TPosition dividend,TPosition divisor){
+		const lldiv_t result={ dividend/divisor, dividend%divisor };
+		return result;
+	}
+	//#pragma optimize("",on) // optimization back to '/O' compiler settings
+#else
+	lldiv_t IAdvisor::div(TPosition dividend,TPosition divisor){
+		return div(dividend,divisor);
+	}
+#endif
+
 }
 
 

@@ -247,6 +247,7 @@ namespace Gui
 	namespace Stream{
 		interface IAdvisor{
 			static TPosition YAHEL_DECLSPEC WINAPI GetMaximumRecordLength();
+			static lldiv_t YAHEL_DECLSPEC WINAPI div(TPosition dividend,TPosition divisor);
 
 			virtual void GetRecordInfo(TPosition pos,PPosition pOutRecordStartLogPos,PPosition pOutRecordLength,bool *pOutDataReady)=0;
 			virtual TRow LogicalPositionToRow(TPosition pos,WORD nStreamBytesInRow)=0;

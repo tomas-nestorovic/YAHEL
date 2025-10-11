@@ -1261,7 +1261,7 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 									auto itEmpView=itEmp;
 									auto itNearestBm=itNearestBookmark;
 									auto aView=address; auto aNearestBm=itNearestBm!=bookmarks.end()?*itNearestBm:Stream::GetErrorPosition();
-									const auto d=div( nBytesRead, (TPosition)item.nStreamBytes );
+									const auto d=Stream::IAdvisor::div( nBytesRead, item.nStreamBytes );
 									const bool readIncompleteItem=d.rem!=0;
 									const WORD nCompleteItems=std::min( (TPosition)item.nInRow, d.quot );
 									for( WORD n=0; n<nCompleteItems+readIncompleteItem; n++ ){
