@@ -401,7 +401,7 @@ namespace Stream
 	}
 
 	TPosition WINAPI GetErrorPosition(){
-		return LONG_MAX;
+		return LLONG_MAX;
 	}
 
 	TPosition WINAPI GetLength(IStream *s){
