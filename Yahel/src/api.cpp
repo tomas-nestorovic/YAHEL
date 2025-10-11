@@ -825,7 +825,7 @@ namespace Stream
 				// attempts to redefine an Item from current inputs; returns a DWORD-encoded error
 				const int nStreamBytes=GetDlgItemInt(IDC_NUMBER);
 				TError err=ERROR_KOSHER; // assumption
-				if (ITEM_STREAM_BYTES_MAX<nStreamBytes)
+				if (nStreamBytes<=0 || ITEM_STREAM_BYTES_MAX<nStreamBytes)
 					err=ERROR_ITEM_DEF_BYTE_COUNT;
 				else if (patternLengthMax<GetDlgItemTextLength(IDC_PATTERN))
 					err=ERROR_ITEM_DEF_PATTERN_INSUFFICIENT_BUFFER;
