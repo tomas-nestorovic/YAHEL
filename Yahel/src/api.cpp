@@ -101,9 +101,6 @@ namespace Gui
 		// creates a default Buddy checkbox inside an existing EditBox
 		if (!hEditBox)
 			return;
-		const long style=::GetWindowLongW( hEditBox, GWL_STYLE );
-		if ((style&ES_MULTILINE)==0)
-			return; // must be created with the Multiline style for better visual experience on Win10 and later
 		// - create the Buddy
 		const HWND hBuddy=::CreateWindowExW( 0, WC_BUTTONW, TEXT_BUDDY,
 			WS_CHILD|WS_VISIBLE|BS_PUSHLIKE|BS_CHECKBOX,
@@ -131,20 +128,14 @@ namespace Gui
 				const HWND hBuddy=::GetDlgItem( hEditBox, BUDDY_ID );
 				const TParams &p=*(TParams *)::GetWindowLongW( hBuddy, GWL_USERDATA );
 				switch (msg){
-					case WM_SIZE:{
+					case WM_SIZE:
 						// window size changed
-						::CallWindowProcW( p.wndProcOrg, hEditBox, msg, wParam, lParam );
-						RECT rc;
-						Edit_GetRect( hEditBox, &rc );
-						rc.right-=p.buddyWidth+BUDDY_MARGIN;
-						Edit_SetRect( hEditBox, &rc ); // make space to accommodate the Buddy
 						::SetWindowPos( // position the Buddy
 							hBuddy, 0,
 							LOWORD(lParam)-p.buddyWidth-BUDDY_MARGIN, BUDDY_MARGIN, p.buddyWidth, HIWORD(lParam)-2*BUDDY_MARGIN,
 							SWP_NOZORDER
 						);
-						return 0;
-					}
+						break;
 					case WM_KEYDOWN:
 						// a key has been pressed
 						if (::GetKeyState(VK_CONTROL)<0)
@@ -275,7 +266,7 @@ namespace Gui
 				return ::CallWindowProcW( p.wndProcOrg, hEditBox, msg, wParam, lParam );
 			}
 		};
-		::SetWindowLongW( hEditBox, GWL_STYLE, style&~ES_NUMBER ); // remove ES_NUMBER (want hexa 'a-f' chars)
+		::SetWindowLongW( hEditBox, GWL_STYLE, ::GetWindowLongW(hEditBox,GWL_STYLE)&~ES_NUMBER|WS_CLIPCHILDREN ); // remove ES_NUMBER (want hexa 'a-f' chars), and don't paint over the Buddy
 		Utils::CYahelFont::TLogFont lf( (HFONT)::SendMessageW(hEditBox,WM_GETFONT,0,0) );
 			::lstrcpy( lf.lfFaceName, FONT_COURIER_NEW );
 		TParams *const pParams=new TParams(
@@ -284,6 +275,8 @@ namespace Gui
 		);
 		::SetWindowLongW( hBuddy, GWL_USERDATA, (LONG)pParams );
 		::SendMessageW( hBuddy, WM_SETFONT, pParams->font, 0 );
+		// - make space to accommodate extras, e.g. the Buddy to the right
+		::SendMessageW( hEditBox, EM_SETMARGINS, EC_RIGHTMARGIN, MAKELONG(0,pParams->buddyWidth) );
 		// - want preserve the current size of the EditBox ?
 		RECT rc;
 		if (protrudeEditBox){
