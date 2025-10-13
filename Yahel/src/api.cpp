@@ -739,15 +739,15 @@ namespace Stream
 	}*/
 
 #ifdef RELEASE_MFC42
-	//#pragma optimize("",off) // optimizations off for RoundDivUp ('_alldvrm' routine may not be found for 'long long' arguments, must use '_alldiv' and '_allrem' instead)
+	#pragma optimize("",off) // optimizations off for RoundDivUp ('_alldvrm' routine may not be found for 'long long' arguments, must use '_alldiv' and '_allrem' instead)
 	lldiv_t IAdvisor::div(TPosition dividend,TPosition divisor){
 		const lldiv_t result={ dividend/divisor, dividend%divisor };
 		return result;
 	}
-	//#pragma optimize("",on) // optimization back to '/O' compiler settings
+	#pragma optimize("",on) // optimization back to '/O' compiler settings
 #else
 	lldiv_t IAdvisor::div(TPosition dividend,TPosition divisor){
-		return div(dividend,divisor);
+		return ::div(dividend,divisor);
 	}
 #endif
 
