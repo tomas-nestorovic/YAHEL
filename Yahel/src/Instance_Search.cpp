@@ -5,7 +5,7 @@ namespace Yahel{
 
 	TSearchParams::TSearchParams()
 		// ctor
-		: type(ASCII_ANY_CASE) , patternLength(0) , searchForward(true) , selectFinding(true) {
+		: type(ANSI_ANY_CASE) , patternLength(0) , searchForward(true) , selectFinding(true) {
 	}
 
 	bool TSearchParams::IsValid() const{
@@ -48,10 +48,10 @@ namespace Yahel{
 				static constexpr WORD SearchButtons[]={ ID_YAHEL_FIND_PREV, ID_YAHEL_FIND_NEXT, 0 };
 				EnableDlgItems( SearchButtons, false ); // assumption (the Dialog has invalid configuration)
 				if (IsDlgButtonChecked(ID_YAHEL_DEFAULT1)){
-					params.type=ASCII_ANY_CASE;
+					params.type=ANSI_ANY_CASE;
 					params.patternLength=::GetDlgItemTextA( hDlg, ID_YAHEL_TEXT, params.pattern.chars, sizeof(params.pattern.chars) );
 					if (IsDlgButtonChecked(ID_YAHEL_ACCURACY))
-						params.type=ASCII_MATCH_CASE;
+						params.type=ANSI_MATCH_CASE;
 				}else if (IsDlgButtonChecked(ID_YAHEL_DEFAULT2)){
 					params.type=HEXA;
 					params.patternLength=hexaEditor.f.GetLength();
@@ -170,10 +170,10 @@ namespace Yahel{
 		FnComparer cmp;
 		switch (params.type){
 			case TSearchParams::HEXA:
-			case TSearchParams::ASCII_MATCH_CASE:
+			case TSearchParams::ANSI_MATCH_CASE:
 				cmp=EqualBytes;
 				break;
-			case TSearchParams::ASCII_ANY_CASE:
+			case TSearchParams::ANSI_ANY_CASE:
 				cmp=EqualChars;
 				break;
 			case TSearchParams::NOT_BYTE:
@@ -208,7 +208,7 @@ namespace Yahel{
 		const HRESULT hr=this->f.stream->Clone( &f.stream.p );
 		if (hr==E_NOTIMPL){ // have to reuse existing Stream?
 			assert(false); // using here the same Stream always requires attention; YAHEL is fine with that - is also the client app fine with that?
-			( f.stream=this->f.stream )->AddRef(), f.posOrg=f.GetPosition();
+			f.stream=this->f.stream, f.posOrg=f.GetPosition();
 		}else if (FAILED(hr))
 			return Stream::GetErrorPosition();
 		f.Seek( range.a );

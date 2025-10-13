@@ -118,7 +118,7 @@ namespace Utils{
 		void InitDlgItemText(WORD id,...) const;
 		int GetDlgItemTextLength(WORD id) const;
 		inline int SetDlgItemText(WORD id,LPCTSTR text) const{ return ::SetDlgItemText( hDlg, id, text ); }
-		inline UINT GetDlgItemInt(WORD id,BOOL &outParsed,bool bSigned=false) const{ return ::GetDlgItemInt( hDlg, id, &outParsed, bSigned ); }
+		inline TPosition GetDlgItemInt(WORD id) const{ return Gui::GetDlgItemInt( hDlg, id ); }
 		HWND FocusDlgItem(WORD id) const;
 		inline LRESULT SendCommand(WPARAM wParam,LPARAM lParam=0) const{ return ::SendMessage( hDlg, WM_COMMAND, wParam, lParam ); }
 		RECT MapDlgItemClientRect(WORD id) const;

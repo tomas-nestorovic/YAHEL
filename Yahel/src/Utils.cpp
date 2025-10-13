@@ -255,7 +255,7 @@ namespace Utils{
 				);
 	}
 
-	INT_PTR WINAPI CYahelDialog::DialogProc(HWND hDlg,UINT msg,WPARAM wParam,LPARAM lParam){
+	INT_PTR CYahelDialog::DialogProc(HWND hDlg,UINT msg,WPARAM wParam,LPARAM lParam){
 		// dialog procedure
 		switch (msg){
 			case WM_INITDIALOG:{

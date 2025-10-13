@@ -699,7 +699,7 @@ resetSelectionWithValue:BYTE buf[65535];
 							if (const auto sel=caret.streamSelection){
 								f.Seek( sel.a );
 								if (tmp.patternLength=f.Read( tmp.pattern.bytes, std::min((TPosition)sizeof(tmp.pattern.bytes),sel.GetLength()), IgnoreIoResult )){
-									tmp.type=TSearchParams::ASCII_ANY_CASE; // should be set by the ctor above, but just to be sure
+									tmp.type=TSearchParams::ANSI_ANY_CASE; // should be set by the ctor above, but just to be sure
 									for( TPosition i=0; i<tmp.patternLength; i++ )
 										if (!::isprint(tmp.pattern.bytes[i])){
 											tmp.type=TSearchParams::HEXA; // can't use ASCII searching as the Selection contains non-printable characters

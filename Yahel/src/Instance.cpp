@@ -172,7 +172,7 @@ namespace Yahel{
 
 	static WNDPROC baseClassWndProc;
 
-	LRESULT WINAPI CInstance::WndProc(HWND hYahel,UINT msg,WPARAM wParam,LPARAM lParam){
+	LRESULT CInstance::WndProc(HWND hYahel,UINT msg,WPARAM wParam,LPARAM lParam){
 		// window procedure
 		CInstance *const instance=(CInstance *)::GetWindowLong(hYahel,GWL_USERDATA);
 		MSG msgOrg={ hYahel, msg, wParam, lParam };

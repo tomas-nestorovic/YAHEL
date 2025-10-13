@@ -79,10 +79,10 @@ namespace Yahel
 
 	struct YAHEL_DECLSPEC TSearchParams{
 		enum:int{ // in order of radio buttons in the default "Find" dialog
-			ASCII_ANY_CASE,
+			ANSI_ANY_CASE,
 			HEXA,
 			NOT_BYTE,
-			ASCII_MATCH_CASE,
+			ANSI_MATCH_CASE,
 			LAST
 		} type;
 		union{

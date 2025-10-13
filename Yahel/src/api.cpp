@@ -16,17 +16,17 @@ namespace Gui
 			case ERROR_ITEM_DEF_PATTERN_TOO_LONG:
 				return L"Item pattern too long";
 			case ERROR_ITEM_DEF_PATTERN_FORBIDDEN:
-				return L"Item pattern contains forbidden characters";
+				return L"Item pattern has forbidden chars";
 			case ERROR_ITEM_DEF_PATTERN_NOT_PRINTABLE:
-				return L"Item pattern contains non-printable characters";
+				return L"Item pattern has non-printable chars";
 			case ERROR_ITEM_DEF_PATTERN_INDEX:
-				return L"Item pattern indices out of bounds";
+				return L"Item pattern indices out of range";
 			case ERROR_ITEM_DEF_PATTERN_NO_PLACEHOLDER:
 				return L"Item pattern doesn't address the stream";
 			case ERROR_ITEM_DEF_PATTERN_INSUFFICIENT_BUFFER:
 				return L"Item pattern doesn't fit in caller's buffer";
 			case ERROR_ITEM_COUNT_INVALID:
-				return L"Invalid count of items per row";
+				return L"Invalid item count per row";
 			case ERROR_PASTE_FAILED:
 				return L"Can't paste content";
 			case ERROR_SELECTION_CANT_SAVE:
@@ -306,7 +306,7 @@ namespace Gui
 		SetWindowIntBuddyW( ::GetDlgItem(hDlg,idEditBox), defaultValue, defaultNotation, protrudeEditBox );
 	}
 
-	bool YAHEL_DECLSPEC WINAPI QuerySingleIntA(LPCSTR caption,LPCSTR label,const TPosInterval &range,TPosition &inOutValue,TNotation defaultNotation,HWND hParent){
+	bool WINAPI QuerySingleIntA(LPCSTR caption,LPCSTR label,const TPosInterval &range,TPosition &inOutValue,TNotation defaultNotation,HWND hParent){
 		WCHAR captionW[128], labelW[256];
 		::wsprintfW( captionW, L"%S", caption );
 		::wsprintfW( labelW, L"%S", label );
