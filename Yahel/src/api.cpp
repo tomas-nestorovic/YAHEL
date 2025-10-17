@@ -337,12 +337,12 @@ namespace Gui
 				TCHAR buf[200], strMin[32], strMax[32];
 				if (IsWindowIntHexa(hEditBox)){
 					TCHAR format[32];
-					::wsprintf( format, _T("0x%%0%dX"), ::wsprintf(strMax,_T("%x"),rangeIncl.a|rangeIncl.z) );
+					::wsprintf( format, _T("0x%%0%dI64X"), ::wsprintf(strMax,_T("%I64X"),rangeIncl.a|rangeIncl.z) );
 					::wsprintf( strMin, format, rangeIncl.a );
 					::wsprintf( strMax, format, rangeIncl.z );
 				}else{
-					::wsprintf( strMin, _T("%d"), rangeIncl.a );
-					::wsprintf( strMax, _T("%d"), rangeIncl.z );
+					::wsprintf( strMin, _T("%I64i"), rangeIncl.a );
+					::wsprintf( strMax, _T("%I64i"), rangeIncl.z );
 				}
 				const int nLabelChars=::lstrlen(label);
 				if (label[nLabelChars-1]==')') // Label finishes with text enclosed in brackets
