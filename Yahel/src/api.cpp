@@ -198,6 +198,7 @@ namespace Gui
 								::SetFocus(hEditBox);
 								// . select all text
 								::SendMessage( hEditBox, EM_SETSEL, 0, -1 );
+								::SendMessage( ::GetParent(hEditBox), WM_COMMAND, MAKELONG(::GetWindowLong(hEditBox,GWL_ID),EN_UPDATE), (LPARAM)hEditBox );
 								break;
 							}
 						}
@@ -318,19 +319,23 @@ namespace Gui
 			const LPCWSTR caption,label;
 			const TPosInterval rangeIncl;
 			const TNotation defaultNotation;
+			HWND hEditBox;
 
 			bool InitDialog() override{
 				// dialog initialization
 				::SetWindowText( hDlg, caption );
-				SetDlgItemIntBuddyW( hDlg, IDC_NUMBER, Value, defaultNotation, false );
+				COMBOBOXINFO cbi={sizeof(cbi)};
+				::GetComboBoxInfo( GetDlgItemHwnd(IDC_NUMBER), &cbi );
+				hEditBox=cbi.hwndItem;
+				SetWindowIntBuddyW( hEditBox, Value, defaultNotation, false );
 				ReformulateInstructions();
 				return true; // set the keyboard focus to the default control
 			}
 
-			void ReformulateInstructions(){
+			void ReformulateInstructions() const{
 				// reformulates instructions using current Notation
 				TCHAR buf[200], strMin[32], strMax[32];
-				if (IsDlgItemIntHexa( hDlg, IDC_NUMBER )){
+				if (IsWindowIntHexa(hEditBox)){
 					TCHAR format[32];
 					::wsprintf( format, _T("0x%%0%dX"), ::wsprintf(strMax,_T("%x"),rangeIncl.a|rangeIncl.z) );
 					::wsprintf( strMin, format, rangeIncl.a );
@@ -356,11 +361,10 @@ namespace Gui
 			bool OnCommand(WPARAM wParam,LPARAM lParam) override{
 				// command processing
 				switch (wParam){
-					case MAKELONG(IDC_NUMBER,EN_CHANGE):{
+					case MAKELONG(IDC_NUMBER,CBN_EDITUPDATE):
 						ReformulateInstructions();
 						EnableDlgItem( IDOK, ValidateDialog() ); // indicate validity
 						return true;
-					}
 				}
 				return false;
 			}
