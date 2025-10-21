@@ -18,12 +18,9 @@ namespace Yahel{
 		if (!IsValid())
 			return false;
 		// - showing the Dialog and processing its result
-		TPosition tmp=byteValue;
-		if (Gui::QuerySingleIntA( "Reset selection", "&Value", TPosInterval(0,UCHAR_MAX), tmp, Gui::Hexa, hParent )){
-			byteValue=tmp;
-			return true;
-		}
-		return false;
+		return Gui::QuerySingleIntA(
+			"Reset selection", "&Value", TPosInterval(0,UCHAR_MAX), byteValue, Gui::Hexa, hParent
+		);
 	}
 
 }

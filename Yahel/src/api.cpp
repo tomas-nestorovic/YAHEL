@@ -301,19 +301,23 @@ namespace Gui
 		SetWindowIntBuddyW( ::GetDlgItem(hDlg,idEditBox), defaultValue, defaultNotation, protrudeEditBox );
 	}
 
-	bool WINAPI QuerySingleIntA(LPCSTR caption,LPCSTR label,const TPosInterval &range,TPosition &inOutValue,TNotation defaultNotation,HWND hParent){
+	bool WINAPI QuerySingleIntA(LPCSTR caption,LPCSTR label,const TPosInterval &range,PVOID pInOutValue,BYTE inOutValueSize,TNotation defaultNotation,HWND hParent){
 		WCHAR captionW[128], labelW[256];
 		::wsprintfW( captionW, L"%S", caption );
 		::wsprintfW( labelW, L"%S", label );
-		return QuerySingleIntW( captionW, labelW, range, inOutValue, defaultNotation, hParent );
+		return QuerySingleIntW( captionW, labelW, range, pInOutValue, inOutValueSize, defaultNotation, hParent );
 	}
 
-	bool WINAPI QuerySingleIntW(LPCWSTR caption,LPCWSTR label,const TPosInterval &rangeIncl,TPosition &inOutValue,TNotation defaultNotation,HWND hParent){
+	bool WINAPI QuerySingleIntW(LPCWSTR caption,LPCWSTR label,const TPosInterval &rangeIncl,PVOID pInOutValue,BYTE inOutValueSize,TNotation defaultNotation,HWND hParent){
 		// - must be able to set at least two options
 		if (rangeIncl.GetLength()<1) // inclusive!
 			return false;
+		if (!inOutValueSize || sizeof(TPosition)<inOutValueSize)
+			return false;
 		// - initial value must be within Range
-		if (!rangeIncl.Contains(inOutValue) && inOutValue!=rangeIncl.z) // inclusive!
+		TPosition v=0;
+		::memcpy( &v, pInOutValue, inOutValueSize );
+		if (!rangeIncl.Contains(v) && v!=rangeIncl.z) // inclusive!
 			return false;
 		// - defining the Dialog
 		class CSingleNumberDialog sealed:public Utils::CYahelDialog{
@@ -377,13 +381,13 @@ namespace Gui
 				: caption(caption) , label(label) , rangeIncl(rangeIncl) , defaultNotation(defaultNotation)
 				, Value(initValue) {
 			}
-		} d( caption, label, rangeIncl, inOutValue, defaultNotation );
+		} d( caption, label, rangeIncl, v, defaultNotation );
 		// - showing the Dialog and processing its result
 		const bool confirmed=d.DoModal( IDR_YAHEL_SINGLE_NUMBER, hParent )==IDOK;
 		if (hParent)
 			::SetFocus(hParent);
 		if (confirmed)
-			inOutValue=d.Value;
+			::memcpy( pInOutValue, &d.Value, inOutValueSize );
 		return confirmed;
 	}
 }

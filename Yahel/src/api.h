@@ -137,10 +137,7 @@ namespace Yahel
 				Ccitt16,
 				Last
 			} type;
-			union{
-				int initValue;
-				TPosition initValue64;
-			};
+			int initValue;
 
 			TParams();
 			TParams(TType type,int initValue);
@@ -233,8 +230,19 @@ namespace Gui
 	void YAHEL_DECLSPEC WINAPI SetDlgItemInt(HWND hDlg,UINT idEditBox,TPosition value);
 	void YAHEL_DECLSPEC WINAPI SetWindowIntBuddyW(HWND hEditBox,TPosition defaultValue,TNotation defaultNotation,bool protrudeEditBox);
 	void YAHEL_DECLSPEC WINAPI SetDlgItemIntBuddyW(HWND hDlg,UINT idEditBox,TPosition defaultValue,TNotation defaultNotation,bool protrudeEditBox);
-	bool YAHEL_DECLSPEC WINAPI QuerySingleIntA(LPCSTR caption,LPCSTR label,const TPosInterval &rangeIncl,TPosition &inOutValue,TNotation defaultNotation,HWND hParent);
-	bool YAHEL_DECLSPEC WINAPI QuerySingleIntW(LPCWSTR caption,LPCWSTR label,const TPosInterval &rangeIncl,TPosition &inOutValue,TNotation defaultNotation,HWND hParent);
+	bool YAHEL_DECLSPEC WINAPI QuerySingleIntA(LPCSTR caption,LPCSTR label,const TPosInterval &rangeIncl,PVOID pInOutValue,BYTE inOutValueSize,TNotation defaultNotation,HWND hParent);
+	bool YAHEL_DECLSPEC WINAPI QuerySingleIntW(LPCWSTR caption,LPCWSTR label,const TPosInterval &rangeIncl,PVOID pInOutValue,BYTE inOutValueSize,TNotation defaultNotation,HWND hParent);
+
+	template <typename T>
+	bool QuerySingleIntA(LPCSTR caption,LPCSTR label,const TPosInterval &rangeIncl,T &inOutValue,TNotation defaultNotation,HWND hParent){
+		return QuerySingleIntA( caption, label, rangeIncl, &inOutValue, sizeof(T), defaultNotation, hParent );
+	}
+
+	template <typename T>
+	bool QuerySingleIntW(LPCSTR caption,LPCSTR label,const TPosInterval &rangeIncl,T &inOutValue,TNotation defaultNotation,HWND hParent){
+		return QuerySingleIntW( caption, label, rangeIncl, &inOutValue, sizeof(T), defaultNotation, hParent );
+	}
+
 	#ifdef UNICODE
 		#define QuerySingleInt QuerySingleIntW
 	#else
