@@ -145,19 +145,19 @@ namespace Gui
 									break;
 								case VK_UP: // want increment value by magnitude
 									SetWindowInt( hEditBox, GetWindowInt(hEditBox)+(10+6*IsWindowIntHexa(hEditBox)) );
-									break;
+									return 0;
 								case VK_DOWN: // want decrement value by magnitude
 									SetWindowInt( hEditBox, GetWindowInt(hEditBox)-(10+6*IsWindowIntHexa(hEditBox)) );
-									break;
+									return 0;
 							}
 						else
 							switch (wParam){
 								case VK_UP: // want increment value
 									SetWindowInt( hEditBox, GetWindowInt(hEditBox)+1 );
-									break;
+									return 0;
 								case VK_DOWN: // want decrement value
 									SetWindowInt( hEditBox, GetWindowInt(hEditBox)-1 );
-									break;
+									return 0;
 							}
 						break;
 					case WM_CHAR:
@@ -226,7 +226,8 @@ namespace Gui
 					case WM_SETTEXT:{
 						// providing Hexa/Decimal notation
 						INT64 i=0;
-						::StrToInt64ExW( (LPCWSTR)lParam, STIF_SUPPORT_HEX, &i );
+						if (!::StrToInt64ExW( (LPCWSTR)lParam, STIF_SUPPORT_HEX, &i ))
+							return 0; // keep current value
 						if (IsWindowIntHexa(hEditBox))
 							::wsprintfW( (LPWSTR)lParam, TEXT_HEXA L"%I64X", i );
 						else
