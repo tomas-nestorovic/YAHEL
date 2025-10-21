@@ -301,14 +301,14 @@ namespace Gui
 		SetWindowIntBuddyW( ::GetDlgItem(hDlg,idEditBox), defaultValue, defaultNotation, protrudeEditBox );
 	}
 
-	bool WINAPI QuerySingleIntA(LPCSTR caption,LPCSTR label,const TPosInterval &range,PVOID pInOutValue,BYTE inOutValueSize,TNotation defaultNotation,HWND hParent){
+	bool WINAPI QuerySingleIntA(LPCSTR caption,LPCSTR label,const TPosInterval &range,PVOID pInOutValue,BYTE inOutValueSize,TNotation defaultNotation,HWND hParent,PCNamedInt namedInts,BYTE nNamedInts){
 		WCHAR captionW[128], labelW[256];
 		::wsprintfW( captionW, L"%S", caption );
 		::wsprintfW( labelW, L"%S", label );
-		return QuerySingleIntW( captionW, labelW, range, pInOutValue, inOutValueSize, defaultNotation, hParent );
+		return QuerySingleIntW( captionW, labelW, range, pInOutValue, inOutValueSize, defaultNotation, hParent, namedInts, nNamedInts );
 	}
 
-	bool WINAPI QuerySingleIntW(LPCWSTR caption,LPCWSTR label,const TPosInterval &rangeIncl,PVOID pInOutValue,BYTE inOutValueSize,TNotation defaultNotation,HWND hParent){
+	bool WINAPI QuerySingleIntW(LPCWSTR caption,LPCWSTR label,const TPosInterval &rangeIncl,PVOID pInOutValue,BYTE inOutValueSize,TNotation defaultNotation,HWND hParent,PCNamedInt namedInts,BYTE nNamedInts){
 		// - must be able to set at least two options
 		if (rangeIncl.GetLength()<1) // inclusive!
 			return false;
@@ -324,6 +324,8 @@ namespace Gui
 			const LPCWSTR caption,label;
 			const TPosInterval rangeIncl;
 			const TNotation defaultNotation;
+			const PCNamedInt namedInts;
+			const BYTE nNamedInts;
 			HWND hEditBox;
 
 			bool InitDialog() override{
@@ -333,12 +335,13 @@ namespace Gui
 				::GetComboBoxInfo( GetDlgItemHwnd(IDC_NUMBER), &cbi );
 				hEditBox=cbi.hwndItem;
 				SetWindowIntBuddyW( hEditBox, Value, defaultNotation, false );
-				ReformulateInstructions();
+				ChangeDialogNotation();
 				return true; // set the keyboard focus to the default control
 			}
 
-			void ReformulateInstructions() const{
-				// reformulates instructions using current Notation
+			void ChangeDialogNotation() const{
+				// applies currently selected Notation to all assets that display numeric values
+				// - reformulate instructions using current Notation
 				TCHAR buf[200], strMin[32], strMax[32];
 				if (IsWindowIntHexa(hEditBox)){
 					TCHAR format[32];
@@ -355,6 +358,19 @@ namespace Gui
 				else
 					::wsprintf( buf, _T("%s (%s - %s):"), label, strMin, strMax );
 				SetDlgItemText( IDC_INFO1, buf );
+				// - repopulate combo-box
+				const HWND hcb=GetDlgItemHwnd(IDC_NUMBER);
+				ComboBox_ResetContent(hcb);
+				for( BYTE i=0; i<nNamedInts; i++ ){
+					const TNamedInt &ni=namedInts[i];
+					WCHAR format[16], buf[200];
+					::wsprintfW( format, L"%s (%%%c)",
+						IsWindowIntHexa(hEditBox) ? TEXT_HEXA L"%I64X" : L"%I64i",
+						ni.unicodeName ? 's' : 'S'
+					);
+					::wsprintfW( buf, format, ni.value, ni.nameA );
+					ComboBox_AddString( hcb, buf );
+				}
 			}
 
 			bool ValidateDialog() override{
@@ -367,7 +383,7 @@ namespace Gui
 				// command processing
 				switch (wParam){
 					case MAKELONG(IDC_NUMBER,CBN_EDITUPDATE):
-						ReformulateInstructions();
+						ChangeDialogNotation();
 						EnableDlgItem( IDOK, ValidateDialog() ); // indicate validity
 						return true;
 				}
@@ -376,12 +392,13 @@ namespace Gui
 		public:
 			TPosition Value;
 
-			CSingleNumberDialog(LPCWSTR caption,LPCWSTR label,const TPosInterval &rangeIncl,TPosition initValue,TNotation defaultNotation)
+			CSingleNumberDialog(LPCWSTR caption,LPCWSTR label,const TPosInterval &rangeIncl,TPosition initValue,TNotation defaultNotation,PCNamedInt namedInts,BYTE nNamedInts)
 				// ctor
 				: caption(caption) , label(label) , rangeIncl(rangeIncl) , defaultNotation(defaultNotation)
+				, namedInts(namedInts), nNamedInts(nNamedInts)
 				, Value(initValue) {
 			}
-		} d( caption, label, rangeIncl, v, defaultNotation );
+		} d( caption, label, rangeIncl, v, defaultNotation, namedInts, nNamedInts );
 		// - showing the Dialog and processing its result
 		const bool confirmed=d.DoModal( IDR_YAHEL_SINGLE_NUMBER, hParent )==IDOK;
 		if (hParent)

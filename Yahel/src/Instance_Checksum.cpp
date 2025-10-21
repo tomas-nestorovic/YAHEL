@@ -34,6 +34,10 @@ namespace Checksum{
 		if (!IsValid())
 			return false;
 		// - showing the Dialog and processing its result
+		static const Gui::TNamedInt Seeds[]={
+			{ 38370, "MFM A1A1A1<data>" },
+			{ 63186, "MFM A1A1A1<deleted-data>" }
+		};
 		return Gui::QuerySingleIntA(
 			"Checksum", "&Initial value", TPosInterval(0,UINT_MAX), initValue, Gui::Hexa, hParent, Seeds
 		);

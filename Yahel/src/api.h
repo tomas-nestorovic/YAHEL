@@ -223,6 +223,15 @@ namespace Gui
 		Last
 	};
 
+	typedef const struct TNamedInt sealed{
+		TPosition value;
+		union{
+			LPCSTR nameA;
+			LPCWSTR nameW;
+		};
+		bool unicodeName;
+	} *PCNamedInt;
+
 	LPCWSTR YAHEL_DECLSPEC WINAPI GetDefaultEnglishMessage(TMsg id);
 	bool YAHEL_DECLSPEC WINAPI IsWindowIntHexa(HWND hEditBox);
 	bool YAHEL_DECLSPEC WINAPI IsDlgItemIntHexa(HWND hDlg,UINT idEditBox);
@@ -230,17 +239,27 @@ namespace Gui
 	void YAHEL_DECLSPEC WINAPI SetDlgItemInt(HWND hDlg,UINT idEditBox,TPosition value);
 	void YAHEL_DECLSPEC WINAPI SetWindowIntBuddyW(HWND hEditBox,TPosition defaultValue,TNotation defaultNotation,bool protrudeEditBox);
 	void YAHEL_DECLSPEC WINAPI SetDlgItemIntBuddyW(HWND hDlg,UINT idEditBox,TPosition defaultValue,TNotation defaultNotation,bool protrudeEditBox);
-	bool YAHEL_DECLSPEC WINAPI QuerySingleIntA(LPCSTR caption,LPCSTR label,const TPosInterval &rangeIncl,PVOID pInOutValue,BYTE inOutValueSize,TNotation defaultNotation,HWND hParent);
-	bool YAHEL_DECLSPEC WINAPI QuerySingleIntW(LPCWSTR caption,LPCWSTR label,const TPosInterval &rangeIncl,PVOID pInOutValue,BYTE inOutValueSize,TNotation defaultNotation,HWND hParent);
+	bool YAHEL_DECLSPEC WINAPI QuerySingleIntA(LPCSTR caption,LPCSTR label,const TPosInterval &rangeIncl,PVOID pInOutValue,BYTE inOutValueSize,TNotation defaultNotation,HWND hParent,PCNamedInt namedInts=nullptr,BYTE nNamedInts=0);
+	bool YAHEL_DECLSPEC WINAPI QuerySingleIntW(LPCWSTR caption,LPCWSTR label,const TPosInterval &rangeIncl,PVOID pInOutValue,BYTE inOutValueSize,TNotation defaultNotation,HWND hParent,PCNamedInt namedInts=nullptr,BYTE nNamedInts=0);
 
 	template <typename T>
 	bool QuerySingleIntA(LPCSTR caption,LPCSTR label,const TPosInterval &rangeIncl,T &inOutValue,TNotation defaultNotation,HWND hParent){
 		return QuerySingleIntA( caption, label, rangeIncl, &inOutValue, sizeof(T), defaultNotation, hParent );
 	}
 
+	template <typename T,int N>
+	bool QuerySingleIntA(LPCSTR caption,LPCSTR label,const TPosInterval &rangeIncl,T &inOutValue,TNotation defaultNotation,HWND hParent,const TNamedInt (&defaultValues)[N]){
+		return QuerySingleIntA( caption, label, rangeIncl, &inOutValue, sizeof(T), defaultNotation, hParent, defaultValues, N );
+	}
+
 	template <typename T>
 	bool QuerySingleIntW(LPCSTR caption,LPCSTR label,const TPosInterval &rangeIncl,T &inOutValue,TNotation defaultNotation,HWND hParent){
 		return QuerySingleIntW( caption, label, rangeIncl, &inOutValue, sizeof(T), defaultNotation, hParent );
+	}
+
+	template <typename T,int N>
+	bool QuerySingleIntW(LPCSTR caption,LPCSTR label,const TPosInterval &rangeIncl,T &inOutValue,TNotation defaultNotation,HWND hParent,const TNamedInt (&defaultValues)[N]){
+		return QuerySingleIntW( caption, label, rangeIncl, &inOutValue, sizeof(T), defaultNotation, hParent, defaultValues, N );
 	}
 
 	#ifdef UNICODE
