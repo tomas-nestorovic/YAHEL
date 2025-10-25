@@ -265,7 +265,7 @@ namespace Utils{
 				return pd->InitDialog();
 			}
 			case WM_COMMAND:{
-				CYahelDialog *const pd=(CYahelDialog *)::GetWindowLongA(hDlg,GWL_USERDATA);
+				CYahelDialog *const pd=(CYahelDialog *)::GetWindowLong(hDlg,GWL_USERDATA);
 				switch (LOWORD(wParam)){
 					case IDOK:
 						if (!pd->ValidateDialog())

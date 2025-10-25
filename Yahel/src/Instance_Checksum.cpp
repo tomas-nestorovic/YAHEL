@@ -38,8 +38,9 @@ namespace Checksum{
 			{ 38370, "MFM A1A1A1<data>" },
 			{ 63186, "MFM A1A1A1<deleted-data>" }
 		};
+		static const TPosInterval UInt( 0, UINT_MAX );
 		return Gui::QuerySingleIntA(
-			"Checksum", "&Initial value", TPosInterval(0,UINT_MAX), initValue, Gui::Hexa, hParent, Seeds
+			"Checksum", "&Initial value", UInt, initValue, Gui::Hexa, hParent, Seeds
 		);
 	}
 
