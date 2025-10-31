@@ -78,19 +78,24 @@ namespace Gui
 		WCHAR buf[DecimalCharsMax];
 		::GetWindowTextW( hEditBox, buf, ARRAYSIZE(buf) );
 		INT64 i;
-		::StrToInt64ExW( buf, STIF_SUPPORT_HEX, &i );
-		return i;
+		return	::StrToInt64ExW( buf, STIF_SUPPORT_HEX, &i )
+				? i
+				: LLONG_MIN; // the least probable value
 	}
 
 	TPosition WINAPI GetDlgItemInt(HWND hDlg,UINT idEditBox){
 		return GetWindowInt( ::GetDlgItem(hDlg,idEditBox) );
 	}
 
+	static void NotifyEditUpdated(HWND hEditBox){
+		::SendMessageW( ::GetParent(hEditBox), WM_COMMAND, MAKELONG(::GetWindowLongW(hEditBox,GWL_ID),EN_UPDATE), (LPARAM)hEditBox );
+	}
+
 	static void SetWindowInt(HWND hEditBox,INT64 i){
 		WCHAR buf[DecimalCharsMax];
 		::wsprintfW( buf, L"%I64i", i );
 		::SetWindowTextW( hEditBox, buf );
-		::SendMessageW( ::GetParent(hEditBox), WM_COMMAND, MAKELONG(::GetWindowLongW(hEditBox,GWL_ID),EN_CHANGE), (LPARAM)hEditBox );
+		NotifyEditUpdated(hEditBox);
 	}
 
 	void WINAPI SetDlgItemInt(HWND hDlg,UINT idEditBox,TPosition value){
@@ -200,8 +205,8 @@ namespace Gui
 								// . focus EditBox (focus may be set to the Buddy instead)
 								::SetFocus(hEditBox);
 								// . select all text
-								::SendMessage( hEditBox, EM_SETSEL, 0, -1 );
-								::SendMessage( ::GetParent(hEditBox), WM_COMMAND, MAKELONG(::GetWindowLong(hEditBox,GWL_ID),EN_UPDATE), (LPARAM)hEditBox );
+								SelectAll(hEditBox);
+								NotifyEditUpdated(hEditBox);
 								break;
 							}
 						}
