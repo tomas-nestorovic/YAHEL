@@ -329,15 +329,13 @@ namespace Gui
 			const TNotation defaultNotation;
 			const PCNamedInt namedInts;
 			const BYTE nNamedInts;
-			HWND hEditBox;
+			COMBOBOXINFO cbi;
 
 			bool InitDialog() override{
 				// dialog initialization
 				::SetWindowText( hDlg, caption );
-				COMBOBOXINFO cbi={sizeof(cbi)};
 				::GetComboBoxInfo( GetDlgItemHwnd(IDC_NUMBER), &cbi );
-				hEditBox=cbi.hwndItem;
-				SetWindowIntBuddyW( hEditBox, Value, defaultNotation, false );
+				SetWindowIntBuddyW( cbi.hwndItem, Value, defaultNotation, false );
 				ChangeDialogNotation();
 				return true; // set the keyboard focus to the default control
 			}
@@ -346,7 +344,7 @@ namespace Gui
 				// applies currently selected Notation to all assets that display numeric values
 				// - reformulate instructions using current Notation
 				TCHAR buf[200], strMin[32], strMax[32];
-				if (IsWindowIntHexa(hEditBox)){
+				if (IsWindowIntHexa(cbi.hwndItem)){
 					TCHAR format[32];
 					::wsprintf( format, _T("0x%%0%dI64X"), ::wsprintf(strMax,_T("%I64X"),rangeIncl.a|rangeIncl.z) );
 					::wsprintf( strMin, format, rangeIncl.a );
@@ -362,17 +360,16 @@ namespace Gui
 					::wsprintf( buf, _T("%s (%s - %s):"), label, strMin, strMax );
 				SetDlgItemText( IDC_INFO1, buf );
 				// - repopulate combo-box
-				const HWND hcb=GetDlgItemHwnd(IDC_NUMBER);
-				ComboBox_ResetContent(hcb);
+				ListBox_ResetContent(cbi.hwndList);
 				for( BYTE i=0; i<nNamedInts; i++ ){
 					const TNamedInt &ni=namedInts[i];
 					WCHAR format[16], buf[200];
 					::wsprintfW( format, L"%s (%%%c)",
-						IsWindowIntHexa(hEditBox) ? TEXT_HEXA L"%I64X" : L"%I64i",
+						IsWindowIntHexa(cbi.hwndItem) ? TEXT_HEXA L"%I64X" : L"%I64i",
 						ni.unicodeName ? 's' : 'S'
 					);
 					::wsprintfW( buf, format, ni.value, ni.nameA );
-					ComboBox_AddString( hcb, buf );
+					ComboBox_AddString( cbi.hwndCombo, buf );
 				}
 			}
 
@@ -400,6 +397,7 @@ namespace Gui
 				: caption(caption) , label(label) , rangeIncl(rangeIncl) , defaultNotation(defaultNotation)
 				, namedInts(namedInts), nNamedInts(nNamedInts)
 				, Value(initValue) {
+				cbi.cbSize=sizeof(cbi);
 			}
 		} d( caption, label, rangeIncl, v, defaultNotation, namedInts, nNamedInts );
 		// - showing the Dialog and processing its result
