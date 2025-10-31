@@ -3,6 +3,9 @@
 
 namespace Yahel
 {
+	const TPosInterval YAHEL_DECLSPEC Percent(0,100);
+	const TPosInterval YAHEL_DECLSPEC Word(0,USHRT_MAX);
+
 namespace Gui
 {
 	LPCWSTR WINAPI GetDefaultEnglishMessage(TMsg id){

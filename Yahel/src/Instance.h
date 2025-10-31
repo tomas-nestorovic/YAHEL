@@ -237,7 +237,7 @@ namespace Yahel{
 		bool Update(IStream *f,Stream::IAdvisor *sa,const TPosInterval &fileLogicalSizeLimits) override;
 		bool Reset(IStream *f,Stream::IAdvisor *sa,const TPosInterval &fileLogicalSizeLimits) override;
 		TPosition GetCaretPosition() const override;
-		TPosInterval GetSelectionAsc() const override;
+		const TPosInterval &GetSelectionAsc() const override;
 		void SetSelection(TPosition selStart,TPosition selEnd) override;
 		TPosInterval GetVisiblePart() const override;
 		void ScrollTo(TPosition logicalPos,bool moveAlsoCaret=false) override;

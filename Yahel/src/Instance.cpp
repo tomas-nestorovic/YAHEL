@@ -341,7 +341,7 @@ namespace Yahel{
 		return caret.streamPosition;
 	}
 
-	TPosInterval CInstance::GetSelectionAsc() const{
+	const TPosInterval &CInstance::GetSelectionAsc() const{
 		return caret.streamSelection;
 	}
 

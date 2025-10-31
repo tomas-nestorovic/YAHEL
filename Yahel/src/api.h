@@ -75,6 +75,9 @@ namespace Yahel
 	typedef INT64 TPosition,*PPosition;
 	typedef TInterval<TPosition> TPosInterval;
 
+	extern const TPosInterval YAHEL_DECLSPEC Percent;
+	extern const TPosInterval YAHEL_DECLSPEC Word;
+
 
 
 	struct YAHEL_DECLSPEC TSearchParams{
@@ -332,7 +335,7 @@ namespace Gui
 		virtual bool Update(IStream *s,Stream::IAdvisor *sa,const TPosInterval &fileLogicalSizeLimits)=0;
 		virtual bool Reset(IStream *s,Stream::IAdvisor *sa,const TPosInterval &fileLogicalSizeLimits)=0;
 		virtual TPosition GetCaretPosition() const=0;
-		virtual TPosInterval GetSelectionAsc() const=0;
+		virtual const TPosInterval &GetSelectionAsc() const=0;
 		virtual void SetSelection(TPosition selStart,TPosition selEnd)=0;
 		virtual TPosInterval GetVisiblePart() const=0;
 		virtual void ScrollTo(TPosition logicalPos,bool moveAlsoCaret=false)=0;
