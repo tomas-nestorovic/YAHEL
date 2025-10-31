@@ -4,7 +4,9 @@
 namespace Yahel
 {
 	const TPosInterval YAHEL_DECLSPEC Percent(0,100);
+	const TPosInterval YAHEL_DECLSPEC Byte(0,UCHAR_MAX);
 	const TPosInterval YAHEL_DECLSPEC Word(0,USHRT_MAX);
+	const TPosInterval YAHEL_DECLSPEC UInt32(0,UINT_MAX);
 
 namespace Gui
 {
@@ -908,11 +910,11 @@ namespace Stream
 				ComboBox_SetCurSel( hPresets, nItems-1 ); // "Custom"
 				ValidateDialog(); // show eventual errors in custom Item definition
 			}
-			bool ValidateDialog(){
+			bool ValidateDialog() override{
 				// True <=> Dialog inputs are acceptable, otherwise False
 				return TrySaveDefinition()==ERROR_KOSHER;
 			}
-			bool OnCommand(WPARAM wParam,LPARAM lParam){
+			bool OnCommand(WPARAM wParam,LPARAM lParam) override{
 				// command processing
 				if (processNotifications)
 					switch (wParam){

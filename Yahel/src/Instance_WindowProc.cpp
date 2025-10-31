@@ -583,10 +583,10 @@ resetSelectionWithValue:BYTE buf[65535];
 						TResetSelectionParams rsp;
 						if (pOwner->QueryByteToResetSelectionWith(rsp) && rsp.IsValid())
 							switch (rsp.type){
-								case TResetSelectionParams::Byte:
-									i=rsp.byteValue;
+								case TResetSelectionParams::VALUE:
+									i=rsp.value;
 									goto resetSelectionWithValue;
-								case TResetSelectionParams::GaussianNoise:
+								case TResetSelectionParams::NOISE_GAUSSIAN:
 									i=-1;
 									goto resetSelectionWithValue;
 								default:

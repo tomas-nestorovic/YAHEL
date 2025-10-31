@@ -76,7 +76,9 @@ namespace Yahel
 	typedef TInterval<TPosition> TPosInterval;
 
 	extern const TPosInterval YAHEL_DECLSPEC Percent;
+	extern const TPosInterval YAHEL_DECLSPEC Byte;
 	extern const TPosInterval YAHEL_DECLSPEC Word;
+	extern const TPosInterval YAHEL_DECLSPEC UInt32;
 
 
 
@@ -119,10 +121,11 @@ namespace Yahel
 
 	struct YAHEL_DECLSPEC TResetSelectionParams{
 		enum:BYTE{
-			Byte,
-			GaussianNoise
+			VALUE,
+			NOISE_GAUSSIAN,
+			LAST
 		} type;
-		BYTE byteValue;
+		BYTE value;
 
 		TResetSelectionParams();
 

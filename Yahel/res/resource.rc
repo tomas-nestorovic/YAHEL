@@ -124,15 +124,15 @@ IDR_YAHEL_FIND DIALOG DISCARDABLE  0, 0, 303, 186
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
 CAPTION "Find"
 BEGIN
-    CONTROL         "Search for ANSI pattern:",ID_YAHEL_DEFAULT1,"Button",
+    CONTROL         "Search for &text pattern:",ID_YAHEL_DEFAULT1,"Button",
                     BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,7,7,289,10
     EDITTEXT        ID_YAHEL_TEXT,20,18,276,14,ES_AUTOHSCROLL
-    CONTROL         "Match case",ID_YAHEL_ACCURACY,"Button",BS_AUTOCHECKBOX | 
+    CONTROL         "Match &case",ID_YAHEL_ACCURACY,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,20,35,53,10
-    CONTROL         "Search for Byte pattern:",ID_YAHEL_DEFAULT2,"Button",
+    CONTROL         "Search for &Byte pattern:",ID_YAHEL_DEFAULT2,"Button",
                     BS_AUTORADIOBUTTON | WS_TABSTOP,7,52,289,10
     EDITTEXT        IDC_FILE,20,64,276,68,WS_CLIPSIBLINGS
-    CONTROL         "Byte other than:",ID_YAHEL_DEFAULT3,"Button",
+    CONTROL         "Byte &other than:",ID_YAHEL_DEFAULT3,"Button",
                     BS_AUTORADIOBUTTON,7,142,66,10
     EDITTEXT        ID_YAHEL_NUMBER,74,140,40,14,ES_AUTOHSCROLL
     DEFPUSHBUTTON   "Find next",ID_YAHEL_FIND_NEXT,192,165,50,14,WS_DISABLED

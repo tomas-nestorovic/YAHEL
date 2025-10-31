@@ -5,11 +5,11 @@ namespace Yahel{
 
 	TResetSelectionParams::TResetSelectionParams()
 		// ctor
-		: type(Byte) , byteValue(0) {
+		: type(VALUE) , value(0) {
 	}
 
 	bool TResetSelectionParams::IsValid() const{
-		return type<=GaussianNoise;
+		return type<LAST;
 	}
 
 	bool TResetSelectionParams::EditModalWithDefaultEnglishDialog(HWND hParent){
@@ -19,7 +19,7 @@ namespace Yahel{
 			return false;
 		// - showing the Dialog and processing its result
 		return Gui::QuerySingleIntA(
-			"Reset selection", "&Value", TPosInterval(0,UCHAR_MAX), byteValue, Gui::Hexa, hParent
+			"Reset selection", "&Value", Byte, value, Gui::Hexa, hParent
 		);
 	}
 
