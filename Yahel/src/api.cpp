@@ -178,7 +178,10 @@ namespace Gui
 							if (IsWindowIntHexa(hEditBox))
 								return 0; // can't enter minus sign in Hexa Notation
 							WCHAR buf[2];
-							if (::GetWindowTextW(hEditBox,buf,ARRAYSIZE(buf)) && *buf=='-')
+							if (::CallWindowProcW( p.wndProcOrg, hEditBox, WM_GETTEXT, ARRAYSIZE(buf), (LPARAM)buf ) // don't use 'GetWindowText' as it returns 0 for "-" string (which is an invalid number), allowing for the minus sign to be input arbitrarily many times
+								&&
+								*buf=='-'
+							)
 								return 0; // block insertion of second minus sign
 							Edit_SetSel( hEditBox, 0, 0 );
 							break; // prepend an existing Decimal number with a minus sign
@@ -219,7 +222,7 @@ namespace Gui
 						static_assert( (ARRAYSIZE(TEXT_HEXA)-1)*sizeof(*buf)==sizeof(int), "" ); // see 'PINT' below
 						*(PINT)buf=MAKELONG( ' ', ' ' );
 						::CallWindowProcW(
-							p.wndProcOrg, hEditBox, msg, ARRAYSIZE(buf),
+							p.wndProcOrg, hEditBox, msg, DecimalCharsMax,
 							(LPARAM)(buf+ARRAYSIZE(TEXT_HEXA)-1)
 						);
 						if (IsWindowIntHexa(hEditBox))
