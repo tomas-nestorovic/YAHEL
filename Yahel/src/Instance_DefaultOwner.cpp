@@ -33,7 +33,7 @@ namespace Yahel{
 		return false;
 	}
 
-	int CInstance::ComputeChecksum(const Checksum::TParams &cp,const TPosInterval &range) const{
+	Checksum::T CInstance::ComputeChecksum(const Checksum::TParams &cp,const TPosInterval &range) const{
 		return Checksum::GetErrorValue();
 	}
 

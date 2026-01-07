@@ -182,7 +182,7 @@ namespace Yahel{
 		TPosition ContinueSearching(const TSearchParams &sp) const override;
 		bool QueryAddressToGoTo(TGoToParams &outGtp) const override;
 		bool QueryChecksumParams(Checksum::TParams &outCp) const override;
-		int ComputeChecksum(const Checksum::TParams &cp,const TPosInterval &range) const override;
+		Checksum::T ComputeChecksum(const Checksum::TParams &cp,const TPosInterval &range) const override;
 		bool QueryByteToResetSelectionWith(TResetSelectionParams &outRsp) const override;
 		int GetCustomCommandMenuFlags(WORD cmd) const override;
 		bool ShowOpenFileDialog(LPCWSTR singleFilter,DWORD ofnFlags,PWCHAR lpszFileNameBuffer,WORD bufferCapacity) const override;
@@ -256,7 +256,7 @@ namespace Yahel{
 		TPosition GetStreamLogicalSize() const override;
 		void SetStreamLogicalSize(TPosition logicalSize) override;
 		WORD GetStreamBytesCountPerRow() const override;
-		int GetChecksum(const Checksum::TParams &cp,const TPosInterval &range,volatile const bool &cancel) const override;
+		Checksum::T GetChecksum(const Checksum::TParams &cp,const TPosInterval &range,volatile const bool &cancel) const override;
 
 		// "Label" column
 		TError SetLabelColumnParams(char nCharsSpace,COLORREF bgColor) override;

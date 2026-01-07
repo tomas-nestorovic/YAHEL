@@ -135,7 +135,10 @@ namespace Yahel
 
 
 
-	namespace Checksum{
+	namespace Checksum
+	{
+		typedef UINT T;
+
 		struct YAHEL_DECLSPEC TParams{
 			enum TType:BYTE{
 				Add,
@@ -143,20 +146,20 @@ namespace Yahel
 				Ccitt16,
 				Last
 			} type;
-			int initValue;
+			T seed;
 
 			TParams();
-			TParams(TType type,int initValue);
+			TParams(TType type,T seed);
 
 			bool IsValid() const;
 			bool EditModalWithDefaultEnglishDialog(HWND hParent);
 		};
 
-		int YAHEL_DECLSPEC GetDefaultInitValue();
-		int YAHEL_DECLSPEC GetErrorValue();
-		int YAHEL_DECLSPEC Compute(const TParams &params,LPCVOID bytes,UINT nBytes);
-		int YAHEL_DECLSPEC ComputeAdd(LPCVOID bytes,UINT nBytes,int initValue=0);
-		BYTE YAHEL_DECLSPEC ComputeXor(LPCVOID bytes,UINT nBytes,BYTE initValue=0);
+		T YAHEL_DECLSPEC GetDefaultInitValue();
+		T YAHEL_DECLSPEC GetErrorValue();
+		T YAHEL_DECLSPEC Compute(const TParams &params,LPCVOID bytes,UINT nBytes);
+		T YAHEL_DECLSPEC ComputeAdd(LPCVOID bytes,UINT nBytes,T seed=0);
+		BYTE YAHEL_DECLSPEC ComputeXor(LPCVOID bytes,UINT nBytes,BYTE seed=0);
 	}
 
 
@@ -209,7 +212,7 @@ namespace Yahel
 		virtual bool QueryByteToResetSelectionWith(TResetSelectionParams &outRsp) const=0;
 		// checksum
 		virtual bool QueryChecksumParams(Checksum::TParams &outCp) const=0;
-		virtual int ComputeChecksum(const Checksum::TParams &cp,const TPosInterval &range) const=0;
+		virtual Checksum::T ComputeChecksum(const Checksum::TParams &cp,const TPosInterval &range) const=0;
 		// GUI
 		virtual int GetCustomCommandMenuFlags(WORD cmd) const=0;
 		virtual bool ShowOpenFileDialog(LPCWSTR singleFilter,DWORD ofnFlags,PWCHAR lpszFileNameBuffer,WORD bufferCapacity) const=0;
@@ -357,7 +360,7 @@ namespace Gui
 		virtual TPosition GetStreamLogicalSize() const=0;
 		virtual void SetStreamLogicalSize(TPosition logicalSize)=0;
 		virtual WORD GetStreamBytesCountPerRow() const=0;
-		virtual int GetChecksum(const Checksum::TParams &cp,const TPosInterval &range,volatile const bool &cancel) const=0;
+		virtual Checksum::T GetChecksum(const Checksum::TParams &cp,const TPosInterval &range,volatile const bool &cancel) const=0;
 
 		// "Label" column
 		virtual TError SetLabelColumnParams(char nLabelCharsMax,COLORREF bgColor)=0; // 'zero' = hidden column, 'positive' = shown and must scroll to see the column, 'negative' = shown and always visible

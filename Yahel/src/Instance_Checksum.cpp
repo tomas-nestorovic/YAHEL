@@ -6,25 +6,25 @@ namespace Checksum{
 
 	TParams::TParams()
 		// ctor
-		: type(Add) , initValue(GetDefaultInitValue()) {
+		: type(Add) , seed(GetDefaultInitValue()) {
 	}
 
-	TParams::TParams(TType type,int initValue)
+	TParams::TParams(TType type,T seed)
 		// ctor
-		: type(type) , initValue(initValue) {
+		: type(type) , seed(seed) {
 	}
 
 	bool TParams::IsValid() const{
 		return	type<Last
 				&&
-				initValue!=GetErrorValue();
+				seed!=GetErrorValue();
 	}
 
-	int GetDefaultInitValue(){
+	T GetDefaultInitValue(){
 		return 0;
 	}
 
-	int GetErrorValue(){
+	T GetErrorValue(){
 		return -1;
 	}
 
@@ -39,7 +39,7 @@ namespace Checksum{
 			{ 63186, "MFM A1A1A1<deleted-data>" }
 		};
 		return Gui::QuerySingleIntA(
-			"Checksum", "&Initial value", UInt32, initValue, Gui::Hexa, hParent, Seeds
+			"Checksum", "&Initial value", UInt32, seed, Gui::Hexa, hParent, Seeds
 		);
 	}
 
@@ -48,17 +48,17 @@ namespace Checksum{
 
 
 
-	typedef int (* FnAppender)(int seed,BYTE b);
+	typedef T (* FnAppender)(T seed,BYTE b);
 
-	static int Add(int seed,BYTE b){
+	static T Add(T seed,BYTE b){
 		return seed+b;
 	}
 
-	static int Xor(int seed,BYTE b){
+	static T Xor(T seed,BYTE b){
 		return seed^b;
 	}
 
-	static int Crc16Ccitt(int seed,BYTE b){
+	static T Crc16Ccitt(T seed,BYTE b){
 		WORD tmp= (LOBYTE(seed)<<8) + HIBYTE(seed); // big endian
 			BYTE x = tmp>>8 ^ b;
 			x ^= x>>4;
@@ -66,7 +66,7 @@ namespace Checksum{
 		return (LOBYTE(tmp)<<8) + HIBYTE(tmp); // little endian
 	}
 
-	int Compute(const TParams &params,LPCVOID bytes,UINT nBytes){
+	T Compute(const TParams &params,LPCVOID bytes,UINT nBytes){
 		//
 		// - can't compute Checksum by invalid Params
 		if (!params.IsValid())
@@ -88,17 +88,17 @@ namespace Checksum{
 				return GetErrorValue();
 		}
 		// - computation
-		auto result=params.initValue;
+		auto result=params.seed;
 		for( const BYTE *pb=(LPBYTE)bytes; nBytes-->0; result=fn(result,*pb++) );
 		return result;
 	}
 
-	BYTE ComputeXor(LPCVOID bytes,UINT nBytes,BYTE initValue){
-		return Compute( TParams(TParams::Xor,initValue), bytes, nBytes );
+	BYTE ComputeXor(LPCVOID bytes,UINT nBytes,BYTE seed){
+		return Compute( TParams(TParams::Xor,seed), bytes, nBytes );
 	}
 
-	int ComputeAdd(LPCVOID bytes,UINT nBytes,int initValue){
-		return Compute( TParams(TParams::Add,initValue), bytes, nBytes );
+	T ComputeAdd(LPCVOID bytes,UINT nBytes,T seed){
+		return Compute( TParams(TParams::Add,seed), bytes, nBytes );
 	}
 }
 
@@ -106,7 +106,7 @@ namespace Checksum{
 
 
 
-	int CInstance::GetChecksum(const Checksum::TParams &params,const TPosInterval &range,volatile const bool &cancel) const{
+	Checksum::T CInstance::GetChecksum(const Checksum::TParams &params,const TPosInterval &range,volatile const bool &cancel) const{
 		//
 		// - can't compute Checksum by invalid Params
 		if (!params.IsValid() || !range.IsValidNonempty())
@@ -135,12 +135,12 @@ namespace Checksum{
 			if (cancel)
 				return Checksum::GetErrorValue();
 			else if (const auto nBytesRead=f.Read( buf, std::min((TPosition)sizeof(buf),range.z-f.GetPosition()), IgnoreIoResult )){
-				p.initValue=Checksum::Compute( p, buf, nBytesRead );
-				if (p.initValue==Checksum::GetErrorValue())
+				p.seed=Checksum::Compute( p, buf, nBytesRead );
+				if (p.seed==Checksum::GetErrorValue())
 					break;
 			}else
 				f.Seek( 1, STREAM_SEEK_CUR ); // skipping irrecoverable portion of data
-		return p.initValue;
+		return p.seed;
 	}
 
 }
