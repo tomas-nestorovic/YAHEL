@@ -143,7 +143,7 @@ namespace Yahel
 			enum TType:BYTE{
 				Add,
 				Xor,
-				Ccitt16,
+				Ibm3740,
 				Last
 			} type;
 			T seed;
@@ -155,7 +155,7 @@ namespace Yahel
 			bool EditModalWithDefaultEnglishDialog(HWND hParent);
 		};
 
-		T YAHEL_DECLSPEC GetDefaultInitValue();
+		T YAHEL_DECLSPEC GetDefaultSeed();
 		T YAHEL_DECLSPEC GetErrorValue();
 		T YAHEL_DECLSPEC Compute(const TParams &params,LPCVOID bytes,UINT nBytes);
 		T YAHEL_DECLSPEC ComputeAdd(LPCVOID bytes,UINT nBytes,T seed=0);

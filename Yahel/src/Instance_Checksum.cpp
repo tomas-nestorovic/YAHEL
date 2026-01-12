@@ -6,7 +6,7 @@ namespace Checksum{
 
 	TParams::TParams()
 		// ctor
-		: type(Add) , seed(GetDefaultInitValue()) {
+		: type(Add) , seed(GetDefaultSeed()) {
 	}
 
 	TParams::TParams(TType type,T seed)
@@ -20,7 +20,7 @@ namespace Checksum{
 				seed!=GetErrorValue();
 	}
 
-	T GetDefaultInitValue(){
+	T GetDefaultSeed(){
 		return 0;
 	}
 
@@ -35,8 +35,8 @@ namespace Checksum{
 			return false;
 		// - showing the Dialog and processing its result
 		static const Gui::TNamedInt Seeds[]={
-			{ 38370, "MFM A1A1A1<data>" },
-			{ 63186, "MFM A1A1A1<deleted-data>" }
+			{ 0xE295, "MFM A1A1A1<data>" },
+			{ 0xD2F6, "MFM A1A1A1<deleted-data>" }
 		};
 		return Gui::QuerySingleIntA(
 			"Checksum", "&Initial value", UInt32, seed, Gui::Hexa, hParent, Seeds
@@ -58,12 +58,10 @@ namespace Checksum{
 		return seed^b;
 	}
 
-	static T Crc16Ccitt(T seed,BYTE b){
-		WORD tmp= (LOBYTE(seed)<<8) + HIBYTE(seed); // big endian
-			BYTE x = tmp>>8 ^ b;
-			x ^= x>>4;
-			tmp = (tmp<<8) ^ (WORD)(x<<12) ^ (WORD)(x<<5) ^ (WORD)x;
-		return (LOBYTE(tmp)<<8) + HIBYTE(tmp); // little endian
+	static T Ibm3740(T seed,BYTE b){
+			b ^= seed>>8;
+			b ^= b>>4;
+			return (WORD)(seed<<8) ^ (WORD)(b<<12) ^ (WORD)(b<<5) ^ b;
 	}
 
 	T Compute(const TParams &params,LPCVOID bytes,UINT nBytes){
@@ -80,8 +78,8 @@ namespace Checksum{
 			case TParams::Xor:
 				fn=Xor;
 				break;
-			case TParams::Ccitt16:
-				fn=Crc16Ccitt;
+			case TParams::Ibm3740:
+				fn=Ibm3740;
 				break;
 			default:
 				assert(false);
