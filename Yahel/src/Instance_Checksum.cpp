@@ -48,20 +48,28 @@ namespace Checksum{
 
 
 
-	typedef T (* FnAppender)(T seed,BYTE b);
+	typedef T (* FnAppender)(T seed,const BYTE *pBytes,WORD nBytes);
 
-	static T Add(T seed,BYTE b){
-		return seed+b;
+	static T Add(T seed,const BYTE *pBytes,WORD nBytes){
+		while (nBytes-->0)
+			seed+=*pBytes++;
+		return seed;
 	}
 
-	static T Xor(T seed,BYTE b){
-		return seed^b;
+	static T Xor(T seed,const BYTE *pBytes,WORD nBytes){
+		while (nBytes-->0)
+			seed^=*pBytes++;
+		return seed;
 	}
 
-	static T Ibm3740(T seed,BYTE b){
+	static T Ibm3740(T seed,const BYTE *pBytes,WORD nBytes){
+		while (nBytes-->0){
+			BYTE b=*pBytes++;
 			b ^= seed>>8;
 			b ^= b>>4;
-			return (WORD)(seed<<8) ^ (WORD)(b<<12) ^ (WORD)(b<<5) ^ b;
+			seed= (WORD)(seed<<8) ^ (WORD)(b<<12) ^ (WORD)(b<<5) ^ b;
+		}
+		return seed;
 	}
 
 	T Compute(const TParams &params,LPCVOID bytes,UINT nBytes){
@@ -86,8 +94,13 @@ namespace Checksum{
 				return GetErrorValue();
 		}
 		// - computation
-		auto result=params.seed;
-		for( const BYTE *pb=(LPBYTE)bytes; nBytes-->0; result=fn(result,*pb++) );
+		constexpr UINT ChunkBytesMax=4096;
+		T result=params.seed;
+		for( const BYTE *pb=(LPBYTE)bytes; nBytes>0; ){
+			const UINT nChunkBytes=std::min( nBytes, ChunkBytesMax );
+			result=fn( result, pb, nChunkBytes );
+			pb+=nChunkBytes, nBytes-=nChunkBytes;
+		}
 		return result;
 	}
 
