@@ -1200,14 +1200,14 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 					RECT rcHeader=singleRowRect;
 					if (IsColumnShown(TColumn::VIEW)){
 						WCHAR buf[16];
-						rcHeader.left=charLayout.view.a*font.GetCharAvgWidth();
+						rcHeader.left=(charLayout.view.a-iHorzScroll)*font.GetCharAvgWidth();
 						static_assert( ADDRESS_SPACE_LENGTH==1, "see wsprint-ed count of spaces below" );
 						static_assert( ITEM_PATTERN_LENGTH_MIN>=3, "see wsprint-ed pattern length below" );
 						for( WORD n=0; n<item.nInRow; rcHeader.left+=itemWidth )
 							::DrawTextW( dc, buf, ::wsprintfW(buf,L"%02X ",n++*item.nStreamBytes), &rcHeader, DT_LEFT|DT_TOP );
 					}
 					if (IsColumnShown(TColumn::STREAM)){
-						rcHeader.left=charLayout.stream.a*font.GetCharAvgWidth();
+						rcHeader.left=(charLayout.stream.a-iHorzScroll)*font.GetCharAvgWidth();
 						::DrawTextW( dc, L"Stream",-1, &rcHeader, DT_LEFT|DT_TOP );
 					}
 				}
