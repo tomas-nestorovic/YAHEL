@@ -1068,12 +1068,12 @@ leftMouseDragged:
 					inline const RECT &GetPaintRect() const{ return ps.rcPaint; }
 
 					RECT CreateRect(TCol right,TRow bottom) const{
-						const RECT tmp={ 0, 0, right*he.font.GetCharAvgWidth(), bottom*he.font.GetCharHeight() };
-						return tmp;
+						return CreateRect( 0, 0, right, bottom );
 					}
 
 					RECT CreateRect(TCol left,TRow top,TCol right,TRow bottom) const{
-						const RECT tmp={ left*he.font.GetCharAvgWidth(), top*he.font.GetCharHeight(), right*he.font.GetCharAvgWidth(), bottom*he.font.GetCharHeight() };
+						const auto charAvgWidth=he.font.GetCharAvgWidth(), charHeight=he.font.GetCharHeight();
+						const RECT tmp={ left*charAvgWidth, top*charHeight, right*charAvgWidth, bottom*charHeight };
 						return tmp;
 					}
 
@@ -1180,13 +1180,9 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 					::FillRect( dc, &rc, dc.BtnFaceBrush );
 			{		const Utils::CViewportOrg viewportOrg1( dc, HEADER_LINES_COUNT+iRowsPaint.a, 0, font );
 					::DrawTextW( dc, buf,p-buf, (LPRECT)&FullClientRect, DT_LEFT|DT_TOP );
-					const RECT &&rcWhite=dc.CreateRect( 0, HEADER_LINES_COUNT+iRowsPaint.z, addrLength, USHRT_MAX );
-					::FillRect( dc, &rcWhite, Utils::CYahelBrush::White );
-					const Utils::CViewportOrg viewportOrg2( dc, HEADER_LINES_COUNT, addrLength, font );
-					::FillRect( dc, &singleColumnRect, Utils::CYahelBrush::White );
 			}		::ExcludeClipRect( dc, 0, 0, rc.right, USHRT_MAX );
 				}else{
-					const Utils::CViewportOrg viewportOrg( dc, HEADER_LINES_COUNT+iRowsPaint.a, 0, font );
+					const Utils::CViewportOrg viewportOrg( dc, HEADER_LINES_COUNT, 0, font );
 					::FillRect( dc, &singleColumnRect, Utils::CYahelBrush::White );
 					::ExcludeClipRect( dc, 0, 0, singleColumnRect.right, USHRT_MAX );
 				}
