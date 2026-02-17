@@ -294,9 +294,9 @@ namespace Gui
 		TPosition YAHEL_DECLSPEC WINAPI GetMaximumLength();
 		TPosition YAHEL_DECLSPEC WINAPI GetErrorPosition();
 		TPosition YAHEL_DECLSPEC WINAPI GetLength(IStream *s);
-		IStream YAHEL_DECLSPEC * WINAPI FromBuffer(PVOID pBuffer,TPosition length);
-		IStream YAHEL_DECLSPEC * WINAPI FromFileForSharedReading(LPCWSTR fileName,DWORD dwFlagsAndAttributes=FILE_ATTRIBUTE_NORMAL);
-		IDataObject YAHEL_DECLSPEC * WINAPI CreateDataObject(IStream *s,const TPosInterval &range);
+		ATL::CComPtr<IStream> YAHEL_DECLSPEC WINAPI FromBuffer(PVOID pBuffer,TPosition length);
+		ATL::CComPtr<IStream> YAHEL_DECLSPEC WINAPI FromFileForSharedReading(LPCWSTR fileName,DWORD dwFlagsAndAttributes=FILE_ATTRIBUTE_NORMAL);
+		ATL::CComPtr<IDataObject> YAHEL_DECLSPEC WINAPI CreateDataObject(IStream &s,const TPosInterval &range);
 	};
 
 
@@ -318,7 +318,7 @@ namespace Gui
 		static LPCSTR YAHEL_DECLSPEC WINAPI GetBaseClassNameA(HINSTANCE hInstance);
 		static LPCWSTR YAHEL_DECLSPEC WINAPI GetBaseClassNameW(HINSTANCE hInstance);
 		static UINT YAHEL_DECLSPEC WINAPI GetClipboardFormat();
-		static IInstance YAHEL_DECLSPEC * WINAPI Create(HINSTANCE hInstance,POwner pOwner,PVOID lpParam=0,HFONT hFont=0);
+		static ATL::CComPtr<IInstance> YAHEL_DECLSPEC WINAPI Create(HINSTANCE hInstance,POwner pOwner,PVOID lpParam=0,HFONT hFont=0);
 		static LPCWSTR YAHEL_DECLSPEC WINAPI GetDefaultByteItemDefinition();
 		static bool YAHEL_DECLSPEC WINAPI DefineItemUsingDefaultEnglishDialog(PWCHAR definitionBuffer,BYTE bufferCapacity,HWND hParent=0,HFONT hFont=0);
 

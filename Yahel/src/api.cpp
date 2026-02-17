@@ -538,7 +538,7 @@ namespace Stream
 
 		HRESULT STDMETHODCALLTYPE Clone(IStream **ppstm) override{
 			if (ppstm){
-				*ppstm=FromBuffer( buffer, bufferLength );
+				*ppstm=FromBuffer( buffer, bufferLength ).Detach();
 				return S_OK;
 			}else
 				return E_INVALIDARG;
@@ -569,8 +569,10 @@ namespace Stream
 		}
 	};
 
-	IStream * WINAPI FromBuffer(PVOID pBuffer,TPosition length){
-		return new CBufferStream(pBuffer,length);
+	ATL::CComPtr<IStream> WINAPI FromBuffer(PVOID pBuffer,TPosition length){
+		ATL::CComPtr<IStream> tmp;
+			tmp.p=new CBufferStream(pBuffer,length);
+		return tmp;
 	}
 
 
@@ -578,11 +580,10 @@ namespace Stream
 
 
 
-	IStream * WINAPI FromFileForSharedReading(LPCWSTR fileName,DWORD dwFlagsAndAttributes){
-		IStream *s;
-		return	SUCCEEDED(::SHCreateStreamOnFileEx( fileName, STGM_READ|STGM_SHARE_DENY_WRITE, dwFlagsAndAttributes, FALSE, nullptr, &s ))
-				? s
-				: nullptr;
+	ATL::CComPtr<IStream> WINAPI FromFileForSharedReading(LPCWSTR fileName,DWORD dwFlagsAndAttributes){
+		ATL::CComPtr<IStream> tmp;
+			::SHCreateStreamOnFileEx( fileName, STGM_READ|STGM_SHARE_DENY_WRITE, dwFlagsAndAttributes, FALSE, nullptr, &tmp.p );
+		return tmp;
 	}
 
 
@@ -740,11 +741,12 @@ namespace Stream
 		}
 	};
 
-	IDataObject * WINAPI CreateDataObject(IStream *s,const TPosInterval &range){
+	ATL::CComPtr<IDataObject> WINAPI CreateDataObject(IStream &s,const TPosInterval &range){
 		//
-		return	s!=nullptr && range.IsValidNonempty()
-				? new COleDataObject( *s, range )
-				: nullptr;
+		ATL::CComPtr<IDataObject> tmp;
+		if (range.IsValidNonempty())
+			tmp.p=new COleDataObject( s, range );
+		return tmp;
 	}
 
 
@@ -820,11 +822,11 @@ namespace Stream
 		return ::RegisterClipboardFormat(CLIPFORMAT_YAHEL_BINARY);
 	}
 
-	IInstance *IInstance::Create(HINSTANCE hInstance,POwner pOwner,PVOID lpParam,HFONT hFont){
+	ATL::CComPtr<IInstance> IInstance::Create(HINSTANCE hInstance,POwner pOwner,PVOID lpParam,HFONT hFont){
+		ATL::CComPtr<IInstance> tmp;
 		if (pOwner)
-			return new CInstance( hInstance, pOwner, lpParam, hFont );
-		else
-			return nullptr;
+			tmp.p=new CInstance( hInstance, pOwner, lpParam, hFont );
+		return tmp;
 	}
 
 	LPCWSTR IInstance::GetDefaultByteItemDefinition(){
@@ -959,11 +961,10 @@ namespace Stream
 				if (item.Redefine( definitionBuffer )) // invalid input Pattern?
 					item.Redefine( GetDefaultByteItemDefinition() );
 				// . creating the Stream for the the HexaEditor
-				if (IStream *const s=Stream::FromBuffer( sampleStreamBytes, ITEM_STREAM_BYTES_MAX )){
+				if (const auto &&s=Stream::FromBuffer( sampleStreamBytes, ITEM_STREAM_BYTES_MAX )){
 					for( BYTE i=0; i<ITEM_STREAM_BYTES_MAX; i++ )
 						sampleStreamBytes[i]=i;
 					hexaEditor.Reset( s, nullptr, TPosInterval(1,ITEM_STREAM_BYTES_MAX) );
-					s->Release();
 				}
 				hexaEditor.ShowColumns(TColumn::VIEW);
 			}

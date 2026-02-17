@@ -121,9 +121,11 @@ namespace Yahel{
 			CParamsDialog(const TSearchParams &params0,HFONT hFont)
 				: params(params0)
 				, hexaEditor( (HINSTANCE)&__ImageBase, &hexaEditor, MARK_RECURRENT_USE, hFont ) {
-				IStream *const s=Stream::FromBuffer( params.pattern.bytes, params.patternLength );
-					hexaEditor.Reset( s, nullptr, TPosInterval(1,sizeof(params.pattern.bytes)) );
-				s->Release();
+				hexaEditor.Reset(
+					Stream::FromBuffer( params.pattern.bytes, params.patternLength ),
+					nullptr,
+					TPosInterval( 1, sizeof(params.pattern.bytes) )
+				);
 				hexaEditor.ShowColumns( IInstance::TColumn::MINIMAL );
 				hexaEditor.SetEditable(true);
 			}

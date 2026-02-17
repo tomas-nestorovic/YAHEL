@@ -550,11 +550,10 @@ finishWriting:				SendEditNotification( EN_CHANGE );
 						// pasting content of a file at current Caret Position
 						if (!editable) return true; // can't edit content of a disabled window
 						WCHAR fileName[MAX_PATH];
-						if (pOwner->ShowOpenFileDialog( nullptr, OFN_FILEMUSTEXIST, ::lstrcpyW(fileName,L""), ARRAYSIZE(fileName) )){
-							CComPtr<IStream> fSrc;
-							fSrc.Attach( Stream::FromFileForSharedReading(fileName) );
-							PasteStreamAtCaretAndShowError(fSrc);
-						}
+						if (pOwner->ShowOpenFileDialog( nullptr, OFN_FILEMUSTEXIST, ::lstrcpyW(fileName,L""), ARRAYSIZE(fileName) ))
+							PasteStreamAtCaretAndShowError(
+								Stream::FromFileForSharedReading(fileName)
+							);
 						SetFocus(); // restoring focus lost by displaying the "Open" dialog
 						return true;
 					}
@@ -599,16 +598,14 @@ resetSelectionWithValue:BYTE buf[65535];
 						// copying the Selection into clipboard
 						if (!caret.SelectionExists())
 							return true;
-						if (const LPDATAOBJECT pdo=Stream::CreateDataObject( f, caret.streamSelection )){
+						if (auto &&pdo=Stream::CreateDataObject( *f, caret.streamSelection )){
 							::OleSetClipboard(pdo);
 							if (editable) // if content Editable ...
 								::OleFlushClipboard(); // ... render data immediately
 							else
 								delayedDataInClipboard=pdo;
 							if (lParam) // want pointer to the data now placed into the clipboard?
-								*((LPDATAOBJECT *)lParam)=pdo;
-							else
-								pdo->Release();
+								*((LPDATAOBJECT *)lParam)=pdo.Detach();
 						}
 						return true;
 					case ID_YAHEL_EDIT_PASTE:{
