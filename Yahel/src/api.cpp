@@ -146,6 +146,10 @@ namespace Gui
 							SWP_NOZORDER
 						);
 						break;
+					case WM_MOUSEWHEEL:
+						// mouse wheel was rotated
+						wParam=VK_UP+2*((short)HIWORD(wParam)<0); // convert to keys Up and Down
+						//fallthrough
 					case WM_KEYDOWN:
 						// a key has been pressed
 						if (::GetKeyState(VK_CONTROL)<0)
