@@ -1092,6 +1092,7 @@ leftMouseDragged:
 							if (!(currContentFlags&Erroneous)) // "if previously not Erroneous"
 								::SetTextColor( handle, !he.editable*0x777700+COLOR_RED );
 							// : BackgroundColor is the EmphasisColor overlayed with SelectionColor
+							newEmphasisColor=Utils::GetBlendedColor( newEmphasisColor, 0x7777ff, .6f ); // inject some tone of Red to the background
 blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContentFlags!=currContentFlags) // "if EmphasisColor or the application of SelectionColor have changed"
 								::SetBkColor( handle,
 									newContentFlags&Selected
