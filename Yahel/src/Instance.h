@@ -175,7 +175,7 @@ namespace Yahel{
 		inline TCol GetHorzScrollPos() const{ assert(hWnd); return ::GetScrollPos(hWnd,SB_HORZ); }
 		inline TRow GetVertScrollPos() const{ assert(hWnd); return ::GetScrollPos(hWnd,SB_VERT); }
 		inline LRESULT SendMessage(UINT msg,WPARAM wParam=0,LPARAM lParam=0) const{ assert(hWnd); return ::SendMessage(hWnd,msg,wParam,lParam); }
-		inline bool PostMessage(UINT msg,WPARAM wParam=0,LPARAM lParam=0) const{ assert(hWnd); return ::PostMessage(hWnd,msg,wParam,lParam)!=FALSE; }
+		inline void SendNotifyMessage(UINT msg,WPARAM wParam=0,LPARAM lParam=0) const{ assert(hWnd); ::SendNotifyMessage(hWnd,msg,wParam,lParam); }
 
 		// default IOwner implementation
 		bool QueryNewSearchParams(TSearchParams &outSp) const override;

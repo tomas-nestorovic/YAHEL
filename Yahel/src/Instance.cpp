@@ -704,10 +704,7 @@ namespace Yahel{
 		nRowsDisplayed=std::max( 0L, (r.bottom-r.top)/font.GetCharHeight()-HEADER_LINES_COUNT );
 		nRowsOnPage=std::max( 0, nRowsDisplayed-1 );
 		// - paint both scrollbars
-		if (::GetCurrentThreadId()==::GetWindowThreadProcessId(hWnd,nullptr)) // do we own the HexaEditor control?
-			SendMessage( WM_HEXA_PAINTSCROLLBARS );
-		else
-			PostMessage( WM_HEXA_PAINTSCROLLBARS );
+		SendNotifyMessage( WM_HEXA_PAINTSCROLLBARS );
 	}
 
 	void CInstance::RefreshCaretDisplay() const{
@@ -839,7 +836,7 @@ namespace Yahel{
 	void CInstance::ShowMessage(TMsg id) const{
 		// shows Message and passes focus back to the HexaEditor
 		pOwner->ShowInformation(id);
-		::PostMessage( hWnd, WM_LBUTTONDOWN, 0, -1 ); // recovering the focus; "-1" = [x,y] = nonsense value; can't use mere SetFocus because this alone doesn't work
+		SendNotifyMessage( WM_LBUTTONDOWN, 0, -1 ); // recovering the focus; "-1" = [x,y] = nonsense value; can't use mere SetFocus because this alone doesn't work
 	}
 
 	BYTE CInstance::ReadByteUnderCaret(HRESULT &outResult) const{
@@ -919,10 +916,7 @@ namespace Yahel{
 
 	void CInstance::ScrollToCaretAsync(){
 		// makes sure the Caret is visible
-		if (::GetCurrentThreadId()==::GetWindowThreadProcessId(hWnd,nullptr)) // do we own the HexaEditor control?
-			SendMessage( WM_KEYDOWN, VK_KANJI );
-		else
-			PostMessage( WM_KEYDOWN, VK_KANJI );
+		SendNotifyMessage( WM_KEYDOWN, VK_KANJI );
 	}
 
 	CInstance::TCharLayout CInstance::GetCharLayout() const{
