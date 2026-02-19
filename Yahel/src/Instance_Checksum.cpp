@@ -4,9 +4,12 @@
 namespace Yahel{
 namespace Checksum{
 
+	const T YAHEL_DECLSPEC DefaultSeed=0;
+	const T YAHEL_DECLSPEC ErrorSeed=-1;
+
 	TParams::TParams()
 		// ctor
-		: type(Add) , seed(GetDefaultSeed()) {
+		: type(Add) , seed(DefaultSeed) {
 	}
 
 	TParams::TParams(TType type,T seed)
@@ -17,15 +20,7 @@ namespace Checksum{
 	bool TParams::IsValid() const{
 		return	type<Last
 				&&
-				seed!=GetErrorValue();
-	}
-
-	T GetDefaultSeed(){
-		return 0;
-	}
-
-	T GetErrorValue(){
-		return -1;
+				seed!=ErrorSeed;
 	}
 
 	bool TParams::EditModalWithDefaultEnglishDialog(HWND hParent){
@@ -76,7 +71,7 @@ namespace Checksum{
 		//
 		// - can't compute Checksum by invalid Params
 		if (!params.IsValid())
-			return GetErrorValue();
+			return ErrorSeed;
 		// - determine computation function
 		FnAppender fn;
 		switch (params.type){
@@ -91,7 +86,7 @@ namespace Checksum{
 				break;
 			default:
 				assert(false);
-				return GetErrorValue();
+				return ErrorSeed;
 		}
 		// - computation
 		constexpr UINT ChunkBytesMax=4096;
@@ -121,16 +116,16 @@ namespace Checksum{
 		//
 		// - can't compute Checksum by invalid Params
 		if (!params.IsValid() || !range.IsValidNonempty())
-			return Checksum::GetErrorValue();
+			return Checksum::ErrorSeed;
 		// - computation
 		struct TContent sealed:public CInstance::TContent{
 			TPosition posOrg;
 
 			TContent()
-				: posOrg(Stream::GetErrorPosition()) {
+				: posOrg(Stream::ErrorPosition) {
 			}
 			~TContent(){
-				if (posOrg!=Stream::GetErrorPosition())
+				if (posOrg!=Stream::ErrorPosition)
 					Seek(posOrg);
 			}
 		} f;
@@ -139,15 +134,15 @@ namespace Checksum{
 			assert(false); // using here the same Stream always requires attention; YAHEL is fine with that - is also the client app fine with that?
 			f.stream=this->f.stream, f.posOrg=f.GetPosition();
 		}else if (FAILED(hr))
-			return Checksum::GetErrorValue();
+			return Checksum::ErrorSeed;
 		Checksum::TParams p=params;
 		f.Seek( range.a );
 		for( BYTE buf[65536]; f.GetPosition()<range.z; )
 			if (cancel)
-				return Checksum::GetErrorValue();
+				return Checksum::ErrorSeed;
 			else if (const auto nBytesRead=f.Read( buf, std::min((TPosition)sizeof(buf),range.z-f.GetPosition()), IgnoreIoResult )){
 				p.seed=Checksum::Compute( p, buf, nBytesRead );
-				if (p.seed==Checksum::GetErrorValue())
+				if (p.seed==Checksum::ErrorSeed)
 					break;
 			}else
 				f.Seek( 1, STREAM_SEEK_CUR ); // skipping irrecoverable portion of data

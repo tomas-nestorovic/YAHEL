@@ -32,7 +32,7 @@ namespace Yahel{
 		ULARGE_INTEGER uli;
 		return	SUCCEEDED(stream->Seek( li, dwMoveMethod, &uli ))
 				? uli.QuadPart
-				: Stream::GetErrorPosition();
+				: Stream::ErrorPosition;
 	}
 
 	TPosition CInstance::TContent::Read(PVOID buffer,TPosition bufferCapacity,HRESULT &outResult) const{
@@ -79,7 +79,7 @@ namespace Yahel{
 			if (pOutRecordStartLogPos)
 				*pOutRecordStartLogPos=0;
 			if (pOutRecordLength)
-				*pOutRecordLength=GetMaximumRecordLength();
+				*pOutRecordLength=Stream::MaximumRecordLength;
 			if (pOutDataReady)
 				*pOutDataReady=true;
 		}
@@ -151,7 +151,7 @@ namespace Yahel{
 		const auto n=::GetClassNameW( hWnd, baseClassName, ARRAYSIZE(baseClassName) );
 		if (!n)
 			return false;
-		if (::lstrcmpW( baseClassName, GetBaseClassNameW(GetWindowInstance(hWnd)) )) // not the required window class?
+		if (::lstrcmpW( baseClassName, BaseClassNameW )) // not the required window class?
 			return false;
 		EXCLUSIVELY_LOCK_THIS_OBJECT();
 		if (this->hWnd && this->hWnd!=hWnd) // has already a different window buddy?
@@ -407,7 +407,7 @@ namespace Yahel{
 	TError CInstance::RedefineItem(LPCWSTR newItemDef,WORD nItemsInRowMin,WORD nItemsInRowMax){
 		//
 		if (!newItemDef) // want the default View?
-			newItemDef=GetDefaultByteItemDefinition();
+			newItemDef=DefaultByteItemDefinition;
 		auto newItem=item; // transactional - only if Definition valid shall it be used
 			if (const auto err=newItem.Redefine(newItemDef))
 				return err;
@@ -552,7 +552,7 @@ namespace Yahel{
 	void CInstance::RemoveAllHighlights(){
 		// destroys the list of Emphases
 		emphases.clear();
-		emphases.insert( TEmphasis(Stream::GetMaximumLength(),CLR_DEFAULT) ); // terminator
+		emphases.insert( TEmphasis(Stream::MaximumLength,CLR_DEFAULT) ); // terminator
 	}
 
 

@@ -532,7 +532,7 @@ finishWriting:				SendEditNotification( EN_CHANGE );
 								for( TPosition nBytesToSave=selection.z-f.Seek(selection.a),n; nBytesToSave; nBytesToSave-=n ){
 									BYTE buf[65536];
 									n=f.Read(  buf,  std::min( nBytesToSave, (TPosition)sizeof(buf) ),  IgnoreIoResult  );
-									if (n==Stream::GetErrorPosition()){
+									if (n==Stream::ErrorPosition){
 										pOwner->ShowInformation( MSG_SELECTION_SAVED_PARTIALLY, ERROR_READ_FAULT );
 										break;
 									}
@@ -619,7 +619,7 @@ resetSelectionWithValue:BYTE buf[65535];
 							return true;
 						for( FORMATETC fmt; pefe->Next(1,&fmt,nullptr)==S_OK; ){
 							BYTE nIgnoredTailBytes;
-							if (fmt.cfFormat==GetClipboardFormat())
+							if (fmt.cfFormat==ClipboardFormat)
 								nIgnoredTailBytes=0;
 							else if (fmt.cfFormat==CF_TEXT)
 								nIgnoredTailBytes=sizeof(char);
@@ -710,7 +710,7 @@ resetSelectionWithValue:BYTE buf[65535];
 								return true;
 						}
 						const auto posFound=pOwner->ContinueSearching(searchParams);
-						if (posFound!=Stream::GetErrorPosition()){ // found a match?
+						if (posFound!=Stream::ErrorPosition){ // found a match?
 							SetFocus();
 							caret.streamSelection=TPosInterval( posFound, posFound+searchParams.patternLength );
 							caret.streamPosition=caret.streamSelection.z;
@@ -755,7 +755,7 @@ resetSelectionWithValue:BYTE buf[65535];
 						cp.type=(decltype(cp.type))(wParam-ID_YAHEL_CHECKSUM_ADD);
 						if (pOwner->QueryChecksumParams(cp) && cp.IsValid()){
 							const auto checksum=pOwner->ComputeChecksum( cp, caret.streamSelection );
-							if (checksum!=Checksum::GetErrorValue()){
+							if (checksum!=Checksum::ErrorSeed){
 								TCHAR msg[80];
 								::wsprintf( msg, _T("Checksum of selected stream is %d (0x%X)"), checksum, checksum );
 								::MessageBox( hWnd, msg, _T(""), 0 );
@@ -1251,7 +1251,7 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 								if (IsColumnShown(TColumn::VIEW)){
 									auto itEmpView=itEmp;
 									auto itNearestBm=itNearestBookmark;
-									auto aView=address; auto aNearestBm=itNearestBm!=bookmarks.end()?*itNearestBm:Stream::GetErrorPosition();
+									auto aView=address; auto aNearestBm=itNearestBm!=bookmarks.end()?*itNearestBm:Stream::ErrorPosition;
 									const auto d=Stream::IAdvisor::div( nBytesRead, item.nStreamBytes );
 									const bool readIncompleteItem=d.rem!=0;
 									const WORD nCompleteItems=std::min( (TPosition)item.nInRow, d.quot );
@@ -1302,7 +1302,7 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 											::FrameRect( dc, &rcBookmark, Utils::CYahelBrush::Black );
 											aNearestBm=	( itNearestBm=bookmarks.lower_bound(aView) )!=bookmarks.end()
 														? *itNearestBm
-														: Stream::GetErrorPosition();
+														: Stream::ErrorPosition;
 										}
 									}
 									dc.PrintBkSpace(
@@ -1315,7 +1315,7 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 								if (IsColumnShown(TColumn::STREAM)){
 									auto itEmpStream=itEmp;
 									auto itNearestBm=itNearestBookmark;
-									auto aStream=address; auto aNearestBm=itNearestBm!=bookmarks.end()?*itNearestBm:Stream::GetErrorPosition();
+									auto aStream=address; auto aNearestBm=itNearestBm!=bookmarks.end()?*itNearestBm:Stream::ErrorPosition;
 									for( WORD i=0; i<nBytesRead; i++ ){
 										// > choose colors
 										if (aStream==itEmpStream->z)
@@ -1335,7 +1335,7 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 											dc.FlushPrintBuffer(); // to print the Bookmark over the File content!
 											const RECT rcBookmark={ rcContent.left-font.GetCharAvgWidth(), rcContent.top, rcContent.left, rcContent.top+font.GetCharHeight() };
 											::FrameRect( dc, &rcBookmark, Utils::CYahelBrush::Black );
-											aNearestBm= ++itNearestBm!=bookmarks.end() ? *itNearestBm : Stream::GetErrorPosition();
+											aNearestBm= ++itNearestBm!=bookmarks.end() ? *itNearestBm : Stream::ErrorPosition;
 										}
 									}
 									dc.PrintBkSpace( charLayout.stream.GetLength()-nBytesRead );

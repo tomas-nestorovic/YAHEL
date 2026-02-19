@@ -430,19 +430,15 @@ namespace Gui
 
 namespace Stream
 {
-	TPosition WINAPI GetMaximumLength(){
-		return GetErrorPosition()-1;
-	}
-
-	TPosition WINAPI GetErrorPosition(){
-		return LLONG_MAX;
-	}
+	const TPosition YAHEL_DECLSPEC MaximumLength=ErrorPosition-1;
+	const TPosition YAHEL_DECLSPEC MaximumRecordLength=0x7fffff00;
+	const TPosition YAHEL_DECLSPEC ErrorPosition=LLONG_MAX;
 
 	TPosition WINAPI GetLength(IStream *s){
 		ULARGE_INTEGER uli;
 		return	SUCCEEDED(IStream_Size( s, &uli ))
 				? uli.QuadPart
-				: GetErrorPosition();
+				: ErrorPosition;
 	}
 
 
@@ -606,7 +602,7 @@ namespace Stream
 				assert( n<ARRAYSIZE(list) );
 				assert( (tymedMask&tymed)==0 );
 				FORMATETC &r=list[n++];
-					r.cfFormat=IInstance::GetClipboardFormat();
+					r.cfFormat=ClipboardFormat;
 					r.dwAspect=DVASPECT_CONTENT;
 					r.lindex=-1;
 					r.tymed=tymed;
@@ -699,7 +695,7 @@ namespace Stream
 				return DV_E_FORMATETC;
 			if (pFormatEtc->lindex!=-1)
 				return DV_E_LINDEX;
-			if (pFormatEtc->cfFormat!=IInstance::GetClipboardFormat())
+			if (pFormatEtc->cfFormat!=ClipboardFormat)
 				return DV_E_FORMATETC;
 			if ((pFormatEtc->tymed&supportedFormats.tymedMask)==0)
 				return DV_E_TYMED;
@@ -754,10 +750,6 @@ namespace Stream
 
 
 
-	TPosition IAdvisor::GetMaximumRecordLength(){
-		return 0x7fffff00;
-	}
-
 	// see also the following functions from NtDll.dll for working with 64-bit integers without C++ Runtime
 	// - LARGE_INTEGER RtlExtendedIntegerMultiply(LARGE_INTEGER multiplicand,LONG multiplier);
 	// - LARGE_INTEGER RtlExtendedLargeIntegerDivide(LARGE_INTEGER dividend,ULONG divisor,PULONG remainder);
@@ -793,9 +785,11 @@ namespace Stream
 
 
 
-	LPCTSTR IInstance::GetVersionString(){
-		return DLL_VERSION;
-	}
+	const LPCTSTR YAHEL_DECLSPEC VersionString=DLL_VERSION;
+	const LPCSTR YAHEL_DECLSPEC BaseClassNameA=WC_EDITA;
+	const LPCWSTR YAHEL_DECLSPEC BaseClassNameW=WC_EDITW;
+	const UINT YAHEL_DECLSPEC ClipboardFormat=::RegisterClipboardFormat(CLIPFORMAT_YAHEL_BINARY);
+	const LPCWSTR YAHEL_DECLSPEC DefaultByteItemDefinition=L"1;Aa ";
 
 	void IInstance::ShowModalAboutDialog(HWND hParent){
 		SYSTEMTIME st;
@@ -810,27 +804,11 @@ namespace Stream
 		);
 	}
 
-	LPCSTR IInstance::GetBaseClassNameA(HINSTANCE hInstance){
-		return WC_EDITA;
-	}
-
-	LPCWSTR IInstance::GetBaseClassNameW(HINSTANCE hInstance){
-		return WC_EDITW;
-	}
-
-	UINT IInstance::GetClipboardFormat(){
-		return ::RegisterClipboardFormat(CLIPFORMAT_YAHEL_BINARY);
-	}
-
 	ATL::CComPtr<IInstance> IInstance::Create(HINSTANCE hInstance,POwner pOwner,PVOID lpParam,HFONT hFont){
 		ATL::CComPtr<IInstance> tmp;
 		if (pOwner)
 			tmp.p=new CInstance( hInstance, pOwner, lpParam, hFont );
 		return tmp;
-	}
-
-	LPCWSTR IInstance::GetDefaultByteItemDefinition(){
-		return L"1;Aa ";
 	}
 
 	bool IInstance::DefineItemUsingDefaultEnglishDialog(PWCHAR definitionBuffer,BYTE bufferCapacity,HWND hParent,HFONT hFont){
@@ -871,7 +849,7 @@ namespace Stream
 			bool InitDialog() override{
 				// Dialog initialization
 				// . Presets
-				AddPresetItem( L"Byte", GetDefaultByteItemDefinition() );
+				AddPresetItem( L"Byte", DefaultByteItemDefinition );
 				AddPresetItem( L"Word", L"2;AaBb " );
 				AddPresetItem( L"Custom", nullptr );
 				// . labels
@@ -959,7 +937,7 @@ namespace Stream
 				static_assert( ARRAYSIZE(item.pattern)<=99, "must revise ::wsprintf calls in InitDialog!" );
 				definitionBuffer[bufferCapacity-1]='\0'; // mustn't overrun!
 				if (item.Redefine( definitionBuffer )) // invalid input Pattern?
-					item.Redefine( GetDefaultByteItemDefinition() );
+					item.Redefine( DefaultByteItemDefinition );
 				// . creating the Stream for the the HexaEditor
 				if (const auto &&s=Stream::FromBuffer( sampleStreamBytes, ITEM_STREAM_BYTES_MAX )){
 					for( BYTE i=0; i<ITEM_STREAM_BYTES_MAX; i++ )

@@ -167,7 +167,7 @@ namespace Yahel{
 		// search by specified Params
 		// - can't search by unusable Params
 		if (!params.IsUsable())
-			return Stream::GetErrorPosition();
+			return Stream::ErrorPosition;
 		// - determining Comparer function
 		FnComparer cmp;
 		switch (params.type){
@@ -183,7 +183,7 @@ namespace Yahel{
 				break;
 			default:
 				assert(false);
-				return Stream::GetErrorPosition();
+				return Stream::ErrorPosition;
 		}
 		// - preparation for KMP search (Knuth-Morris-Pratt)
 		static_assert( sizeof(*params.pattern.bytes)==sizeof(*params.pattern.chars), "" ); // musn't mix Bytes and (for instance) Unicode
@@ -200,10 +200,10 @@ namespace Yahel{
 			TPosition posOrg;
 
 			TContent()
-				: posOrg(Stream::GetErrorPosition()) {
+				: posOrg(Stream::ErrorPosition) {
 			}
 			~TContent(){
-				if (posOrg!=Stream::GetErrorPosition())
+				if (posOrg!=Stream::ErrorPosition)
 					Seek(posOrg);
 			}
 		} f;
@@ -212,7 +212,7 @@ namespace Yahel{
 			assert(false); // using here the same Stream always requires attention; YAHEL is fine with that - is also the client app fine with that?
 			f.stream=this->f.stream, f.posOrg=f.GetPosition();
 		}else if (FAILED(hr))
-			return Stream::GetErrorPosition();
+			return Stream::ErrorPosition;
 		f.Seek( range.a );
 		for( BYTE posMatched=0,b; f.GetPosition()<range.z; )
 			if (cancel)
@@ -228,7 +228,7 @@ namespace Yahel{
 					return f.GetPosition()-params.patternLength;
 			}
 		// - no match found
-		return Stream::GetErrorPosition();
+		return Stream::ErrorPosition;
 	}
 
 }

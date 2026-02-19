@@ -139,6 +139,9 @@ namespace Yahel
 	{
 		typedef UINT T;
 
+		extern const T YAHEL_DECLSPEC DefaultSeed;
+		extern const T YAHEL_DECLSPEC ErrorSeed;
+
 		struct YAHEL_DECLSPEC TParams{
 			enum TType:BYTE{
 				Add,
@@ -155,8 +158,6 @@ namespace Yahel
 			bool EditModalWithDefaultEnglishDialog(HWND hParent);
 		};
 
-		T YAHEL_DECLSPEC GetDefaultSeed();
-		T YAHEL_DECLSPEC GetErrorValue();
 		T YAHEL_DECLSPEC Compute(const TParams &params,LPCVOID bytes,UINT nBytes);
 		T YAHEL_DECLSPEC ComputeAdd(LPCVOID bytes,UINT nBytes,T seed=0);
 		BYTE YAHEL_DECLSPEC ComputeXor(LPCVOID bytes,UINT nBytes,BYTE seed=0);
@@ -280,10 +281,14 @@ namespace Gui
 
 
 
-	namespace Stream{
-		interface IAdvisor{
-			static TPosition YAHEL_DECLSPEC WINAPI GetMaximumRecordLength();
-			static lldiv_t YAHEL_DECLSPEC WINAPI div(TPosition dividend,TPosition divisor);
+	namespace Stream
+	{
+		extern const TPosition YAHEL_DECLSPEC MaximumLength;
+		extern const TPosition YAHEL_DECLSPEC MaximumRecordLength;
+		extern const TPosition YAHEL_DECLSPEC ErrorPosition;
+
+		interface YAHEL_DECLSPEC IAdvisor{
+			static lldiv_t WINAPI div(TPosition dividend,TPosition divisor);
 
 			virtual void GetRecordInfo(TPosition pos,PPosition pOutRecordStartLogPos,PPosition pOutRecordLength,bool *pOutDataReady)=0;
 			virtual TRow LogicalPositionToRow(TPosition pos,WORD nStreamBytesInRow)=0;
@@ -291,8 +296,6 @@ namespace Gui
 			virtual LPCWSTR GetRecordLabelW(TPosition pos,PWCHAR labelBuffer,BYTE labelBufferCharsMax,PVOID param) const=0;
 		};
 
-		TPosition YAHEL_DECLSPEC WINAPI GetMaximumLength();
-		TPosition YAHEL_DECLSPEC WINAPI GetErrorPosition();
 		TPosition YAHEL_DECLSPEC WINAPI GetLength(IStream *s);
 		ATL::CComPtr<IStream> YAHEL_DECLSPEC WINAPI FromBuffer(PVOID pBuffer,TPosition length);
 		ATL::CComPtr<IStream> YAHEL_DECLSPEC WINAPI FromFileForSharedReading(LPCWSTR fileName,DWORD dwFlagsAndAttributes=FILE_ATTRIBUTE_NORMAL);
@@ -301,7 +304,13 @@ namespace Gui
 
 
 
-	interface IInstance:public IUnknown
+	extern const LPCTSTR YAHEL_DECLSPEC VersionString;
+	extern const LPCSTR YAHEL_DECLSPEC BaseClassNameA;
+	extern const LPCWSTR YAHEL_DECLSPEC BaseClassNameW;
+	extern const UINT YAHEL_DECLSPEC ClipboardFormat;
+	extern const LPCWSTR YAHEL_DECLSPEC DefaultByteItemDefinition;
+
+	interface YAHEL_DECLSPEC IInstance:public IUnknown
 	{
 		enum TColumn:BYTE{
 			ADDRESS	=1,
@@ -310,17 +319,12 @@ namespace Gui
 			LABEL	=8,
 			DATA	= VIEW | STREAM,
 			MINIMAL	= DATA,
-			ALL		= ADDRESS | MINIMAL | LABEL
+			ALL		= ADDRESS | DATA | LABEL
 		};
 
-		static LPCTSTR YAHEL_DECLSPEC WINAPI GetVersionString();
-		static void YAHEL_DECLSPEC WINAPI ShowModalAboutDialog(HWND hParent);
-		static LPCSTR YAHEL_DECLSPEC WINAPI GetBaseClassNameA(HINSTANCE hInstance);
-		static LPCWSTR YAHEL_DECLSPEC WINAPI GetBaseClassNameW(HINSTANCE hInstance);
-		static UINT YAHEL_DECLSPEC WINAPI GetClipboardFormat();
-		static ATL::CComPtr<IInstance> YAHEL_DECLSPEC WINAPI Create(HINSTANCE hInstance,POwner pOwner,PVOID lpParam=0,HFONT hFont=0);
-		static LPCWSTR YAHEL_DECLSPEC WINAPI GetDefaultByteItemDefinition();
-		static bool YAHEL_DECLSPEC WINAPI DefineItemUsingDefaultEnglishDialog(PWCHAR definitionBuffer,BYTE bufferCapacity,HWND hParent=0,HFONT hFont=0);
+		static void WINAPI ShowModalAboutDialog(HWND hParent);
+		static ATL::CComPtr<IInstance> WINAPI Create(HINSTANCE hInstance,POwner pOwner,PVOID lpParam=0,HFONT hFont=0);
+		static bool WINAPI DefineItemUsingDefaultEnglishDialog(PWCHAR definitionBuffer,BYTE bufferCapacity,HWND hParent=0,HFONT hFont=0);
 
 		// window manipulation (destroy by simply calling ::DestroyWindow)
 		virtual bool Attach(HWND hYahel)=0;

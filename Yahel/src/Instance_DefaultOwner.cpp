@@ -9,7 +9,7 @@ namespace Yahel{
 	}
 
 	TPosition CInstance::ContinueSearching(const TSearchParams &sp) const{
-		return Stream::GetErrorPosition();
+		return Stream::ErrorPosition;
 	}
 
 
@@ -34,7 +34,7 @@ namespace Yahel{
 	}
 
 	Checksum::T CInstance::ComputeChecksum(const Checksum::TParams &cp,const TPosInterval &range) const{
-		return Checksum::GetErrorValue();
+		return Checksum::ErrorSeed;
 	}
 
 
@@ -52,7 +52,7 @@ namespace Yahel{
 				flags|=MF_GRAYED*!( caret.SelectionExists() );
 				return flags;
 			case ID_YAHEL_EDIT_PASTE:
-				flags|=MF_GRAYED*!( editable && (::IsClipboardFormatAvailable(GetClipboardFormat())||::IsClipboardFormatAvailable(CF_TEXT)||::IsClipboardFormatAvailable(CF_UNICODETEXT)) );
+				flags|=MF_GRAYED*!( editable && (::IsClipboardFormatAvailable(ClipboardFormat)||::IsClipboardFormatAvailable(CF_TEXT)||::IsClipboardFormatAvailable(CF_UNICODETEXT)) );
 				return flags;
 			case ID_YAHEL_BOOKMARK_TOGGLE:
 				flags|=MF_GRAYED*!(
