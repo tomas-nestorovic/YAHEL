@@ -1168,29 +1168,26 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 				static constexpr RECT FullClientRect={ 0, 0, USHRT_MAX, USHRT_MAX };
 				const RECT singleColumnRect={ 0, 0, font.GetCharAvgWidth(), USHRT_MAX };
 				const RECT singleRowRect={ 0, 0, USHRT_MAX, font.GetCharHeight() };
+		{		static_assert( HEADER_LINES_COUNT==1, "must revise FillRect below");
+				::FillRect( dc, &singleRowRect, dc.BtnFaceBrush ); // Header (see 'static_assert' above)
 				if (addrLength){
 					WCHAR buf[1600],*p=buf;
 					for( TRow r=iRowsPaint.a; r<=iRowsPaint.z; r++ ){
 						const auto address=__firstByteInRowToLogicalPosition__(iVertScroll+r);
 						p+=::wsprintfW( p, ADDRESS_FORMAT L"\r\n", HIWORD(address), LOWORD(address) );
 					}
-					const RECT &&rc=dc.CreateRect( addrLength+ADDRESS_SPACE_LENGTH, HEADER_LINES_COUNT );
-					::FillRect( dc, &rc, dc.BtnFaceBrush );
-			{		const Utils::CViewportOrg viewportOrg1( dc, HEADER_LINES_COUNT+iRowsPaint.a, 0, font );
+					const Utils::CViewportOrg viewportOrg1( dc, HEADER_LINES_COUNT+iRowsPaint.a, 0, font );
 					::DrawTextW( dc, buf,p-buf, (LPRECT)&FullClientRect, DT_LEFT|DT_TOP );
-			}		::ExcludeClipRect( dc, 0, 0, rc.right, USHRT_MAX );
-				}else{
-					const Utils::CViewportOrg viewportOrg( dc, HEADER_LINES_COUNT, 0, font );
-					::FillRect( dc, &singleColumnRect, Utils::CYahelBrush::White );
-					::ExcludeClipRect( dc, 0, 0, singleColumnRect.right, USHRT_MAX );
 				}
+				const Utils::CViewportOrg viewportOrg( dc, HEADER_LINES_COUNT, addrLength, font );
+				::FillRect( dc, &singleColumnRect, Utils::CYahelBrush::White );
+		}		::ExcludeClipRect( dc, 0, 0, (addrLength+ADDRESS_SPACE_LENGTH)*singleColumnRect.right, USHRT_MAX );
 				// . drawing Header row
 				const auto iHorzScroll=GetHorzScrollPos();
 				const char patternLength=std::max( ITEM_PATTERN_LENGTH_MIN, item.patternLength );
 				const int itemWidth=patternLength*font.GetCharAvgWidth();
 				const auto &&charLayout=GetCharLayout();
 				if (HEADER_LINES_COUNT){
-					::FillRect( dc, &singleRowRect, dc.BtnFaceBrush );
 					RECT rcHeader=singleRowRect;
 					if (IsColumnShown(TColumn::VIEW)){
 						WCHAR buf[16];
