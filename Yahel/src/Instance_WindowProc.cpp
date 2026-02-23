@@ -1176,8 +1176,12 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 						const auto address=__firstByteInRowToLogicalPosition__(iVertScroll+r);
 						p+=::wsprintfW( p, ADDRESS_FORMAT L"\r\n", HIWORD(address), LOWORD(address) );
 					}
-					const Utils::CViewportOrg viewportOrg1( dc, HEADER_LINES_COUNT+iRowsPaint.a, 0, font );
+					const Utils::CViewportOrg viewportOrg( dc, HEADER_LINES_COUNT+iRowsPaint.a, 0, font );
 					::DrawTextW( dc, buf,p-buf, (LPRECT)&FullClientRect, DT_LEFT|DT_TOP );
+					::FillRect( dc,
+						&dc.CreateRect( 0, iRowsPaint.GetLength()+1, addrLength, USHRT_MAX ),
+						Utils::CYahelBrush::White
+					);
 				}
 				const Utils::CViewportOrg viewportOrg( dc, HEADER_LINES_COUNT, addrLength, font );
 				::FillRect( dc, &singleColumnRect, Utils::CYahelBrush::White );
