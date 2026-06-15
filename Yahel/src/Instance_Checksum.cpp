@@ -67,7 +67,7 @@ namespace Checksum{
 		return seed;
 	}
 
-	T Compute(const TParams &params,LPCVOID bytes,UINT nBytes){
+	T Compute(const TParams &params,LPCVOID bytes,TPosition nBytes){
 		//
 		// - can't compute Checksum by invalid Params
 		if (!params.IsValid())
@@ -89,10 +89,10 @@ namespace Checksum{
 				return ErrorSeed;
 		}
 		// - computation
-		constexpr UINT ChunkBytesMax=4096;
+		constexpr TPosition ChunkBytesMax=4096;
 		T result=params.seed;
 		for( const BYTE *pb=(LPBYTE)bytes; nBytes>0; ){
-			const UINT nChunkBytes=std::min( nBytes, ChunkBytesMax );
+			const auto nChunkBytes=std::min( nBytes, ChunkBytesMax );
 			result=fn( result, pb, nChunkBytes );
 			pb+=nChunkBytes, nBytes-=nChunkBytes;
 		}

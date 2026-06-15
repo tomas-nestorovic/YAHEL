@@ -867,7 +867,7 @@ namespace Stream
 			}
 			TError TrySaveDefinition(){
 				// attempts to redefine an Item from current inputs; returns a DWORD-encoded error
-				const int nStreamBytes=GetDlgItemInt(IDC_NUMBER);
+				const auto nStreamBytes=GetDlgItemInt(IDC_NUMBER);
 				TError err=ERROR_KOSHER; // assumption
 				if (nStreamBytes<=0 || ITEM_STREAM_BYTES_MAX<nStreamBytes)
 					err=ERROR_ITEM_DEF_BYTE_COUNT;

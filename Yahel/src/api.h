@@ -83,6 +83,7 @@ namespace Yahel
 
 
 	struct YAHEL_DECLSPEC TSearchParams{
+		typedef BYTE TPatternLength;
 		enum:int{ // in order of radio buttons in the default "Find" dialog
 			ANSI_ANY_CASE,
 			HEXA,
@@ -94,7 +95,7 @@ namespace Yahel
 			BYTE bytes[SCHAR_MAX];
 			char chars[SCHAR_MAX];
 		} pattern; // pattern to find
-		BYTE patternLength;
+		TPatternLength patternLength;
 		bool searchForward;
 		bool selectFinding;
 
@@ -158,7 +159,7 @@ namespace Yahel
 			bool EditModalWithDefaultEnglishDialog(HWND hParent);
 		};
 
-		T YAHEL_DECLSPEC Compute(const TParams &params,LPCVOID bytes,UINT nBytes);
+		T YAHEL_DECLSPEC Compute(const TParams &params,LPCVOID bytes,TPosition nBytes);
 		T YAHEL_DECLSPEC ComputeAdd(LPCVOID bytes,UINT nBytes,T seed=0);
 		BYTE YAHEL_DECLSPEC ComputeXor(LPCVOID bytes,UINT nBytes,BYTE seed=0);
 	}

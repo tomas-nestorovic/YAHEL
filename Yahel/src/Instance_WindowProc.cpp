@@ -693,11 +693,11 @@ resetSelectionWithValue:BYTE buf[65535];
 						// . requesting the Owner to begin/continue with a Search session
 						if (LOWORD(wParam)==ID_YAHEL_FIND){
 							TSearchParams tmp;
-							if (const auto sel=caret.streamSelection){
+							if (const auto &sel=caret.streamSelection){
 								f.Seek( sel.a );
 								if (tmp.patternLength=f.Read( tmp.pattern.bytes, std::min((TPosition)sizeof(tmp.pattern.bytes),sel.GetLength()), IgnoreIoResult )){
 									tmp.type=TSearchParams::ANSI_ANY_CASE; // should be set by the ctor above, but just to be sure
-									for( TPosition i=0; i<tmp.patternLength; i++ )
+									for( TSearchParams::TPatternLength i=0; i<tmp.patternLength; i++ )
 										if (!::isprint(tmp.pattern.bytes[i])){
 											tmp.type=TSearchParams::HEXA; // can't use ASCII searching as the Selection contains non-printable characters
 											break;
@@ -1137,13 +1137,13 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 						charBuffer[nCharsBuffered++]=c;
 					}
 
-					void PrintChars(LPCWSTR c,int n){
+					void PrintChars(LPCWSTR c,TCol n){
 						assert( pRect!=nullptr ); // call SetPrintRect first!
 						::memcpy( charBuffer+nCharsBuffered, c, sizeof(WCHAR)*n );
 						nCharsBuffered+=n;
 					}
 
-					void PrintBkSpace(int n){
+					void PrintBkSpace(TCol n){
 						assert( pRect!=nullptr ); // call SetPrintRect first!
 						if (currEmphasisColor!=COLOR_WHITE || (currContentFlags&Selected)!=0) // front color is irrelevant, what counts is only the background
 							SetContentPrintState( currContentFlags&~Selected, COLOR_WHITE );
