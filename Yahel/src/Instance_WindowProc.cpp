@@ -1016,8 +1016,6 @@ leftMouseDragged:
 				return true; // nop (always painting over existing Content)
 			case WM_PAINT:{
 				// drawing
-				if (!f) // there's nothing to paint without an underlying Content
-					return false;
 				class CHexaPaintDC sealed{
 					const CInstance &he;
 					const HDC handle;
@@ -1209,7 +1207,7 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 				// . drawing View and Stream columns
 				const Utils::CViewportOrg viewportOrg( dc, HEADER_LINES_COUNT+iRowsPaint.a, addrLength+ADDRESS_SPACE_LENGTH-iHorzScroll, font );
 				RECT rcContent=FullClientRect;
-				if (IsColumnShown(TColumn::VIEW) || IsColumnShown(TColumn::STREAM)){
+				if (f&&( IsColumnShown(TColumn::VIEW) || IsColumnShown(TColumn::STREAM) )){
 					dc.SetPrintRect(rcContent);
 					auto address=__firstByteInRowToLogicalPosition__(iVertScroll+iRowsPaint.a);
 					const auto selection=caret.streamSelection;
@@ -1285,7 +1283,7 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 															break;
 														}
 												}
-												const BYTE iByte=n*nStreamBytes+item.GetByteIndex(i);
+												const WORD iByte=n*item.nStreamBytes+item.GetByteIndex(i);
 												if (byteStates[iByte]==Good)
 													dc.SetContentPrintState( printFlags, emphasisColor );
 												else
@@ -1309,6 +1307,7 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 														: Stream::ErrorPosition;
 										}
 									}
+									dc.SetContentPrintState( CHexaPaintDC::Normal, COLOR_WHITE );
 									dc.PrintBkSpace(
 										charLayout.view.GetLength()-nCompleteItems*item.patternLength-readIncompleteItem // blank space caused by lack of Items
 										+
@@ -1342,6 +1341,7 @@ blendEmphasisAndSelection:	if (newEmphasisColor!=currEmphasisColor || newContent
 											aNearestBm= ++itNearestBm!=bookmarks.end() ? *itNearestBm : Stream::ErrorPosition;
 										}
 									}
+									dc.SetContentPrintState( CHexaPaintDC::Normal, COLOR_WHITE );
 									dc.PrintBkSpace( charLayout.stream.GetLength()-nBytesRead );
 								}
 								address+=nBytesRead;
