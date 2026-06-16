@@ -635,7 +635,7 @@ namespace Yahel{
 		// assuming this Item is valid, composes its string Definition, and returns pointer to the Pattern in the Definition
 		def+=::wsprintfW( def, L"%d;", nStreamBytes );
 		const LPCWSTR patternBegin=def;
-		for( BYTE i=0; i<patternLength; i++ )
+		for( char i=0; i<patternLength; i++ )
 			if (const WCHAR c=GetPrintableChar(i))
 				*def++=c;
 			else

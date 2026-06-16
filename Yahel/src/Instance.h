@@ -136,12 +136,12 @@ namespace Yahel{
 			TError Redefine(LPCWSTR newDef);
 			TError SetRowLimits(const TInterval<WORD> limits);
 			LPCWSTR GetDefinition(PWCHAR def) const;
-			inline WCHAR GetPrintableChar(BYTE iPattern) const{ return pattern[iPattern].printableChar; }
-			inline void SetPrintableChar(BYTE iPattern,WCHAR c){ pattern[iPattern].printableChar=c; }
-			inline bool IsPlaceholder(BYTE iPattern) const{ return !GetPrintableChar(iPattern); }
-			inline void SetPlaceholder(BYTE iPattern,BYTE iByte,bool lowerHalfByte){ pattern[iPattern].iStreamHalfByte=iByte<<1|(BYTE)lowerHalfByte; }
-			inline BYTE GetByteIndex(BYTE iPattern) const{ return pattern[iPattern].iStreamHalfByte>>1; }
-			inline bool IsLowerHalfbyte(BYTE iPattern) const{ return (pattern[iPattern].iStreamHalfByte&1)!=0; }
+			inline WCHAR GetPrintableChar(char iPattern) const{ return pattern[iPattern].printableChar; }
+			inline void SetPrintableChar(char iPattern,WCHAR c){ pattern[iPattern].printableChar=c; }
+			inline bool IsPlaceholder(char iPattern) const{ return !GetPrintableChar(iPattern); }
+			inline void SetPlaceholder(char iPattern,BYTE iByte,bool lowerHalfByte){ pattern[iPattern].iStreamHalfByte=iByte<<1|(BYTE)lowerHalfByte; }
+			inline BYTE GetByteIndex(char iPattern) const{ return pattern[iPattern].iStreamHalfByte>>1; }
+			inline bool IsLowerHalfbyte(char iPattern) const{ return (pattern[iPattern].iStreamHalfByte&1)!=0; }
 		} item;
 	protected:
 		TSearchParams searchParams;
