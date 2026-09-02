@@ -264,12 +264,12 @@ namespace Gui
 	}
 
 	template <typename T>
-	bool QuerySingleIntW(LPCSTR caption,LPCSTR label,const TPosInterval &rangeIncl,T &inOutValue,TNotation defaultNotation,HWND hParent){
+	bool QuerySingleIntW(LPCWSTR caption,LPCWSTR label,const TPosInterval &rangeIncl,T &inOutValue,TNotation defaultNotation,HWND hParent){
 		return QuerySingleIntW( caption, label, rangeIncl, &inOutValue, sizeof(T), defaultNotation, hParent );
 	}
 
 	template <typename T,int N>
-	bool QuerySingleIntW(LPCSTR caption,LPCSTR label,const TPosInterval &rangeIncl,T &inOutValue,TNotation defaultNotation,HWND hParent,const TNamedInt (&defaultValues)[N]){
+	bool QuerySingleIntW(LPCWSTR caption,LPCWSTR label,const TPosInterval &rangeIncl,T &inOutValue,TNotation defaultNotation,HWND hParent,const TNamedInt (&defaultValues)[N]){
 		return QuerySingleIntW( caption, label, rangeIncl, &inOutValue, sizeof(T), defaultNotation, hParent, defaultValues, N );
 	}
 
